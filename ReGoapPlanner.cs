@@ -11,20 +11,16 @@ public class ReGoapPlanner : IGoapPlanner
     {
     }
 
-    public IReGoapGoal Plan(IReGoapAgent a, IReGoapGoal goalToIgnore, Queue<IReGoapAction> currentPlan, Action<IReGoapGoal> callback)
+    public IReGoapGoal Plan(IReGoapAgent agent, IReGoapGoal blacklistGoal = null, Queue<IReGoapAction> currentPlan = null, Action<IReGoapGoal> callback = null)
     {
-        goapAgent = a;
+        ReGoapLogger.Log("[ReGoalPlanner] Starting planning calculation for agent: " + agent);
+        goapAgent = agent;
         calculated = false;
-        //      IGoal.IsGoalPossible() -> bool
-        //      goal function (precalculate possible functions at start? Ex. GoTo(enemy) -> IsAt = "enemy"? (and add this new action to possible actions)
-        //          ^ actions should have a "prerequisited action" GoTo : IAction.GetPrerequisitedActions -> IGoal, List<string> functions
-        //          ^ actions should have a number of params (0 ... N, IAction.GetParamsNumber() -> int) and every thing (IAction.GetEffects) should have a List<string> functions variable
-        //var bestPriority = int.MinValue;
         currentGoal = null;
         var possibleGoals = new List<IReGoapGoal>();
         foreach (var goal in goapAgent.GetGoalsSet())
         {
-            if (goal == goalToIgnore)
+            if (goal == blacklistGoal)
                 continue;
             goal.Precalculations(this);
             if (goal.IsGoalPossible()) //goal.GetPriority() > bestPriority && 
@@ -73,7 +69,12 @@ public class ReGoapPlanner : IGoapPlanner
         }
         calculated = true;
 
-        callback(currentGoal);
+        if (callback != null)
+            callback(currentGoal);
+        if (currentGoal != null)
+            ReGoapLogger.Log(string.Format("[ReGoapPlanner] Calculated plan for goal '{0}', plan: {1}", currentGoal, currentGoal.GetPlan()));
+        else
+            ReGoapLogger.LogWarning("[ReGoapPlanner] Error while calculating plan.");
         return currentGoal;
     }
 
@@ -95,7 +96,7 @@ public class ReGoapPlanner : IGoapPlanner
 
 public interface IGoapPlanner
 {
-    IReGoapGoal Plan(IReGoapAgent goapAgent, IReGoapGoal currentGoal, Queue<IReGoapAction> currentPlan, Action<IReGoapGoal> callback);
+    IReGoapGoal Plan(IReGoapAgent goapAgent, IReGoapGoal blacklistGoal, Queue<IReGoapAction> currentPlan, Action<IReGoapGoal> callback);
     IReGoapGoal GetCurrentGoal();
     IReGoapAgent GetCurrentAgent();
     bool IsPlanning();

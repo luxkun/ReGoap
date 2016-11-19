@@ -11,7 +11,7 @@ public class GoapGoal : MonoBehaviour, IReGoapGoal
     public int priority = 1;
     public float errorDelay = 0.5f;
 
-    public ReGoapState goal;
+    protected ReGoapState goal;
     protected Queue<IReGoapAction> plan;
     protected IGoapPlanner planner;
 

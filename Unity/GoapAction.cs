@@ -7,7 +7,7 @@ using UnityEngine;
 
 public class GoapAction : MonoBehaviour, IReGoapAction
 {
-    public string Name = "PatrolAction";
+    public string Name = "GoapAction";
 
     protected ReGoapState preconditions;
     protected ReGoapState effects;
@@ -19,7 +19,6 @@ public class GoapAction : MonoBehaviour, IReGoapAction
     protected IReGoapAction nextAction;
 
     protected IReGoapAgent agent;
-    protected StateMachine stateMachine;
     protected Dictionary<string, object> genericValues;
     protected GoapActionSettings settings;
     protected bool interruptWhenPossible;
@@ -32,7 +31,6 @@ public class GoapAction : MonoBehaviour, IReGoapAction
         preconditions = new ReGoapState();
 
         genericValues = new Dictionary<string, object>();
-        stateMachine = GetComponent<StateMachine>();
         settings = new GoapActionSettings();
     }
 

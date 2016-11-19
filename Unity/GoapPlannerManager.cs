@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 
 // every thread runs on one of these classes
@@ -42,7 +43,7 @@ public class GoapPlannerThread
             if (checkWork != null)
             {
                 var work = checkWork.Value;
-                planner.Plan(work.agent, work.goal, work.actions,
+                planner.Plan(work.agent, work.blacklistGoal, work.actions,
                     (newGoal) => onDonePlan(this, work, newGoal));
             }
         }
@@ -68,7 +69,10 @@ public class GoapPlannerManager : MonoBehaviour
         if (instance != null)
         {
             Destroy(this);
-            throw new UnityException("A scene can have only one GoapPlannerManager");
+            var errorString =
+                "[GoapPlannerManager] Trying to instantiate a new manager but there can be only one per scene.";
+            ReGoapLogger.LogError(errorString);
+            throw new UnityException(errorString);
         }
         instance = this;
 
@@ -137,9 +141,9 @@ public class GoapPlannerManager : MonoBehaviour
         }
     }
 
-    public PlanWork Plan(IReGoapAgent agent, IReGoapGoal goal, Queue<IReGoapAction> actions, Action<IReGoapGoal> callback)
+    public PlanWork Plan(IReGoapAgent agent, IReGoapGoal blacklistGoal, Queue<IReGoapAction> currentPlan, Action<IReGoapGoal> callback)
     {
-        var work = new PlanWork(agent, goal, actions, callback);
+        var work = new PlanWork(agent, blacklistGoal, currentPlan, callback);
         lock (worksQueue)
             worksQueue.Enqueue(work);
         return work;
@@ -149,16 +153,16 @@ public class GoapPlannerManager : MonoBehaviour
 public struct PlanWork
 {
     public readonly IReGoapAgent agent;
-    public readonly IReGoapGoal goal;
+    public readonly IReGoapGoal blacklistGoal;
     public readonly Queue<IReGoapAction> actions;
     public readonly Action<IReGoapGoal> callback;
 
     public IReGoapGoal newGoal;
 
-    public PlanWork(IReGoapAgent agent, IReGoapGoal goal, Queue<IReGoapAction> actions, Action<IReGoapGoal> callback) : this()
+    public PlanWork(IReGoapAgent agent, IReGoapGoal blacklistGoal, Queue<IReGoapAction> actions, Action<IReGoapGoal> callback) : this()
     {
         this.agent = agent;
-        this.goal = goal;
+        this.blacklistGoal = blacklistGoal;
         this.actions = actions;
         this.callback = callback;
     }

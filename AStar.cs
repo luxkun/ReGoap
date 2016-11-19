@@ -17,7 +17,7 @@ public class AStar
             var node = frontier.Dequeue();
             if (node.IsGoal(goal))
             {
-                Debug.Log("[Astar] Success iterations: " + iterations);
+                ReGoapLogger.Log("[Astar] Success iterations: " + iterations);
                 return node;
             }
             explored[node.GetState()] = node;
@@ -25,7 +25,7 @@ public class AStar
             {
                 if (earlyExit && child.IsGoal(goal))
                 {
-                    Debug.Log("[Astar] (early exit) Success iterations: " + iterations);
+                    ReGoapLogger.Log("[Astar] (early exit) Success iterations: " + iterations);
                     return child;
                 }
                 var childCost = child.GetCost();
@@ -43,7 +43,7 @@ public class AStar
                 stateToNode[state] = child;
             }
         }
-        Debug.LogWarning("AStar failed.");
+        ReGoapLogger.LogWarning("AStar failed.");
         return null;
     }
 }
@@ -71,87 +71,5 @@ public class NodeComparer : IComparer<INode>
         if (result == 0)
             return 1;
         return result;
-    }
-}
-
-public class CheapestNodeQueue
-{
-    private readonly Dictionary<object, INode> stateToNode;
-    private readonly SortedDictionary<int, List<INode>> costToQueue;
-    private int lowestValue;
-
-    public CheapestNodeQueue()
-    {
-        stateToNode = new Dictionary<object, INode>();
-        costToQueue = new SortedDictionary<int, List<INode>>();
-        lowestValue = int.MaxValue;
-    }
-
-    public void Enqueue(INode node)
-    {
-        var state = node.GetState();
-        if (stateToNode.ContainsKey(state))
-            throw new Exception("[AStar] Trying to enqueue an already present state.");
-        stateToNode[state] = node;
-        var cost = node.GetCost();
-        List<INode> queue;
-        if (!costToQueue.TryGetValue(cost, out queue))
-        {
-            queue = new List<INode> {node};
-            costToQueue.Add(cost, queue);
-            if (cost < lowestValue)
-                lowestValue = cost;
-        }
-        else
-        {
-            queue.Add(node);
-            if (cost < lowestValue)
-                lowestValue = cost;
-        }
-    }
-
-    public INode Dequeue()
-    {
-        var queue = costToQueue[lowestValue]; //.First();
-        var toReturn = queue[0];
-        queue.RemoveAt(0);
-        CleanQueue(lowestValue);
-        return toReturn;
-    }
-
-    private void CleanQueue(int cost)
-    {
-        var queue = costToQueue[cost];
-        if (queue.Count == 0)
-            if (costToQueue.Count > 0)
-                lowestValue = costToQueue.First().Key;
-            else
-                lowestValue = int.MaxValue;
-    }
-
-    public int Count
-    {
-        get { return costToQueue.Count; }
-        private set { }
-    }
-
-    public bool Contains(INode node)
-    {
-        List<INode> queue;
-        if (!costToQueue.TryGetValue(node.GetCost(), out queue)) return false;
-        if (queue.Contains(node)) return true;
-        return false;
-    }
-
-    public INode StateToNode(object state)
-    {
-        INode result;
-        stateToNode.TryGetValue(state, out result);
-        return result;
-    }
-
-    public void Remove(INode node)
-    {
-        costToQueue[node.GetCost()].Remove(node);
     }
 }
