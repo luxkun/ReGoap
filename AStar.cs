@@ -4,14 +4,14 @@ using System.Linq;
 
 public class AStar
 {
-    public static INode Run(INode start, object goal, int maxIterations = 1000, bool earlyExit = true)
+    public static INode<T> Run<T>(INode<T> start, T goal, int maxIterations = 1000, int maxNodesToExpand = 1000, bool earlyExit = true)
     {
-        var frontier = new SimplePriorityQueue<INode>();
-        var stateToNode = new Dictionary<object, INode>();
+        var frontier = new FastPriorityQueue<INode<T>, T>(maxNodesToExpand);
+        var stateToNode = new Dictionary<T, INode<T>>();
         frontier.Enqueue(start, start.GetCost());
-        var explored = new Dictionary<object, INode>(); // State -> node
+        var explored = new Dictionary<T, INode<T>>(); // State -> node
         var iterations = 0;
-        while ((frontier.Count > 0) && (iterations < maxIterations))
+        while ((frontier.Count > 0) && (iterations < maxIterations) && (frontier.Count + 1 < frontier.MaxSize))
         {
             iterations++;
             var node = frontier.Dequeue();
@@ -32,7 +32,7 @@ public class AStar
                 var state = child.GetState();
                 if (explored.ContainsKey(state))
                     continue;
-                INode similiarNode;
+                INode<T> similiarNode;
                 stateToNode.TryGetValue(state, out similiarNode);
                 if (similiarNode != null)
                     if (similiarNode.GetCost() > childCost)
@@ -43,29 +43,34 @@ public class AStar
                 stateToNode[state] = child;
             }
         }
-        ReGoapLogger.LogWarning("AStar failed.");
+        ReGoapLogger.LogWarning("[Astar] failed.");
         return null;
     }
 }
 
-public interface INode
+public interface INode<T>
 {
-    object GetState();
-    List<INode> Expand();
+    T GetState();
+    List<INode<T>> Expand();
 
-    List<INode> CalculatePath();
+    List<INode<T>> CalculatePath();
 
-    int CompareTo(INode other);
+    int CompareTo(INode<T> other);
     int GetCost();
     int GetHeuristicCost();
     int GetPathCost();
-    INode GetParent();
-    bool IsGoal(object goal);
+    INode<T> GetParent();
+    bool IsGoal(T goal);
+
+    // for fastpriorityqueue
+    double Priority { get; set; }
+    long InsertionIndex { get; set; }
+    int QueueIndex { get; set; }
 }
 
-public class NodeComparer : IComparer<INode>
+public class NodeComparer<T> : IComparer<INode<T>>
 {
-    public int Compare(INode x, INode y)
+    public int Compare(INode<T> x, INode<T> y)
     {
         var result = x.CompareTo(y);
         if (result == 0)

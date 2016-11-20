@@ -51,33 +51,42 @@ public interface IPriorityQueue<T> : IEnumerable<T>
     int Count { get; }
 }
 
-public class FastPriorityQueueNode
-{
-    /// <summary>
-    /// The Priority to insert this node at.  Must be set BEFORE adding a node to the queue
-    /// </summary>
-    public double Priority { get; set; }
+//public interface IFastPriorityQueueNode
+//{
+//    double Priority { get; set; }
+    
+//    long InsertionIndex { get; set; }
+    
+//    int QueueIndex { get; set; }
+//}
 
-    /// <summary>
-    /// <b>Used by the priority queue - do not edit this value.</b>
-    /// Represents the order the node was inserted in
-    /// </summary>
-    public long InsertionIndex { get; set; }
+//public class FastPriorityQueueNode 
+//{
+//    /// <summary>
+//    /// The Priority to insert this node at.  Must be set BEFORE adding a node to the queue
+//    /// </summary>
+//    public double Priority { get; set; }
 
-    /// <summary>
-    /// <b>Used by the priority queue - do not edit this value.</b>
-    /// Represents the current position in the queue
-    /// </summary>
-    public int QueueIndex { get; set; }
-}
+//    /// <summary>
+//    /// <b>Used by the priority queue - do not edit this value.</b>
+//    /// Represents the order the node was inserted in
+//    /// </summary>
+//    public long InsertionIndex { get; set; }
+
+//    /// <summary>
+//    /// <b>Used by the priority queue - do not edit this value.</b>
+//    /// Represents the current position in the queue
+//    /// </summary>
+//    public int QueueIndex { get; set; }
+//}
 
 /// <summary>
 /// An implementation of a min-Priority Queue using a heap.  Has O(1) .Contains()!
 /// See https://github.com/BlueRaja/High-Speed-Priority-Queue-for-C-Sharp/wiki/Getting-Started for more information
 /// </summary>
 /// <typeparam name="T">The values in the queue.  Must extend the FastPriorityQueueNode class</typeparam>
-public sealed class FastPriorityQueue<T> : IPriorityQueue<T>
-    where T : FastPriorityQueueNode
+public sealed class FastPriorityQueue<T, U> : IPriorityQueue<T>
+    where T : class, INode<U>
 {
     private int numNodes;
     private T[] nodes;
@@ -472,205 +481,205 @@ public sealed class FastPriorityQueue<T> : IPriorityQueue<T>
     }
 }
 
-public sealed class SimplePriorityQueue<T> : IPriorityQueue<T>
-{
-    private class SimpleNode : FastPriorityQueueNode
-    {
-        public T Data { get; private set; }
+//public sealed class SimplePriorityQueue<T> : IPriorityQueue<T>
+//{
+//    private class SimpleNode : FastPriorityQueueNode
+//    {
+//        public T Data { get; private set; }
 
-        public SimpleNode(T data)
-        {
-            Data = data;
-        }
-    }
+//        public SimpleNode(T data)
+//        {
+//            Data = data;
+//        }
+//    }
 
-    private const int InitialQueueSize = 10;
-    private readonly FastPriorityQueue<SimpleNode> queue;
+//    private const int InitialQueueSize = 10;
+//    private readonly FastPriorityQueue<SimpleNode> queue;
 
-    public SimplePriorityQueue()
-    {
-        queue = new FastPriorityQueue<SimpleNode>(InitialQueueSize);
-    }
+//    public SimplePriorityQueue()
+//    {
+//        queue = new FastPriorityQueue<SimpleNode>(InitialQueueSize);
+//    }
 
-    /// <summary>
-    /// Given an item of type T, returns the exist SimpleNode in the queue
-    /// </summary>
-    private SimpleNode GetExistingNode(T item)
-    {
-        var comparer = EqualityComparer<T>.Default;
-        foreach (var node in queue)
-            if (comparer.Equals(node.Data, item))
-                return node;
-        throw new InvalidOperationException("Item cannot be found in queue: " + item);
-    }
+//    /// <summary>
+//    /// Given an item of type T, returns the exist SimpleNode in the queue
+//    /// </summary>
+//    private SimpleNode GetExistingNode(T item)
+//    {
+//        var comparer = EqualityComparer<T>.Default;
+//        foreach (var node in queue)
+//            if (comparer.Equals(node.Data, item))
+//                return node;
+//        throw new InvalidOperationException("Item cannot be found in queue: " + item);
+//    }
 
-    /// <summary>
-    /// Returns the number of nodes in the queue.
-    /// O(1)
-    /// </summary>
-    public int Count
-    {
-        get
-        {
-            lock (queue)
-            {
-                return queue.Count;
-            }
-        }
-    }
+//    /// <summary>
+//    /// Returns the number of nodes in the queue.
+//    /// O(1)
+//    /// </summary>
+//    public int Count
+//    {
+//        get
+//        {
+//            lock (queue)
+//            {
+//                return queue.Count;
+//            }
+//        }
+//    }
 
 
-    /// <summary>
-    /// Returns the head of the queue, without removing it (use Dequeue() for that).
-    /// Throws an exception when the queue is empty.
-    /// O(1)
-    /// </summary>
-    public T First
-    {
-        get
-        {
-            lock (queue)
-            {
-                if (queue.Count <= 0)
-                    throw new InvalidOperationException("Cannot call .First on an empty queue");
+//    /// <summary>
+//    /// Returns the head of the queue, without removing it (use Dequeue() for that).
+//    /// Throws an exception when the queue is empty.
+//    /// O(1)
+//    /// </summary>
+//    public T First
+//    {
+//        get
+//        {
+//            lock (queue)
+//            {
+//                if (queue.Count <= 0)
+//                    throw new InvalidOperationException("Cannot call .First on an empty queue");
 
-                var first = queue.First;
-                return first != null ? first.Data : default(T);
-            }
-        }
-    }
+//                var first = queue.First;
+//                return first != null ? first.Data : default(T);
+//            }
+//        }
+//    }
 
-    /// <summary>
-    /// Removes every node from the queue.
-    /// O(n)
-    /// </summary>
-    public void Clear()
-    {
-        lock (queue)
-        {
-            queue.Clear();
-        }
-    }
+//    /// <summary>
+//    /// Removes every node from the queue.
+//    /// O(n)
+//    /// </summary>
+//    public void Clear()
+//    {
+//        lock (queue)
+//        {
+//            queue.Clear();
+//        }
+//    }
 
-    /// <summary>
-    /// Returns whether the given item is in the queue.
-    /// O(n)
-    /// </summary>
-    public bool Contains(T item)
-    {
-        lock (queue)
-        {
-            var comparer = EqualityComparer<T>.Default;
-            foreach (var node in queue)
-                if (comparer.Equals(node.Data, item))
-                    return true;
-            return false;
-        }
-    }
+//    /// <summary>
+//    /// Returns whether the given item is in the queue.
+//    /// O(n)
+//    /// </summary>
+//    public bool Contains(T item)
+//    {
+//        lock (queue)
+//        {
+//            var comparer = EqualityComparer<T>.Default;
+//            foreach (var node in queue)
+//                if (comparer.Equals(node.Data, item))
+//                    return true;
+//            return false;
+//        }
+//    }
 
-    /// <summary>
-    /// Removes the head of the queue (node with minimum priority; ties are broken by order of insertion), and returns it.
-    /// If queue is empty, throws an exception
-    /// O(log n)
-    /// </summary>
-    public T Dequeue()
-    {
-        lock (queue)
-        {
-            if (queue.Count <= 0)
-                throw new InvalidOperationException("Cannot call Dequeue() on an empty queue");
+//    /// <summary>
+//    /// Removes the head of the queue (node with minimum priority; ties are broken by order of insertion), and returns it.
+//    /// If queue is empty, throws an exception
+//    /// O(log n)
+//    /// </summary>
+//    public T Dequeue()
+//    {
+//        lock (queue)
+//        {
+//            if (queue.Count <= 0)
+//                throw new InvalidOperationException("Cannot call Dequeue() on an empty queue");
 
-            var node = queue.Dequeue();
-            return node.Data;
-        }
-    }
+//            var node = queue.Dequeue();
+//            return node.Data;
+//        }
+//    }
 
-    /// <summary>
-    /// Enqueue a node to the priority queue.  Lower values are placed in front. Ties are broken by first-in-first-out.
-    /// This queue automatically resizes itself, so there's no concern of the queue becoming 'full'.
-    /// Duplicates are allowed.
-    /// O(log n)
-    /// </summary>
-    public void Enqueue(T item, double priority)
-    {
-        lock (queue)
-        {
-            var node = new SimpleNode(item);
-            if (queue.Count == queue.MaxSize)
-                queue.Resize(queue.MaxSize*2 + 1);
-            queue.Enqueue(node, priority);
-        }
-    }
+//    /// <summary>
+//    /// Enqueue a node to the priority queue.  Lower values are placed in front. Ties are broken by first-in-first-out.
+//    /// This queue automatically resizes itself, so there's no concern of the queue becoming 'full'.
+//    /// Duplicates are allowed.
+//    /// O(log n)
+//    /// </summary>
+//    public void Enqueue(T item, double priority)
+//    {
+//        lock (queue)
+//        {
+//            var node = new SimpleNode(item);
+//            if (queue.Count == queue.MaxSize)
+//                queue.Resize(queue.MaxSize*2 + 1);
+//            queue.Enqueue(node, priority);
+//        }
+//    }
 
-    /// <summary>
-    /// Removes an item from the queue.  The item does not need to be the head of the queue.  
-    /// If the item is not in the queue, an exception is thrown.  If unsure, check Contains() first.
-    /// If multiple copies of the item are enqueued, only the first one is removed. 
-    /// O(n)
-    /// </summary>
-    public void Remove(T item)
-    {
-        lock (queue)
-        {
-            try
-            {
-                queue.Remove(GetExistingNode(item));
-            }
-            catch (InvalidOperationException ex)
-            {
-                throw new InvalidOperationException("Cannot call Remove() on a node which is not enqueued: " + item, ex);
-            }
-        }
-    }
+//    /// <summary>
+//    /// Removes an item from the queue.  The item does not need to be the head of the queue.  
+//    /// If the item is not in the queue, an exception is thrown.  If unsure, check Contains() first.
+//    /// If multiple copies of the item are enqueued, only the first one is removed. 
+//    /// O(n)
+//    /// </summary>
+//    public void Remove(T item)
+//    {
+//        lock (queue)
+//        {
+//            try
+//            {
+//                queue.Remove(GetExistingNode(item));
+//            }
+//            catch (InvalidOperationException ex)
+//            {
+//                throw new InvalidOperationException("Cannot call Remove() on a node which is not enqueued: " + item, ex);
+//            }
+//        }
+//    }
 
-    /// <summary>
-    /// Call this method to change the priority of an item.
-    /// Calling this method on a item not in the queue will throw an exception.
-    /// If the item is enqueued multiple times, only the first one will be updated.
-    /// (If your requirements are complex enough that you need to enqueue the same item multiple times <i>and</i> be able
-    /// to update all of them, please wrap your items in a wrapper class so they can be distinguished).
-    /// O(n)
-    /// </summary>
-    public void UpdatePriority(T item, double priority)
-    {
-        lock (queue)
-        {
-            try
-            {
-                var updateMe = GetExistingNode(item);
-                queue.UpdatePriority(updateMe, priority);
-            }
-            catch (InvalidOperationException ex)
-            {
-                throw new InvalidOperationException(
-                    "Cannot call UpdatePriority() on a node which is not enqueued: " + item, ex);
-            }
-        }
-    }
+//    /// <summary>
+//    /// Call this method to change the priority of an item.
+//    /// Calling this method on a item not in the queue will throw an exception.
+//    /// If the item is enqueued multiple times, only the first one will be updated.
+//    /// (If your requirements are complex enough that you need to enqueue the same item multiple times <i>and</i> be able
+//    /// to update all of them, please wrap your items in a wrapper class so they can be distinguished).
+//    /// O(n)
+//    /// </summary>
+//    public void UpdatePriority(T item, double priority)
+//    {
+//        lock (queue)
+//        {
+//            try
+//            {
+//                var updateMe = GetExistingNode(item);
+//                queue.UpdatePriority(updateMe, priority);
+//            }
+//            catch (InvalidOperationException ex)
+//            {
+//                throw new InvalidOperationException(
+//                    "Cannot call UpdatePriority() on a node which is not enqueued: " + item, ex);
+//            }
+//        }
+//    }
 
-    public IEnumerator<T> GetEnumerator()
-    {
-        var queueData = new List<T>();
-        lock (queue)
-        {
-            //Copy to a separate list because we don't want to 'yield return' inside a lock
-            foreach (var node in queue)
-                queueData.Add(node.Data);
-        }
+//    public IEnumerator<T> GetEnumerator()
+//    {
+//        var queueData = new List<T>();
+//        lock (queue)
+//        {
+//            //Copy to a separate list because we don't want to 'yield return' inside a lock
+//            foreach (var node in queue)
+//                queueData.Add(node.Data);
+//        }
 
-        return queueData.GetEnumerator();
-    }
+//        return queueData.GetEnumerator();
+//    }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+//    IEnumerator IEnumerable.GetEnumerator()
+//    {
+//        return GetEnumerator();
+//    }
 
-    public bool IsValidQueue()
-    {
-        lock (queue)
-        {
-            return queue.IsValidQueue();
-        }
-    }
-}
+//    public bool IsValidQueue()
+//    {
+//        lock (queue)
+//        {
+//            return queue.IsValidQueue();
+//        }
+//    }
+//}

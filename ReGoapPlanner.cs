@@ -243,7 +243,7 @@ public class ReGoapState :
     }
 }
 
-public class GoapNode : INode
+public class GoapNode : INode<ReGoapState>
 {
     private readonly int cost;
     private readonly IGoapPlanner planner;
@@ -269,7 +269,7 @@ public class GoapNode : INode
 
         if (parent != null)
         {
-            state = (ReGoapState) parent.GetState();
+            state = parent.GetState();
             // g(node)
             g = par.GetPathCost();
         }
@@ -301,7 +301,7 @@ public class GoapNode : INode
         return h;
     }
 
-    public object GetState()
+    public ReGoapState GetState()
     {
         return state;
     }
@@ -321,9 +321,9 @@ public class GoapNode : INode
         return result;
     }
 
-    public List<INode> Expand()
+    public List<INode<ReGoapState>> Expand()
     {
-        var result = new List<INode>();
+        var result = new List<INode<ReGoapState>>();
         List<IReGoapAction> actions;
         if (backwardSearch)
             actions = planner.GetCurrentAgent().GetActionsSet();
@@ -369,10 +369,10 @@ public class GoapNode : INode
         return action;
     }
 
-    public List<INode> CalculatePath()
+    public List<INode<ReGoapState>> CalculatePath()
     {
-        var result = new List<INode>();
-        var node = (INode) this;
+        var result = new List<INode<ReGoapState>>();
+        var node = (INode<ReGoapState>) this;
         while (node.GetParent() != null)
         {
             result.Add(node);
@@ -382,7 +382,7 @@ public class GoapNode : INode
         return result;
     }
 
-    public int CompareTo(INode other)
+    public int CompareTo(INode<ReGoapState> other)
     {
         return cost - other.GetCost();
     }
@@ -392,13 +392,17 @@ public class GoapNode : INode
         return cost;
     }
 
-    public INode GetParent()
+    public INode<ReGoapState> GetParent()
     {
         return parent;
     }
 
-    public bool IsGoal(object goal)
+    public bool IsGoal(ReGoapState goal)
     {
         return h == 0;
     }
+
+    public double Priority { get; set; }
+    public long InsertionIndex { get; set; }
+    public int QueueIndex { get; set; }
 }
