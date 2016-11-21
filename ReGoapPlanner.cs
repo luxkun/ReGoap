@@ -6,9 +6,13 @@ public class ReGoapPlanner : IGoapPlanner
     private IReGoapAgent goapAgent;
     private IReGoapGoal currentGoal;
     public bool calculated;
+    private readonly AStar<ReGoapState> astar;
+    private ReGoapPlannerSettings settings;
 
-    void Start()
+    public ReGoapPlanner(ReGoapPlannerSettings settings = null)
     {
+        this.settings = settings ?? new ReGoapPlannerSettings();
+        astar = new AStar<ReGoapState>(this.settings.maxNodesToExpand);
     }
 
     public IReGoapGoal Plan(IReGoapAgent agent, IReGoapGoal blacklistGoal = null, Queue<IReGoapAction> currentPlan = null, Action<IReGoapGoal> callback = null)
@@ -51,8 +55,8 @@ public class ReGoapPlanner : IGoapPlanner
                 currentGoal = null;
                 continue;
             }
-            var leaf = (GoapNode) AStar.Run(
-                new GoapNode(this, goalState, null, null), goalState);
+            var leaf = (GoapNode) astar.Run(
+                new GoapNode(this, goalState, null, null), goalState, settings.maxIterations, settings.planningEarlyExit);
             if (leaf == null)
             {
                 currentGoal = null;
@@ -124,7 +128,7 @@ public class ReGoapState :
         lock (a.values)
             lock (b.values)
             {
-                var state = (ReGoapState) a.Clone();
+                var state = (ReGoapState)a.Clone();
                 foreach (var pair in b.values)
                     state.values[pair.Key] = pair.Value;
                 return state;
@@ -138,12 +142,12 @@ public class ReGoapState :
     public bool HasAny(ReGoapState other)
     {
         lock (values) lock (other.values)
-        {
-            foreach (var pair in other.values)
-                if (values.ContainsKey(pair.Key) && (values[pair.Key] == other.values[pair.Key]))
-                    return true;
-            return false;
-        }
+            {
+                foreach (var pair in other.values)
+                    if (values.ContainsKey(pair.Key) && (values[pair.Key] == other.values[pair.Key]))
+                        return true;
+                return false;
+            }
     }
 
     public int MissingDifference(ReGoapState other, int stopAt = int.MaxValue)
@@ -163,8 +167,8 @@ public class ReGoapState :
                 var add = false;
                 if (pair.Value is bool)
                 {
-                    if ((!(bool) pair.Value && other.values.ContainsKey(pair.Key) && (bool) other.values[pair.Key]) ||
-                        ((bool) pair.Value && (!other.values.ContainsKey(pair.Key) || !(bool) other.values[pair.Key])))
+                    if ((!(bool)pair.Value && other.values.ContainsKey(pair.Key) && (bool)other.values[pair.Key]) ||
+                        ((bool)pair.Value && (!other.values.ContainsKey(pair.Key) || !(bool)other.values[pair.Key])))
                         add = true;
                 }
                 else // generic version
@@ -210,7 +214,7 @@ public class ReGoapState :
         {
             if (!values.ContainsKey(key))
                 return default(T);
-            return (T) values[key];
+            return (T)values[key];
         }
     }
 
@@ -232,7 +236,7 @@ public class ReGoapState :
 
     public Dictionary<string, object> GetValues()
     {
-        lock (values) 
+        lock (values)
             return values;
     }
 
@@ -260,35 +264,35 @@ public class GoapNode : INode<ReGoapState>
     public bool backwardSearch = false;
     private readonly int heuristicMultiplier = 1;
 
-    public GoapNode(IGoapPlanner p, ReGoapState go, GoapNode par, IReGoapAction a)
+    public GoapNode(IGoapPlanner planner, ReGoapState goal, GoapNode parent, IReGoapAction action)
     {
-        planner = p;
-        parent = par;
-        action = a;
-        goal = go;
+        this.planner = planner;
+        this.parent = parent;
+        this.action = action;
+        this.goal = goal;
 
-        if (parent != null)
+        if (this.parent != null)
         {
-            state = parent.GetState();
+            state = this.parent.GetState();
             // g(node)
-            g = par.GetPathCost();
+            g = parent.GetPathCost();
         }
         else
         {
-            state = p.GetCurrentAgent().GetMemory().GetWorldState();
+            state = planner.GetCurrentAgent().GetMemory().GetWorldState();
         }
         if (action != null)
         {
-            state += a.GetEffects(state);
-            g += a.GetCost(state);
+            state += action.GetEffects(state);
+            g += action.GetCost(state);
         }
         // missing states from goal
         // h(node)
         if (backwardSearch)
             missingState = new ReGoapState();
-        h = goal.MissingDifference(state, ref missingState);
+        h = this.goal.MissingDifference(state, ref missingState);
         // f(node) = g(node) + h(node)
-        cost = g + h*heuristicMultiplier;
+        cost = g + h * heuristicMultiplier;
     }
 
     public int GetPathCost()
@@ -358,7 +362,7 @@ public class GoapNode : INode<ReGoapState>
         {
             if (node.GetAction() != null) //first
                 result.Add(node.GetAction());
-            node = (GoapNode) node.GetParent();
+            node = (GoapNode)node.GetParent();
         }
         result.Reverse();
         return new Queue<IReGoapAction>(result);
@@ -372,7 +376,7 @@ public class GoapNode : INode<ReGoapState>
     public List<INode<ReGoapState>> CalculatePath()
     {
         var result = new List<INode<ReGoapState>>();
-        var node = (INode<ReGoapState>) this;
+        var node = (INode<ReGoapState>)this;
         while (node.GetParent() != null)
         {
             result.Add(node);
@@ -402,7 +406,15 @@ public class GoapNode : INode<ReGoapState>
         return h == 0;
     }
 
-    public double Priority { get; set; }
+    public int Priority { get; set; }
     public long InsertionIndex { get; set; }
     public int QueueIndex { get; set; }
+}
+
+[Serializable]
+public class ReGoapPlannerSettings
+{
+    public bool planningEarlyExit = true;
+    public int maxIterations = 100;
+    public int maxNodesToExpand = 1000;
 }

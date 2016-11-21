@@ -1,15 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Priority_Queue;
 
-public class AStar
+public class AStar<T>
 {
-    public static INode<T> Run<T>(INode<T> start, T goal, int maxIterations = 1000, int maxNodesToExpand = 1000, bool earlyExit = true)
+    private readonly FastPriorityQueue<INode<T>, T> frontier;
+    private readonly Dictionary<T, INode<T>> stateToNode;
+    private readonly Dictionary<T, INode<T>> explored;
+
+    public AStar(int maxNodesToExpand = 1000)
     {
-        var frontier = new FastPriorityQueue<INode<T>, T>(maxNodesToExpand);
-        var stateToNode = new Dictionary<T, INode<T>>();
+        frontier = new FastPriorityQueue<INode<T>, T>(maxNodesToExpand);
+        stateToNode = new Dictionary<T, INode<T>>();
+        explored = new Dictionary<T, INode<T>>(); // State -> node
+    }
+
+    public INode<T> Run(INode<T> start, T goal, int maxIterations = 100, bool earlyExit = true)
+    {
+        frontier.Clear();
+        stateToNode.Clear();
+        explored.Clear();
+
         frontier.Enqueue(start, start.GetCost());
-        var explored = new Dictionary<T, INode<T>>(); // State -> node
         var iterations = 0;
         while ((frontier.Count > 0) && (iterations < maxIterations) && (frontier.Count + 1 < frontier.MaxSize))
         {
@@ -35,10 +48,12 @@ public class AStar
                 INode<T> similiarNode;
                 stateToNode.TryGetValue(state, out similiarNode);
                 if (similiarNode != null)
+                {
                     if (similiarNode.GetCost() > childCost)
                         frontier.Remove(similiarNode);
                     else
                         break;
+                }
                 frontier.Enqueue(child, childCost);
                 stateToNode[state] = child;
             }
@@ -62,10 +77,8 @@ public interface INode<T>
     INode<T> GetParent();
     bool IsGoal(T goal);
 
-    // for fastpriorityqueue
-    double Priority { get; set; }
-    long InsertionIndex { get; set; }
     int QueueIndex { get; set; }
+    int Priority { get; set; }
 }
 
 public class NodeComparer<T> : IComparer<INode<T>>

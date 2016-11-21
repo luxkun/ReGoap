@@ -6,7 +6,6 @@ using System.Threading;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
-
 // every thread runs on one of these classes
 public class GoapPlannerThread
 {
@@ -15,9 +14,9 @@ public class GoapPlannerThread
     private bool isRunning;
     private readonly Action<GoapPlannerThread, PlanWork, IReGoapGoal> onDonePlan;
 
-    public GoapPlannerThread(Queue<PlanWork> worksQueue, Action<GoapPlannerThread, PlanWork, IReGoapGoal> onDonePlan)
+    public GoapPlannerThread(ReGoapPlannerSettings plannerSettings, Queue<PlanWork> worksQueue, Action<GoapPlannerThread, PlanWork, IReGoapGoal> onDonePlan)
     {
-        planner = new ReGoapPlanner();
+        planner = new ReGoapPlanner(plannerSettings);
         this.worksQueue = worksQueue;
         isRunning = true;
         this.onDonePlan = onDonePlan;
@@ -63,6 +62,7 @@ public class GoapPlannerManager : MonoBehaviour
     private Thread[] threads;
 
     public bool workInFixedUpdate = true;
+    public ReGoapPlannerSettings plannerSettings;
 
     void Awake()
     {
@@ -82,7 +82,7 @@ public class GoapPlannerManager : MonoBehaviour
         threads = new Thread[threadsCount];
         for (int i = 0; i < threadsCount; i++)
         {
-            planners[i] = new GoapPlannerThread(worksQueue, OnDonePlan);
+            planners[i] = new GoapPlannerThread(plannerSettings, worksQueue, OnDonePlan);
             var thread = new Thread(planners[i].MainLoop) {IsBackground = true};
             thread.Start();
             threads[i] = thread;
