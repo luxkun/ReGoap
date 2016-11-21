@@ -1,23 +1,22 @@
-﻿#define VERBOSE
+﻿#define DEBUG
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using Debug = System.Diagnostics.Debug;
 
 
 public class ReGoapLogger
 {
 #if UNITY_5_3_OR_NEWER
-    private class UnityTraceListener : TraceListener
+    private class UnityTraceListener : IListener
     {
-        public override void Write(string message)
+        public void Write(string message)
         {
             Write(message, "");
         }
 
-        public override void Write(string message, string category)
+        public void Write(string message, string category)
         {
             switch (category)
             {
@@ -32,41 +31,74 @@ public class ReGoapLogger
                     break;
             }
         }
-
-        public override void WriteLine(string message)
+    }
+#else 
+    private class GenericTraceListener : IListener
+    {
+        public void Write(string message)
         {
-            Write(message);
+            Write(message, "");
         }
 
-        public override void WriteLine(string message, string category)
+        public void Write(string message, string category)
         {
-            Write(message, category);
+            switch (category)
+            {
+                case "error":
+                    System.Diagnostics.Debug.WriteLine(message);
+                    break;
+                case "warning":
+                    System.Diagnostics.Debug.WriteLine(message);
+                    break;
+                default:
+                    System.Diagnostics.Debug.WriteLine(message);
+                    break;
+            }
         }
     }
 #endif
+
+    public bool enabled;
+
+    private static readonly ReGoapLogger instance = new ReGoapLogger();
+    public static ReGoapLogger Instance
+    {
+        get { return instance; }
+    }
+
+    private readonly IListener listener;
 
     private ReGoapLogger()
     {
 #if UNITY_5_3_OR_NEWER
-        Trace.Listeners.Add(new UnityTraceListener());
+        listener = new UnityTraceListener();
 #else
-        Trace.Listeners.Add(new TextWriterTraceListener(Console.Out));
+        listener = new GenericTraceListener();
 #endif
-        Trace.AutoFlush = true;
+        enabled = true;
     }
 
     public static void Log(string message)
     {
-        Trace.WriteLine(message);
+        if (!instance.enabled) return;
+        instance.listener.Write(message);
     }
 
     public static void LogWarning(string message)
     {
-        Trace.WriteLine(message, "warning");
+        if (!instance.enabled) return;
+        instance.listener.Write(message, "warning");
     }
 
     public static void LogError(string message)
     {
-        Trace.WriteLine(message, "error");
+        if (!instance.enabled) return;
+        instance.listener.Write(message, "error");
     }
+}
+
+internal interface IListener
+{
+    void Write(string text);
+    void Write(string text, string category);
 }

@@ -165,15 +165,15 @@ public class ReGoapState :
             foreach (var pair in values)
             {
                 var add = false;
-                if (pair.Value is bool)
+                var valueBool = pair.Value as bool?;
+                if (valueBool.HasValue)
                 {
-                    if ((!(bool)pair.Value && other.values.ContainsKey(pair.Key) && (bool)other.values[pair.Key]) ||
-                        ((bool)pair.Value && (!other.values.ContainsKey(pair.Key) || !(bool)other.values[pair.Key])))
+                    if ((!valueBool.Value && other.values.ContainsKey(pair.Key) && (bool)other.values[pair.Key]) ||
+                        (valueBool.Value && (!other.values.ContainsKey(pair.Key) || !(bool)other.values[pair.Key])))
                         add = true;
                 }
                 else // generic version
                 {
-
                     if ((pair.Value == null && other.values.ContainsKey(pair.Key) && other.values[pair.Key] != null) ||
                         (pair.Value != null &&
                          (!other.values.ContainsKey(pair.Key) || other.values[pair.Key] != pair.Value)))
@@ -182,10 +182,10 @@ public class ReGoapState :
                 if (add)
                 {
                     count++;
-                    if (count >= stopAt)
-                        break;
                     if (difference != null)
                         difference.values[pair.Key] = pair.Value;
+                    if (count >= stopAt)
+                        break;
                 }
             }
             return count;

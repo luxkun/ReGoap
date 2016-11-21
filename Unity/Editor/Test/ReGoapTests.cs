@@ -5,63 +5,6 @@ using NUnit.Framework;
 
 public class ReGoapTests
 {
-    public class MyAction : GoapAction
-    {
-        public void Init()
-        {
-            Awake();
-        }
-
-        public void SetEffects(ReGoapState effects)
-        {
-            this.effects = effects;
-        }
-
-        public void SetPreconditions(ReGoapState preconditions)
-        {
-            this.preconditions = preconditions;
-        }
-    }
-
-    public class MyGoal : GoapGoal
-    {
-        public void Init()
-        {
-            Awake();
-        }
-
-        public void SetGoalState(ReGoapState goalState)
-        {
-            goal = goalState;
-        }
-
-        public void SetPriority(int priority)
-        {
-            this.priority = priority;
-        }
-    }
-
-    public class MyMemory : GoapMemory
-    {
-        public void Init()
-        {
-            Awake();
-        }
-
-        public void SetValue<T>(string key, T value)
-        {
-            state.Set(key, value);
-        }
-    }
-
-    public class MyAgent : GoapAgent
-    {
-        public void Init()
-        {
-            Awake();
-        }
-    }
-
     private ReGoapPlanner planner;
 
     [TestFixtureSetUp]
@@ -76,12 +19,12 @@ public class ReGoapTests
     {
     }
 
-    private MyAction GetCustomAction(GameObject gameObject, string name, Dictionary<string, bool> preconditionsBools,
+    private ReGoapTestsHelper.MyAction GetCustomAction(GameObject gameObject, string name, Dictionary<string, bool> preconditionsBools,
         Dictionary<string, bool> effectsBools, int cost = 1)
     {
         var effects = new ReGoapState();
         var preconditions = new ReGoapState();
-        var customAction = gameObject.AddComponent<MyAction>();
+        var customAction = gameObject.AddComponent<ReGoapTestsHelper.MyAction>();
         customAction.Name = name;
         customAction.Init();
         foreach (var pair in effectsBools)
@@ -94,9 +37,9 @@ public class ReGoapTests
         return customAction;
     }
 
-    private MyGoal GetCustomGoal(GameObject gameObject, string name, Dictionary<string, bool> goalState, int priority = 1)
+    private ReGoapTestsHelper.MyGoal GetCustomGoal(GameObject gameObject, string name, Dictionary<string, bool> goalState, int priority = 1)
     {
-        var customGoal = gameObject.AddComponent<MyGoal>();
+        var customGoal = gameObject.AddComponent<ReGoapTestsHelper.MyGoal>();
         customGoal.Name = name;
         customGoal.SetPriority(priority);
         customGoal.Init();
@@ -108,21 +51,6 @@ public class ReGoapTests
         customGoal.SetGoalState(goal);
         return customGoal;
     }
-
-    private void ApplyAndValidatePlan(IReGoapGoal plan, MyMemory memory)
-    {
-        foreach (var action in plan.GetPlan())
-        {
-            Assert.That(action.GetPreconditions(plan.GetGoalState()).MissingDifference(memory.GetWorldState(), 1) == 0);
-            foreach (var effectsPair in action.GetEffects(plan.GetGoalState()).GetValues())
-            {   // in a real game this should be done by memory itself
-                //  e.x. isNearTarget = (transform.position - target.position).magnitude < minRangeForCC
-                memory.SetValue(effectsPair.Key, effectsPair.Value);
-            }
-        }
-        Assert.That(plan.GetGoalState().MissingDifference(memory.GetWorldState(), 1) == 0);
-    }
-
     [Test]
     public void TestSimpleChainedPlan()
     {
@@ -144,17 +72,17 @@ public class ReGoapTests
 
         var hasAxeGoal = GetCustomGoal(gameObject, "HasAxeGoal", new Dictionary<string, bool> { { "hasAxe", true } });
 
-        var memory = gameObject.AddComponent<MyMemory>();
+        var memory = gameObject.AddComponent<ReGoapTestsHelper.MyMemory>();
         memory.Init();
 
-        var agent = gameObject.AddComponent<MyAgent>();
+        var agent = gameObject.AddComponent<ReGoapTestsHelper.MyAgent>();
         agent.Init();
 
         var plan = planner.Plan(agent);
 
         Assert.That(plan, Is.EqualTo(hasAxeGoal));
         // validate plan actions
-        ApplyAndValidatePlan(plan, memory);
+        ReGoapTestsHelper.ApplyAndValidatePlan(plan, memory);
     }
 
     [Test]
@@ -189,10 +117,10 @@ public class ReGoapTests
         var hasAxeGoal = GetCustomGoal(gameObject, "HasAxeGoal", new Dictionary<string, bool> { { "hasAxe", true } });
         var killEnemyGoal = GetCustomGoal(gameObject, "KillEnemyGoal", new Dictionary<string, bool> { { "killedEnemy", true } }, 3);
 
-        var memory = gameObject.AddComponent<MyMemory>();
+        var memory = gameObject.AddComponent<ReGoapTestsHelper.MyMemory>();
         memory.Init();
 
-        var agent = gameObject.AddComponent<MyAgent>();
+        var agent = gameObject.AddComponent<ReGoapTestsHelper.MyAgent>();
         agent.Init();
 
         // first plan should create axe and equip it, through 'ReadyToFightGoal', since 'hasTarget' is false (memory should handle this)
@@ -203,7 +131,7 @@ public class ReGoapTests
         //  and the memory should understand what happened 
         //  (e.g. equip weapon action? memory should set 'hasWeaponEquipped' to true if the action equipped something)
         // validate plan actions
-        ApplyAndValidatePlan(plan, memory);
+        ReGoapTestsHelper.ApplyAndValidatePlan(plan, memory);
 
         // now we tell the memory that we see the enemy
         memory.SetValue("hasTarget", true);
@@ -211,6 +139,6 @@ public class ReGoapTests
         plan = planner.Plan(agent);
 
         Assert.That(plan, Is.EqualTo(killEnemyGoal));
-        ApplyAndValidatePlan(plan, memory);
+        ReGoapTestsHelper.ApplyAndValidatePlan(plan, memory);
     }
 }
