@@ -55,7 +55,7 @@ public class ReGoapPlanner : IGoapPlanner
                 currentGoal = null;
                 continue;
             }
-            var leaf = (GoapNode) astar.Run(
+            var leaf = (GoapNode)astar.Run(
                 new GoapNode(this, goalState, null, null), goalState, settings.maxIterations, settings.planningEarlyExit);
             if (leaf == null)
             {
@@ -166,17 +166,18 @@ public class ReGoapState :
             {
                 var add = false;
                 var valueBool = pair.Value as bool?;
+                object otherValue;
+                other.values.TryGetValue(pair.Key, out otherValue);
                 if (valueBool.HasValue)
                 {
-                    if ((!valueBool.Value && other.values.ContainsKey(pair.Key) && (bool)other.values[pair.Key]) ||
-                        (valueBool.Value && (!other.values.ContainsKey(pair.Key) || !(bool)other.values[pair.Key])))
+                    // we don't need to check otherValue type since every key is supposed to always have same value type
+                    var otherValueBool = otherValue == null ? false : (bool)otherValue;
+                    if (valueBool.Value != otherValueBool)
                         add = true;
                 }
                 else // generic version
                 {
-                    if ((pair.Value == null && other.values.ContainsKey(pair.Key) && other.values[pair.Key] != null) ||
-                        (pair.Value != null &&
-                         (!other.values.ContainsKey(pair.Key) || other.values[pair.Key] != pair.Value)))
+                    if (pair.Value != otherValue)
                         add = true;
                 }
                 if (add)

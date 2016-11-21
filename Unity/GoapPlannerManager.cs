@@ -31,20 +31,25 @@ public class GoapPlannerThread
     {
         while (isRunning)
         {
-            PlanWork? checkWork = null;
-            lock (worksQueue)
+            CheckWorkers();
+        }
+    }
+
+    public void CheckWorkers()
+    {
+        PlanWork? checkWork = null;
+        lock (worksQueue)
+        {
+            if (worksQueue.Count > 0)
             {
-                if (worksQueue.Count > 0)
-                {
-                    checkWork = worksQueue.Dequeue();
-                }
+                checkWork = worksQueue.Dequeue();
             }
-            if (checkWork != null)
-            {
-                var work = checkWork.Value;
-                planner.Plan(work.agent, work.blacklistGoal, work.actions,
-                    (newGoal) => onDonePlan(this, work, newGoal));
-            }
+        }
+        if (checkWork != null)
+        {
+            var work = checkWork.Value;
+            planner.Plan(work.agent, work.blacklistGoal, work.actions,
+                (newGoal) => onDonePlan(this, work, newGoal));
         }
     }
 }
@@ -54,7 +59,7 @@ public class GoapPlannerManager : MonoBehaviour
 {
     public static GoapPlannerManager instance;
 
-    public readonly int threadsCount = 4;
+    public int threadsCount = 4;
     private GoapPlannerThread[] planners;
 
     private volatile Queue<PlanWork> worksQueue;
@@ -80,12 +85,21 @@ public class GoapPlannerManager : MonoBehaviour
         worksQueue = new Queue<PlanWork>();
         planners = new GoapPlannerThread[threadsCount];
         threads = new Thread[threadsCount];
-        for (int i = 0; i < threadsCount; i++)
+        if (threadsCount > 1)
         {
-            planners[i] = new GoapPlannerThread(plannerSettings, worksQueue, OnDonePlan);
-            var thread = new Thread(planners[i].MainLoop) {IsBackground = true};
-            thread.Start();
-            threads[i] = thread;
+            ReGoapLogger.Log("[GoapPlannerManager] Running in multi-thread mode.");
+            for (int i = 0; i < threadsCount; i++)
+            {
+                planners[i] = new GoapPlannerThread(plannerSettings, worksQueue, OnDonePlan);
+                var thread = new Thread(planners[i].MainLoop) {IsBackground = true};
+                thread.Start();
+                threads[i] = thread;
+            }
+        } // no threads run
+        else
+        {
+            ReGoapLogger.Log("[GoapPlannerManager] Running in single-thread mode.");
+            planners[0] = new GoapPlannerThread(plannerSettings, worksQueue, OnDonePlan);
         }
     }
 
@@ -98,7 +112,8 @@ public class GoapPlannerManager : MonoBehaviour
         // should wait here?
         foreach (var thread in threads)
         {
-            thread.Abort();
+            if (thread != null)
+                thread.Abort();
         }
     }
 
@@ -128,6 +143,10 @@ public class GoapPlannerManager : MonoBehaviour
                     work.callback(work.newGoal);
                 }
             }
+        }
+        if (threadsCount <= 1)
+        {
+            planners[0].CheckWorkers();
         }
     }
 
