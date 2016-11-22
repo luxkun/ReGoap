@@ -13,9 +13,11 @@ public class GoapPlannerThread
     private volatile Queue<PlanWork> worksQueue;
     private bool isRunning;
     private readonly Action<GoapPlannerThread, PlanWork, IReGoapGoal> onDonePlan;
+    private AutoResetEvent threadEvents;
 
-    public GoapPlannerThread(ReGoapPlannerSettings plannerSettings, Queue<PlanWork> worksQueue, Action<GoapPlannerThread, PlanWork, IReGoapGoal> onDonePlan)
+    public GoapPlannerThread(AutoResetEvent threadEvents, ReGoapPlannerSettings plannerSettings, Queue<PlanWork> worksQueue, Action<GoapPlannerThread, PlanWork, IReGoapGoal> onDonePlan)
     {
+        this.threadEvents = threadEvents;
         planner = new ReGoapPlanner(plannerSettings);
         this.worksQueue = worksQueue;
         isRunning = true;
@@ -31,6 +33,7 @@ public class GoapPlannerThread
     {
         while (isRunning)
         {
+            threadEvents.WaitOne();
             CheckWorkers();
         }
     }
@@ -62,6 +65,7 @@ public class GoapPlannerManager : MonoBehaviour
     public int threadsCount = 4;
     private GoapPlannerThread[] planners;
 
+    private AutoResetEvent threadEvents;
     private volatile Queue<PlanWork> worksQueue;
     private volatile List<PlanWork> doneWorks;
     private Thread[] threads;
@@ -85,12 +89,13 @@ public class GoapPlannerManager : MonoBehaviour
         worksQueue = new Queue<PlanWork>();
         planners = new GoapPlannerThread[threadsCount];
         threads = new Thread[threadsCount];
+        threadEvents = new AutoResetEvent(false);
         if (threadsCount > 1)
         {
             ReGoapLogger.Log("[GoapPlannerManager] Running in multi-thread mode.");
             for (int i = 0; i < threadsCount; i++)
             {
-                planners[i] = new GoapPlannerThread(plannerSettings, worksQueue, OnDonePlan);
+                planners[i] = new GoapPlannerThread(threadEvents, plannerSettings, worksQueue, OnDonePlan);
                 var thread = new Thread(planners[i].MainLoop) {IsBackground = true};
                 thread.Start();
                 threads[i] = thread;
@@ -99,7 +104,7 @@ public class GoapPlannerManager : MonoBehaviour
         else
         {
             ReGoapLogger.Log("[GoapPlannerManager] Running in single-thread mode.");
-            planners[0] = new GoapPlannerThread(plannerSettings, worksQueue, OnDonePlan);
+            planners[0] = new GoapPlannerThread(threadEvents, plannerSettings, worksQueue, OnDonePlan);
         }
     }
 
@@ -164,7 +169,10 @@ public class GoapPlannerManager : MonoBehaviour
     {
         var work = new PlanWork(agent, blacklistGoal, currentPlan, callback);
         lock (worksQueue)
+        {
             worksQueue.Enqueue(work);
+        }
+        threadEvents.Set();
         return work;
     }
 }
