@@ -5,18 +5,22 @@ using NUnit.Framework;
 
 public class ReGoapTests
 {
-    private ReGoapPlanner planner;
-
     [TestFixtureSetUp]
     public void Init()
     {
-        // not using early exit to have precise results, probably wouldn't care in a game for performance reasons
-        planner = new ReGoapPlanner(new ReGoapPlannerSettings { planningEarlyExit = false });
     }
 
     [TestFixtureTearDown]
     public void Dispose()
     {
+    }
+
+    IGoapPlanner GetPlanner(bool backward)
+    {
+        // not using early exit to have precise results, probably wouldn't care in a game for performance reasons
+        return new ReGoapPlanner(
+            new ReGoapPlannerSettings { planningEarlyExit = false, backwardSearch = backward }
+        );
     }
 
     private ReGoapTestsHelper.MyAction GetCustomAction(GameObject gameObject, string name, Dictionary<string, bool> preconditionsBools,
@@ -51,8 +55,30 @@ public class ReGoapTests
         customGoal.SetGoalState(goal);
         return customGoal;
     }
+
     [Test]
-    public void TestSimpleChainedPlan()
+    public void TestSimpleChainedPlanForward()
+    {
+        TestSimpleChainedPlan(GetPlanner(false));
+    }
+    [Test]
+    public void TestSimpleChainedPlanBackward()
+    {
+        TestSimpleChainedPlan(GetPlanner(true));
+    }
+
+    [Test]
+    public void TestTwoPhaseChainedPlanForward()
+    {
+        TestTwoPhaseChainedPlan(GetPlanner(false));
+    }
+    [Test]
+    public void TestTwoPhaseChainedPlanBackward()
+    {
+        TestTwoPhaseChainedPlan(GetPlanner(true));
+    }
+
+    public void TestSimpleChainedPlan(IGoapPlanner planner)
     {
         var gameObject = new GameObject();
 
@@ -60,11 +86,13 @@ public class ReGoapTests
             new Dictionary<string, bool> { { "hasAxe", false }, { "hasWood", true }, { "hasSteel", true } },
             new Dictionary<string, bool> { { "hasAxe", true }, { "hasWood", false }, { "hasSteel", false } }, 10);
         var chopTreeAction = GetCustomAction(gameObject, "ChopTree",
-            new Dictionary<string, bool> { { "hasRawWood", false } }, new Dictionary<string, bool> { { "hasRawWood", true } }, 2);
+            new Dictionary<string, bool> { { "hasRawWood", false } },
+            new Dictionary<string, bool> { { "hasRawWood", true } }, 2);
         var worksWoodAction = GetCustomAction(gameObject, "WorksWood",
             new Dictionary<string, bool> { { "hasWood", false }, { "hasRawWood", true } },
             new Dictionary<string, bool> { { "hasWood", true }, { "hasRawWood", false } }, 5);
-        var mineOreAction = GetCustomAction(gameObject, "MineOre", new Dictionary<string, bool> { { "hasOre", false } },
+        var mineOreAction = GetCustomAction(gameObject, "MineOre",
+            new Dictionary<string, bool> { { "hasOre", false } },
             new Dictionary<string, bool> { { "hasOre", true } }, 10);
         var smeltOreAction = GetCustomAction(gameObject, "SmeltOre",
             new Dictionary<string, bool> { { "hasOre", true }, { "hasSteel", false } },
@@ -78,15 +106,14 @@ public class ReGoapTests
         var agent = gameObject.AddComponent<ReGoapTestsHelper.MyAgent>();
         agent.Init();
 
-        var plan = planner.Plan(agent);
+        var plan = planner.Plan(agent, null, null, null);
 
         Assert.That(plan, Is.EqualTo(hasAxeGoal));
         // validate plan actions
         ReGoapTestsHelper.ApplyAndValidatePlan(plan, memory);
     }
 
-    [Test]
-    public void TestTwoPhaseChainedPlan()
+    public void TestTwoPhaseChainedPlan(IGoapPlanner planner)
     {
         var gameObject = new GameObject();
 
@@ -124,7 +151,7 @@ public class ReGoapTests
         agent.Init();
 
         // first plan should create axe and equip it, through 'ReadyToFightGoal', since 'hasTarget' is false (memory should handle this)
-        var plan = planner.Plan(agent);
+        var plan = planner.Plan(agent, null, null, null);
 
         Assert.That(plan, Is.EqualTo(readyToFightGoal));
         // we apply manually the effects, but in reality the actions should do this themselves 
@@ -136,7 +163,7 @@ public class ReGoapTests
         // now we tell the memory that we see the enemy
         memory.SetValue("hasTarget", true);
         // now the planning should choose KillEnemyGoal
-        plan = planner.Plan(agent);
+        plan = planner.Plan(agent, null, null, null);
 
         Assert.That(plan, Is.EqualTo(killEnemyGoal));
         ReGoapTestsHelper.ApplyAndValidatePlan(plan, memory);

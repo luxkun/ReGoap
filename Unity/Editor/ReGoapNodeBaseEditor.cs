@@ -23,11 +23,11 @@ public class ReGoapNodeBaseEditor : EditorWindow
     private float repaintCooldown;
     private float repaintDelay = 0.33f;
 
-    [MenuItem("Window/Node Based Editor")]
+    [MenuItem("Window/ReGoap Debugger")]
     private static void OpenWindow()
     {
         ReGoapNodeBaseEditor window = GetWindow<ReGoapNodeBaseEditor>();
-        window.titleContent = new GUIContent("ReGoap Debug Editor");
+        window.titleContent = new GUIContent("ReGoap Debugger");
         EditorApplication.update += window.Update;
     }
 

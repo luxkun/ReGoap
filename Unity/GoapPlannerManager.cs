@@ -13,7 +13,7 @@ public class GoapPlannerThread
     private volatile Queue<PlanWork> worksQueue;
     private bool isRunning;
     private readonly Action<GoapPlannerThread, PlanWork, IReGoapGoal> onDonePlan;
-    private AutoResetEvent threadEvents;
+    private readonly AutoResetEvent threadEvents;
 
     public GoapPlannerThread(AutoResetEvent threadEvents, ReGoapPlannerSettings plannerSettings, Queue<PlanWork> worksQueue, Action<GoapPlannerThread, PlanWork, IReGoapGoal> onDonePlan)
     {

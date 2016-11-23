@@ -7,7 +7,7 @@ public class ReGoapPlanner : IGoapPlanner
     private IReGoapGoal currentGoal;
     public bool calculated;
     private readonly AStar<ReGoapState> astar;
-    private ReGoapPlannerSettings settings;
+    private readonly ReGoapPlannerSettings settings;
 
     public ReGoapPlanner(ReGoapPlannerSettings settings = null)
     {
@@ -96,6 +96,11 @@ public class ReGoapPlanner : IGoapPlanner
     {
         return !calculated;
     }
+
+    public ReGoapPlannerSettings GetSettings()
+    {
+        return settings;
+    }
 }
 
 public interface IGoapPlanner
@@ -104,6 +109,7 @@ public interface IGoapPlanner
     IReGoapGoal GetCurrentGoal();
     IReGoapAgent GetCurrentAgent();
     bool IsPlanning();
+    ReGoapPlannerSettings GetSettings();
 }
 
 public class ReGoapState :
@@ -128,10 +134,9 @@ public class ReGoapState :
         lock (a.values)
             lock (b.values)
             {
-                var state = (ReGoapState)a.Clone();
                 foreach (var pair in b.values)
-                    state.values[pair.Key] = pair.Value;
-                return state;
+                    a.values[pair.Key] = pair.Value;
+                return a;
             }
     }
 
@@ -144,8 +149,13 @@ public class ReGoapState :
         lock (values) lock (other.values)
             {
                 foreach (var pair in other.values)
-                    if (values.ContainsKey(pair.Key) && (values[pair.Key] == other.values[pair.Key]))
+                {
+                    object thisValue;
+                    values.TryGetValue(pair.Key, out thisValue);
+                    var otherValue = pair.Value;
+                    if (thisValue == otherValue || (thisValue != null && thisValue.Equals(pair.Value)))
                         return true;
+                }
                 return false;
             }
     }
@@ -157,7 +167,7 @@ public class ReGoapState :
     }
 
     // write differences in "difference"
-    public int MissingDifference(ReGoapState other, ref ReGoapState difference, int stopAt = int.MaxValue)
+    public int MissingDifference(ReGoapState other, ref ReGoapState difference, int stopAt = int.MaxValue, Func<KeyValuePair<string, object>, object, bool> predicate = null)
     {
         lock (values)
         {
@@ -180,7 +190,7 @@ public class ReGoapState :
                     if (pair.Value != otherValue)
                         add = true;
                 }
-                if (add)
+                if (add && (predicate == null || predicate(pair, otherValue)))
                 {
                     count++;
                     if (difference != null)
@@ -260,17 +270,16 @@ public class GoapNode : INode<ReGoapState>
     private readonly int h;
     private readonly ReGoapState missingState;
 
-    // experimental: not working
-    // TODO: backward search
-    public bool backwardSearch = false;
     private readonly int heuristicMultiplier = 1;
+    private readonly bool backwardSearch;
 
     public GoapNode(IGoapPlanner planner, ReGoapState goal, GoapNode parent, IReGoapAction action)
     {
         this.planner = planner;
         this.parent = parent;
         this.action = action;
-        this.goal = goal;
+        this.goal = (ReGoapState)goal.Clone();
+        this.backwardSearch = planner.GetSettings().backwardSearch;
 
         if (this.parent != null)
         {
@@ -282,18 +291,37 @@ public class GoapNode : INode<ReGoapState>
         {
             state = planner.GetCurrentAgent().GetMemory().GetWorldState();
         }
+        state = (ReGoapState)state.Clone();
         if (action != null)
         {
-            state += action.GetEffects(state);
-            g += action.GetCost(state);
+            var effects = (ReGoapState)action.GetEffects(goal).Clone();
+            state += effects;
+            g += action.GetCost(goal);
         }
         // missing states from goal
         // h(node)
         if (backwardSearch)
-            missingState = new ReGoapState();
+        {
+            // empirical, giving more importance to heuristic should do better in backward search
+            heuristicMultiplier *= 10;
+        }
         h = this.goal.MissingDifference(state, ref missingState);
+        // we calculate this after getting the heuristic value so actions that gives us goal state will go first
+        if (backwardSearch && action != null)
+        {
+            var diff = new ReGoapState();
+            // we need only true preconditions
+            action.GetPreconditions(this.goal)
+                .MissingDifference(state, ref diff, predicate: (pair, otherValue) => pair.Value.Equals(true));
+            this.goal += diff;
+        }
         // f(node) = g(node) + h(node)
         cost = g + h * heuristicMultiplier;
+        if (backwardSearch) // after calculating the heuristic for astar we change it to the real value
+        {
+            missingState = new ReGoapState();
+            h = this.goal.MissingDifference(state, ref missingState);
+        }
     }
 
     public int GetPathCost()
@@ -335,16 +363,19 @@ public class GoapNode : INode<ReGoapState>
         else
             actions = GetPossibleActionsSet();
         foreach (var possibleAction in actions)
-            if (!backwardSearch || missingState.HasAny(goal))
+        {
+            if (!backwardSearch ||
+                (possibleAction != action && possibleAction.CheckProceduralCondition(planner.GetCurrentAgent(), goal) &&
+                 possibleAction.GetEffects(goal).HasAny(missingState)))
             {
                 var newGoal = goal;
-                // theorically relax the problem for backward search, not working yet
-                if (backwardSearch)
-                {
-                    var diff = new ReGoapState();
-                    possibleAction.GetPreconditions(goal).MissingDifference(state, ref diff);
-                    newGoal += diff;
-                }
+                // doing this in constructor
+                //if (backwardSearch)
+                //{
+                //    var diff = new ReGoapState();
+                //    possibleAction.GetPreconditions(goal).MissingDifference(state, ref diff);
+                //    newGoal += diff;
+                //}
                 result.Add(
                     new GoapNode(
                         planner,
@@ -352,6 +383,7 @@ public class GoapNode : INode<ReGoapState>
                         this,
                         possibleAction));
             }
+        }
         return result;
     }
 
@@ -365,7 +397,38 @@ public class GoapNode : INode<ReGoapState>
                 result.Add(node.GetAction());
             node = (GoapNode)node.GetParent();
         }
-        result.Reverse();
+        // we need to order path in backward search
+        if (backwardSearch)
+        {
+            var orderedResults = new List<IReGoapAction>(result.Count);
+            var memory = (ReGoapState) planner.GetCurrentAgent().GetMemory().GetWorldState().Clone();
+            while (orderedResults.Count < result.Count)
+            {
+                var index = -1;
+                for (int i = 0; i < result.Count; i++)
+                {
+                    var action = result[i];
+                    if (action.GetPreconditions(goal).MissingDifference(memory) == 0)
+                    {
+                        foreach (var effectsPair in action.GetEffects(goal).GetValues())
+                        {
+                            memory.Set(effectsPair.Key, effectsPair.Value);
+                        }
+                        orderedResults.Add(action);
+                        index = i;
+                    }
+                }
+                if (index == -1)
+                    throw new Exception("[ReGoapNode] Error with plan, could not order it.");
+                result.RemoveAt(index);
+            }
+            result = orderedResults;
+            //planner.GetCurrentGoal().GetGoalState().MissingDifference(memory, 1) == 0;
+        }
+        else
+        {
+            result.Reverse();
+        }
         return new Queue<IReGoapAction>(result);
     }
 
@@ -415,6 +478,8 @@ public class GoapNode : INode<ReGoapState>
 [Serializable]
 public class ReGoapPlannerSettings
 {
+    // experimental
+    public bool backwardSearch = false;
     public bool planningEarlyExit = true;
     public int maxIterations = 100;
     public int maxNodesToExpand = 1000;
