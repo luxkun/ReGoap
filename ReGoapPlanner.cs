@@ -76,7 +76,7 @@ public class ReGoapPlanner : IGoapPlanner
         if (callback != null)
             callback(currentGoal);
         if (currentGoal != null)
-            ReGoapLogger.Log(string.Format("[ReGoapPlanner] Calculated plan for goal '{0}', plan: {1}", currentGoal, currentGoal.GetPlan()));
+            ReGoapLogger.Log(string.Format("[ReGoapPlanner] Calculated plan for goal '{0}', plan length: {1}", currentGoal, currentGoal.GetPlan().Count));
         else
             ReGoapLogger.LogWarning("[ReGoapPlanner] Error while calculating plan.");
         return currentGoal;
