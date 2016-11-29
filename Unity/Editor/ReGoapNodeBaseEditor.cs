@@ -163,7 +163,7 @@ public class ReGoapNodeBaseEditor : EditorWindow
             var text = string.Format("<b>POSS.ACTION</b> <i>{0}</i>\n", action.GetName());
             text += "-<b>preconditions</b>-\n";
             ReGoapState preconditionsDifferences = new ReGoapState();
-            worldState.MissingDifference(action.GetPreconditions(null), ref preconditionsDifferences);
+            action.GetPreconditions(null).MissingDifference(worldState, ref preconditionsDifferences);
             foreach (var preconditionPair in action.GetPreconditions(null).GetValues())
             {
                 curHeight += 13;
@@ -180,6 +180,10 @@ public class ReGoapNodeBaseEditor : EditorWindow
                 curHeight += 13;
                 text += string.Format("'<b>{0}</b>' = '<i>{1}</i>'\n", effectPair.Key, effectPair.Value);
             }
+            curHeight += 13;
+            var proceduralCheck = action.CheckProceduralCondition(agent, null);
+            text += string.Format("<color={0}>-<b>proceduralCondition</b>: {1}</color>\n", proceduralCheck ? "#004d00" : "#800000", proceduralCheck);
+
             maxHeight = Mathf.Max(maxHeight, curHeight);
             DrawGenericNode(text, width, curHeight, possibleActionStyle, ref nodePosition);
         }

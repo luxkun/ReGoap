@@ -7,69 +7,12 @@ using UnityEngine;
 
 public class ReGoapTestsHelper
 {
-    public class MyAction : GoapAction
-    {
-        public void Init()
-        {
-            Awake();
-        }
-
-        public void SetEffects(ReGoapState effects)
-        {
-            this.effects = effects;
-        }
-
-        public void SetPreconditions(ReGoapState preconditions)
-        {
-            this.preconditions = preconditions;
-        }
-    }
-
-    public class MyGoal : GoapGoal
-    {
-        public void Init()
-        {
-            Awake();
-        }
-
-        public void SetGoalState(ReGoapState goalState)
-        {
-            goal = goalState;
-        }
-
-        public void SetPriority(int priority)
-        {
-            this.priority = priority;
-        }
-    }
-
-    public class MyMemory : GoapMemory
-    {
-        public void Init()
-        {
-            Awake();
-        }
-
-        public void SetValue<T>(string key, T value)
-        {
-            state.Set(key, value);
-        }
-    }
-
-    public class MyAgent : GoapAgent
-    {
-        public void Init()
-        {
-            Awake();
-        }
-    }
-
-    public static MyAction GetCustomAction(GameObject gameObject, string name, Dictionary<string, bool> preconditionsBools,
+    public static ReGoapTestAction GetCustomAction(GameObject gameObject, string name, Dictionary<string, bool> preconditionsBools,
         Dictionary<string, bool> effectsBools, int cost = 1)
     {
         var effects = new ReGoapState();
         var preconditions = new ReGoapState();
-        var customAction = gameObject.AddComponent<MyAction>();
+        var customAction = gameObject.AddComponent<ReGoapTestAction>();
         customAction.Name = name;
         customAction.Init();
         foreach (var pair in effectsBools)
@@ -82,9 +25,9 @@ public class ReGoapTestsHelper
         return customAction;
     }
 
-    public static MyGoal GetCustomGoal(GameObject gameObject, string name, Dictionary<string, bool> goalState, int priority = 1)
+    public static ReGoapTestGoal GetCustomGoal(GameObject gameObject, string name, Dictionary<string, bool> goalState, int priority = 1)
     {
-        var customGoal = gameObject.AddComponent<MyGoal>();
+        var customGoal = gameObject.AddComponent<ReGoapTestGoal>();
         customGoal.Name = name;
         customGoal.SetPriority(priority);
         customGoal.Init();
@@ -97,7 +40,7 @@ public class ReGoapTestsHelper
         return customGoal;
     }
 
-    public static void ApplyAndValidatePlan(IReGoapGoal plan, ReGoapTestsHelper.MyMemory memory)
+    public static void ApplyAndValidatePlan(IReGoapGoal plan, ReGoapTestMemory memory)
     {
         foreach (var action in plan.GetPlan())
         {
