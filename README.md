@@ -20,7 +20,7 @@ git clone https://github.com/luxkun/ReGoap.git
 
 ## Get Started
 ###Explaining GOAP
-(if you just want to use the library and want an explained example skip to **How to use ReGoap**)
+(if you just want to use the library and want an explained example skip to **[How to use ReGoap](https://github.com/luxkun/ReGoap/blob/master/README.md#how-to-use-regoap-in-unity3d)**)
 
 Before explaining how to use this library in your game let me explain how does a Goap system work, starting with a quote of [Jeff Orkin](http://alumni.media.mit.edu/~jorkin/goap.html)
 ```
@@ -28,7 +28,7 @@ Goal-Oriented Action Planning (aka GOAP, rhymes with soap) refers to a simplfied
 ```
 Basically all it does is find a plan (a list of actions) that will fulfill the choosen goal's objectives.
 
-The main concept you need to understand are: States, Action, Goal, Memory and Sensors
+The main concept you need to understand are: [States](https://github.com/luxkun/ReGoap/blob/master/README.md#state), [Action](https://github.com/luxkun/ReGoap/blob/master/README.md#action), [Goal](https://github.com/luxkun/ReGoap/blob/master/README.md#goal), [Memory](https://github.com/luxkun/ReGoap/blob/master/README.md#memory) and [Sensors](https://github.com/luxkun/ReGoap/blob/master/README.md#sensor)
 
 ####State
 is a definition of the world, in this library they are handled as a Dictionary of string to object (Dictionary<string, object>).
