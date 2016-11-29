@@ -32,6 +32,9 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
         get { return currentPlanWorker != null && currentPlanWorker.Value.newGoal == null; }
     }
 
+    public bool workInFixedUpdate;
+
+    #region UnityFunctions
     protected virtual void Awake()
     {
         lastCalculationTime = -100;
@@ -46,6 +49,35 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
     {
         CalculateNewGoal();
     }
+
+    protected virtual void FixedUpdate()
+    {
+        if (!workInFixedUpdate) return;
+        Tick();
+    }
+
+    protected virtual void Update()
+    {
+        if (workInFixedUpdate) return;
+        Tick();
+    }
+
+    private void Tick()
+    {
+        possibleGoalsDirty = true;
+
+        if (currentAction == null)
+        {
+            if (!isPlanning)
+                CalculateNewGoal();
+            return;
+        }
+        // check if current action preconditions are still valid, else invalid action and restart planning
+        var state = memory.GetWorldState();
+        if (currentAction.GetPreconditions(state).MissingDifference(state, 1) > 0)
+            TryWarnActionFailure(currentAction);
+    }
+    #endregion
 
     protected virtual void UpdatePossibleGoals()
     {
@@ -68,22 +100,6 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
         {
             possibleGoals = goals;
         }
-    }
-
-    protected virtual void FixedUpdate()
-    {
-        possibleGoalsDirty = true;
-
-        if (currentAction == null)
-        {
-            if (!isPlanning)
-                CalculateNewGoal();
-            return;
-        }
-        // check if current action preconditions are still valid, else invalid action and restart planning
-        var state = memory.GetWorldState();
-        if (currentAction.GetPreconditions(state).MissingDifference(state, 1) > 0)
-            TryWarnActionFailure(currentAction);
     }
 
     protected virtual void TryWarnActionFailure(IReGoapAction action)

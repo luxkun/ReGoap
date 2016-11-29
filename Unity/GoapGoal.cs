@@ -18,9 +18,18 @@ public class GoapGoal : MonoBehaviour, IReGoapGoal
     public float warnDelay = 2f;
     private float warnCooldown;
 
+    #region UnityFunctions
     protected virtual void Awake()
     {
         goal = new ReGoapState();
+    }
+
+    protected virtual void Start()
+    {
+    }
+
+    protected virtual void Update()
+    {
     }
 
     protected virtual void FixedUpdate()
@@ -36,7 +45,9 @@ public class GoapGoal : MonoBehaviour, IReGoapGoal
                 planner.GetCurrentAgent().WarnPossibleGoal(this);
         }
     }
+    #endregion
 
+    #region IReGoapGoal
     public virtual string GetName()
     {
         return Name;
@@ -80,6 +91,7 @@ public class GoapGoal : MonoBehaviour, IReGoapGoal
     {
         return errorDelay;
     }
+    #endregion
 
     public static string PlanToString(IEnumerable<IReGoapAction> plan)
     {

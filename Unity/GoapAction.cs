@@ -23,6 +23,7 @@ public class GoapAction : MonoBehaviour, IReGoapAction
     protected GoapActionSettings settings;
     protected bool interruptWhenPossible;
 
+    #region UnityFunctions
     protected virtual void Awake()
     {
         enabled = false;
@@ -34,9 +35,20 @@ public class GoapAction : MonoBehaviour, IReGoapAction
         settings = new GoapActionSettings();
     }
 
+    protected virtual void Start()
+    {
+        
+    }
+
+    protected virtual void Update()
+    {
+        
+    }
+
     protected virtual void FixedUpdate()
     {
     }
+    #endregion
 
     public virtual bool IsActive()
     {

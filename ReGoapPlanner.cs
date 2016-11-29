@@ -159,6 +159,24 @@ public class ReGoapState :
                 return false;
             }
     }
+    public bool HasAnyConflict(ReGoapState other, bool backwardSearch = true) // used only in backward for now
+    {
+        lock (values) lock (other.values)
+            {
+                foreach (var pair in other.values)
+                {
+                    object thisValue;
+                    values.TryGetValue(pair.Key, out thisValue);
+                    var otherValue = pair.Value;
+                    // ex. this["isAt"] = "enemy" and other["isAt"] = "base"
+                    if (backwardSearch && otherValue.Equals(false)) // backward search does NOT support false preconditions
+                        continue;
+                    if (thisValue != null && !otherValue.Equals(thisValue))
+                        return true;
+                }
+                return false;
+            }
+    }
 
     public int MissingDifference(ReGoapState other, int stopAt = int.MaxValue)
     {
@@ -187,7 +205,7 @@ public class ReGoapState :
                 }
                 else // generic version
                 {
-                    if (pair.Value != otherValue)
+                    if (!pair.Value.Equals(otherValue))
                         add = true;
                 }
                 if (add && (predicate == null || predicate(pair, otherValue)))
@@ -268,17 +286,16 @@ public class GoapNode : INode<ReGoapState>
     private readonly ReGoapState goal;
     private readonly int g;
     private readonly int h;
-    private readonly ReGoapState missingState;
 
     private readonly int heuristicMultiplier = 1;
     private readonly bool backwardSearch;
 
-    public GoapNode(IGoapPlanner planner, ReGoapState goal, GoapNode parent, IReGoapAction action)
+    public GoapNode(IGoapPlanner planner, ReGoapState newGoal, GoapNode parent, IReGoapAction action)
     {
         this.planner = planner;
         this.parent = parent;
         this.action = action;
-        this.goal = (ReGoapState)goal.Clone();
+        goal = (ReGoapState)newGoal.Clone();
         this.backwardSearch = planner.GetSettings().backwardSearch;
 
         if (this.parent != null)
@@ -300,27 +317,26 @@ public class GoapNode : INode<ReGoapState>
         }
         // missing states from goal
         // h(node)
-        if (backwardSearch)
-        {
-            // empirical, giving more importance to heuristic should do better in backward search
-            heuristicMultiplier *= 10;
-        }
-        h = this.goal.MissingDifference(state, ref missingState);
         // we calculate this after getting the heuristic value so actions that gives us goal state will go first
         if (backwardSearch && action != null)
         {
             var diff = new ReGoapState();
-            // we need only true preconditions
-            action.GetPreconditions(this.goal)
-                .MissingDifference(state, ref diff, predicate: (pair, otherValue) => pair.Value.Equals(true));
-            this.goal += diff;
+            // backward search does NOT support negative preconditions
+            action.GetPreconditions(goal)
+                .MissingDifference(state, ref diff, predicate: (pair, otherValue) => !pair.Value.Equals(false));
+            goal += diff;
         }
         // f(node) = g(node) + h(node)
         cost = g + h * heuristicMultiplier;
         if (backwardSearch) // after calculating the heuristic for astar we change it to the real value
         {
-            missingState = new ReGoapState();
-            h = this.goal.MissingDifference(state, ref missingState);
+            var missingState = new ReGoapState();
+            h = goal.MissingDifference(state, ref missingState);
+            goal = missingState;
+        }
+        else
+        {
+            h = goal.MissingDifference(state);
         }
     }
 
@@ -364,9 +380,17 @@ public class GoapNode : INode<ReGoapState>
             actions = GetPossibleActionsSet();
         foreach (var possibleAction in actions)
         {
+            // if backward: 
+            // 1) check if any goal state is in the action
+            // 2) check the action's procedural condition
+            // 3) ignore any action that changes the current goals (ex. isAt already in the current goal and the action changes isAt)
+            var thisPreconditions = possibleAction.GetPreconditions(goal);
+            var thisEffects = possibleAction.GetEffects(goal);
             if (!backwardSearch ||
                 (possibleAction != action && possibleAction.CheckProceduralCondition(planner.GetCurrentAgent(), goal) &&
-                 possibleAction.GetEffects(goal).HasAny(missingState)))
+                 thisEffects.HasAny(goal) &&
+                 !goal.HasAnyConflict(thisEffects) &&
+                 !goal.HasAnyConflict(thisPreconditions)))
             {
                 var newGoal = goal;
                 // doing this in constructor

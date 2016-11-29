@@ -73,7 +73,8 @@ public class GoapPlannerManager : MonoBehaviour
     public bool workInFixedUpdate = true;
     public ReGoapPlannerSettings plannerSettings;
 
-    void Awake()
+    #region UnityFunctions
+    protected virtual void Awake()
     {
         if (instance != null)
         {
@@ -108,6 +109,10 @@ public class GoapPlannerManager : MonoBehaviour
         }
     }
 
+    protected virtual void Start()
+    {
+    }
+
     void OnDestroy()
     {
         foreach (var planner in planners)
@@ -122,20 +127,20 @@ public class GoapPlannerManager : MonoBehaviour
         }
     }
 
-    void Update()
+    protected virtual void Update()
     {
         if (workInFixedUpdate) return;
         Tick();
     }
 
-    void FixedUpdate()
+    protected virtual void FixedUpdate()
     {
         if (!workInFixedUpdate) return;
         Tick();
     }
 
     // check all threads for done work
-    private void Tick()
+    protected virtual void Tick()
     {
         lock (doneWorks)
         {
@@ -154,6 +159,7 @@ public class GoapPlannerManager : MonoBehaviour
             planners[0].CheckWorkers();
         }
     }
+    #endregion
 
     // called in another thread
     private void OnDonePlan(GoapPlannerThread plannerThread, PlanWork work, IReGoapGoal newGoal)
@@ -162,6 +168,17 @@ public class GoapPlannerManager : MonoBehaviour
         lock (doneWorks)
         {
             doneWorks.Add(work);
+#if DEBUG
+            if (work.newGoal != null)
+            {
+                ReGoapLogger.Log("[GoapPlannerManager] Done calculating plan, actions list:");
+                var i = 0;
+                foreach (var action in work.newGoal.GetPlan())
+                {
+                    ReGoapLogger.Log(string.Format("{0}: {1}", i++, action));
+                }
+            }
+#endif
         }
     }
 

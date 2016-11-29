@@ -9,6 +9,7 @@ public class GoapMemory : MonoBehaviour, IReGoapMemory
     protected ReGoapState state;
     private IReGoapSensor[] sensors;
 
+    #region UnityFunctions
     protected virtual void Awake()
     {
         state = new ReGoapState();
@@ -18,6 +19,19 @@ public class GoapMemory : MonoBehaviour, IReGoapMemory
             sensor.Init(this);
         }
     }
+
+    protected virtual void Start()
+    {
+    }
+
+    protected virtual void FixedUpdate()
+    {
+    }
+
+    protected virtual void Update()
+    {
+    }
+    #endregion
 
     public virtual ReGoapState GetWorldState()
     {
