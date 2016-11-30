@@ -4,7 +4,7 @@ Generic C# GOAP (Goal Oriented Action Planning) library with Unity3d examples an
 This library is very generic, if you don't include the Unity folder you can use it in any game engine.
 
 1. [Get Started, fast version](#get-started-fast-version)
-2. [Get Started, fast version](#get-started-long-version)
+2. [Get Started, long version](#get-started-long-version)
     1. [Explaining GOAP](#explaining-goap)
     2. [How to use ReGoap in Unity3D](#how-to-use-regoap-in-unity3d)
         1. [How to implement your own GoapAction](#how-to-implement-your-own-goapaction)
