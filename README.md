@@ -11,6 +11,7 @@ This library is very generic, if you don't include the Unity folder you can use 
         2. [How to implement your own GoapGoal](#how-to-implement-your-own-goapgoal)
         3. [How to implement your own GoapSensor](#how-to-implement-your-own-goapsensor)
 3. [Debugging](#debugging)
+4. [Pull Requests](#pull-requests)
 
 ---
 
@@ -138,7 +139,8 @@ As written before the GoapAction does not, by default, write the effects on the 
     public override void Exit(IReGoapAction next)
     {
         base.Exit(next);
-        var worldState = agent.GetMemory().GetWorldState();
+
+var worldState = agent.GetMemory().GetWorldState();
         foreach (var pair in effects) {
             worldState.Set(pair.Key, pair.Value);
         }
@@ -191,3 +193,8 @@ But ReGoap has a very userful debugger for agents in Unity (https://github.com/l
 To use it just click on the Unity's menu **Window** and then **ReGoap Debugger**, an Unity Window will open, this is the agent debugger.
 
 Now if you click on any agent in your scene (while playing, works only on running agents) the window will automatically update letting you know the agent's "thoughts" (current world state, choosen goal and current plan, possibile goals, possible actions, what can be done and what not, try it!).
+
+---
+
+##Pull Requests
+Any pull request is appreciated, just make sure to check Unity Tests (menu **Window** -> **Editor Tests Runner** -> **Run All**) before committing and to keep the same style of code.
