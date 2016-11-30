@@ -44,6 +44,45 @@ public class ReGoapTests
         TestTwoPhaseChainedPlan(GetPlanner(true));
     }
 
+    [Test]
+    public void TestReGoapStateMissingDifference()
+    {
+        var state = new ReGoapState();
+        state.Set("var0", true);
+        state.Set("var1", "string");
+        state.Set("var2", 1);
+        var otherState = new ReGoapState();
+        otherState.Set("var1", "stringDifferent");
+        otherState.Set("var2", 1);
+        ReGoapState differences = new ReGoapState();
+        var count = state.MissingDifference(otherState, ref differences);
+        Assert.That(count, Is.EqualTo(2));
+        Assert.That(differences.Get<bool>("var0"), Is.EqualTo(true));
+        Assert.That(differences.Get<string>("var1"), Is.EqualTo("string"));
+        Assert.That(differences.HasKey("var2"), Is.EqualTo(false));
+    }
+
+    [Test]
+    public void TestReGoapStateAddOperator()
+    {
+        var state = new ReGoapState();
+        state.Set("var0", true);
+        state.Set("var1", "string");
+        state.Set("var2", 1);
+        var otherState = new ReGoapState();
+        otherState.Set("var2", "new2"); // 2nd one replaces the first
+        otherState.Set("var3", true);
+        otherState.Set("var4", 10.1f);
+        var sum = state + otherState;
+        Assert.That(state.Count + otherState.Count, Is.EqualTo(6));
+        Assert.That(sum.Count, Is.EqualTo(5)); // var2 on first is replaced by var2 on second
+        Assert.That(sum.Get<bool>("var0"), Is.EqualTo(true));
+        Assert.That(sum.Get<string>("var1"), Is.EqualTo("string"));
+        Assert.That(sum.Get<string>("var2"), Is.EqualTo("new2"));
+        Assert.That(sum.Get<bool>("var3"), Is.EqualTo(true));
+        Assert.That(sum.Get<float>("var4"), Is.EqualTo(10.1f));
+    }
+
     public void TestSimpleChainedPlan(IGoapPlanner planner)
     {
         var gameObject = new GameObject();
