@@ -3,6 +3,15 @@ Generic C# GOAP (Goal Oriented Action Planning) library with Unity3d examples an
 
 This library is very generic, if you don't include the Unity folder you can use it in any game engine.
 
+1. [Get Started, fast version](#get-started-fast-version)
+2. [Get Started, fast version](#get-started-long-version)
+    1. [Explaining GOAP](#explaining-goap)
+    2. [How to use ReGoap in Unity3D](#how-to-use-regoap-in-unity3d)
+        1. [How to implement your own GoapAction](#how-to-implement-your-own-goapaction)
+        2. [How to implement your own GoapGoal](#how-to-implement-your-own-goapgoal)
+        3. [How to implement your own GoapSensor](#how-to-implement-your-own-goapsensor)
+3. [Debugging](#debugging)
+
 ---
 
 ## Get Started, fast version
@@ -18,9 +27,9 @@ git clone https://github.com/luxkun/ReGoap.git
 
 ---
 
-## Get Started
+## Get Started, long version
 ###Explaining GOAP
-(if you just want to use the library and want an explained example skip to **[How to use ReGoap](https://github.com/luxkun/ReGoap/blob/master/README.md#how-to-use-regoap-in-unity3d)**)
+(if you just want to use the library and want an explained example skip to **[How to use ReGoap](#how-to-use-regoap-in-unity3d)**)
 
 Before explaining how to use this library in your game let me explain how does a Goap system work, starting with a quote of [Jeff Orkin](http://alumni.media.mit.edu/~jorkin/goap.html)
 ```
@@ -28,7 +37,7 @@ Goal-Oriented Action Planning (aka GOAP, rhymes with soap) refers to a simplfied
 ```
 Basically all it does is find a plan (a list of actions) that will fulfill the choosen goal's objectives.
 
-The main concept you need to understand are: [States](https://github.com/luxkun/ReGoap/blob/master/README.md#state), [Action](https://github.com/luxkun/ReGoap/blob/master/README.md#action), [Goal](https://github.com/luxkun/ReGoap/blob/master/README.md#goal), [Memory](https://github.com/luxkun/ReGoap/blob/master/README.md#memory) and [Sensors](https://github.com/luxkun/ReGoap/blob/master/README.md#sensor)
+The main concept you need to understand are: [States](#state), [Action](#action), [Goal](#goal), [Memory](#memory) and [Sensors](#sensor)
 
 ####State
 is a definition of the world, in this library they are handled as a Dictionary of string to object (Dictionary<string, object>).
@@ -96,7 +105,7 @@ What's more? nothing really, the library will handle all the planning, choose th
 
 In the next paragraphs I'll explain how to create your own classes (but for most of behaviours all you need to implement is GoapAction and GoapGoal).
 
-###How to implement your own GoapAction
+####How to implement your own GoapAction
 Check out the actions in this example: https://github.com/luxkun/ReGoap/tree/master/Unity/FSMExample/Actions
 
 Check out GoapAction implementation, to see what functions you can override: https://github.com/luxkun/ReGoap/blob/master/Unity/GoapAction.cs
@@ -136,7 +145,7 @@ As written before the GoapAction does not, by default, write the effects on the 
     }
 ```
 
-###How to implement your own GoapGoal
+####How to implement your own GoapGoal
 This is less tricky, most of the goal will only override the Awake function to add your own goal state (objectives).
 
 Anyway check out GoapGoal, like everything you can implement your own class from scratch by implementing IReGoapGoal interface: https://github.com/luxkun/ReGoap/blob/master/Unity/GoapGoal.cs
@@ -154,7 +163,7 @@ public class MyGoapGoal : GoapGoal
 }
 ```
 
-###How to implement your own GoapSensor
+####How to implement your own GoapSensor
 Check out GoapSensor basic class here: https://github.com/luxkun/ReGoap/blob/master/Unity/GoapSensor.cs
 
 Check out examples here: https://github.com/luxkun/ReGoap/tree/master/Unity/FSMExample/Sensors
@@ -171,3 +180,14 @@ public class MySensor : GoapSensor
     }
 }
 ```
+
+---
+
+##Debugging
+To debug your own agent you can, of course, debug on your own, with your favourite editor.
+
+But ReGoap has a very userful debugger for agents in Unity (https://github.com/luxkun/ReGoap/blob/master/Unity/Editor/ReGoapNodeEditor.cs and https://github.com/luxkun/ReGoap/blob/master/Unity/Editor/ReGoapNodeBaseEditor.cs).
+
+To use it just click on the Unity's menu **Window** and then **ReGoap Debugger**, an Unity Window will open, this is the agent debugger.
+
+Now if you click on any agent in your scene (while playing, works only on running agents) the window will automatically update letting you know the agent's "thoughts" (current world state, choosen goal and current plan, possibile goals, possible actions, what can be done and what not, try it!).
