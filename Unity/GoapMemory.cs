@@ -22,6 +22,10 @@ public class GoapMemory : MonoBehaviour, IReGoapMemory
 
     protected virtual void Start()
     {
+        foreach (var sensor in sensors)
+        {
+            sensor.UpdateSensor();
+        }
     }
 
     protected virtual void FixedUpdate()
@@ -30,6 +34,10 @@ public class GoapMemory : MonoBehaviour, IReGoapMemory
 
     protected virtual void Update()
     {
+        foreach (var sensor in sensors)
+        {
+            sensor.UpdateSensor();
+        }
     }
     #endregion
 

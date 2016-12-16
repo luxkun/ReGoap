@@ -19,7 +19,7 @@ public class BankSensor : GoapSensor
         }
     }
 
-    void FixedUpdate()
+    public override void UpdateSensor()
     {
         var worldState = memory.GetWorldState();
         worldState.Set("seeBank", BankManager.instance != null && BankManager.instance.banks.Length > 0);
@@ -29,10 +29,11 @@ public class BankSensor : GoapSensor
         if (nearestBank != null &&
             (transform.position - nearestBank.transform.position).sqrMagnitude < minPowDistanceToBeNear)
         {
-            worldState.Set("isAt", "bank");
-        } else if (worldState.Get<string>("isAt") == "bank")
+            worldState.Set("isAtTransform", nearestBank.transform);
+        }
+        else if (nearestBank != null && worldState.Get<Transform>("isAtTransform") == nearestBank.transform)
         {
-            worldState.Set("isAt", "");
+            worldState.Set<Transform>("isAtTransform", null);
         }
     }
 }

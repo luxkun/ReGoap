@@ -80,22 +80,22 @@ public class GoapAction : MonoBehaviour, IReGoapAction
         return settings;
     }
 
-    public virtual ReGoapState GetPreconditions(ReGoapState goalState)
+    public virtual ReGoapState GetPreconditions(ReGoapState goalState, IReGoapAction next = null)
     {
         return preconditions;
     }
 
-    public virtual ReGoapState GetEffects(ReGoapState goalState)
+    public virtual ReGoapState GetEffects(ReGoapState goalState, IReGoapAction next = null)
     {
         return effects;
     }
 
-    public virtual int GetCost(ReGoapState goalState)
+    public virtual int GetCost(ReGoapState goalState, IReGoapAction next)
     {
         return cost;
     }
 
-    public virtual bool CheckProceduralCondition(IReGoapAgent goapAgent, ReGoapState goalState)
+    public virtual bool CheckProceduralCondition(IReGoapAgent goapAgent, ReGoapState goalState, IReGoapAction next = null)
     {
         return true;
     }

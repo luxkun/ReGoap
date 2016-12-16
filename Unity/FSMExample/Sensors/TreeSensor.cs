@@ -21,7 +21,7 @@ public class TreeSensor : ResourceSensor
         resourcesBag = GetComponent<ResourcesBag>();
     }
 
-    void FixedUpdate()
+    public override void UpdateSensor()
     {
         var worldState = memory.GetWorldState();
         worldState.Set("seeTree", TreeResourceManager.instance.GetResourcesCount() >= minResourceValue);
@@ -38,10 +38,11 @@ public class TreeSensor : ResourceSensor
         if (nearestTree != null &&
             (transform.position - nearestTree.GetTransform().position).sqrMagnitude < minPowDistanceToBeNear)
         {
-            worldState.Set("isAt", "tree");
-        } else if (worldState.Get<string>("isAt") == "tree")
+            worldState.Set("isAtTransform", nearestTree.GetTransform());
+        }
+        else if (nearestTree != null && worldState.Get<Transform>("isAtTransform") == nearestTree.GetTransform())
         {
-            worldState.Set("isAt", "");
+            worldState.Set<Transform>("isAtTransform", null);
         }
     }
 }

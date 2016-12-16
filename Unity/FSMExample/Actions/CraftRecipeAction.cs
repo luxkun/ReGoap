@@ -22,15 +22,23 @@ public class CraftRecipeAction : GoapAction
         {
             preconditions.Set("has" + pair.Key, true);
         }
-        preconditions.Set("isAt", "workstation");
+        preconditions.Set<Transform>("isAtTransform", null);
         preconditions.Set("has" + recipe.GetCraftedResource(), false); // do not permit duplicates in the bag
         effects.Set("has" + recipe.GetCraftedResource(), true);
+    }
+
+    public override void Precalculations(IReGoapAgent goapAgent, ReGoapState goalState)
+    {
+        base.Precalculations(goapAgent, goalState);
+        var workstation = GetNearestWorkstation();
+        if (workstation != null)
+            preconditions.Set("isAtTransform", workstation.transform);
     }
 
     public override void Run(IReGoapAction previous, IReGoapAction next, ReGoapState goalState, Action<IReGoapAction> done, Action<IReGoapAction> fail)
     {
         base.Run(previous, next, goalState, done, fail);
-        var workstation = agent.GetMemory().GetWorldState().Get<Workstation>("nearestWorkstation");
+        var workstation = GetNearestWorkstation();
         if (workstation.CraftResource(resourcesBag, recipe))
         {
             done(this);
@@ -39,6 +47,11 @@ public class CraftRecipeAction : GoapAction
         {
             fail(this);
         }
+    }
+
+    private Workstation GetNearestWorkstation()
+    {
+        return agent.GetMemory().GetWorldState().Get<Workstation>("nearestWorkstation");
     }
 
     public override string ToString()

@@ -6,6 +6,7 @@ public class ReGoapState : ICloneable
 {
     // can change to object
     private volatile Dictionary<string, object> values;
+    public static char WildCard = '*';
 
     public ReGoapState(ReGoapState old)
     {
@@ -62,9 +63,9 @@ public class ReGoapState : ICloneable
                 values.TryGetValue(pair.Key, out thisValue);
                 var otherValue = pair.Value;
                 // ex. this["isAt"] = "enemy" and other["isAt"] = "base"
-                if (backwardSearch && otherValue.Equals(false)) // backward search does NOT support false preconditions
+                if (backwardSearch && (otherValue == null || otherValue.Equals(false))) // backward search does NOT support false preconditions
                     continue;
-                if (thisValue != null && !otherValue.Equals(thisValue))
+                if (thisValue != null && otherValue != null && !otherValue.Equals(thisValue))
                     return true;
             }
             return false;
@@ -78,7 +79,7 @@ public class ReGoapState : ICloneable
     }
 
     // write differences in "difference"
-    public int MissingDifference(ReGoapState other, ref ReGoapState difference, int stopAt = int.MaxValue, Func<KeyValuePair<string, object>, object, bool> predicate = null)
+    public int MissingDifference(ReGoapState other, ref ReGoapState difference, int stopAt = int.MaxValue, Func<KeyValuePair<string, object>, object, bool> predicate = null, bool acceptWildcard = false)
     {
         lock (values)
         {
@@ -89,6 +90,11 @@ public class ReGoapState : ICloneable
                 var valueBool = pair.Value as bool?;
                 object otherValue;
                 other.values.TryGetValue(pair.Key, out otherValue);
+                // wildcard is any possible value (ex. a GoTo's action isAtPosition)
+                if (acceptWildcard && otherValue != null && otherValue.Equals(WildCard))
+                {
+                    continue;
+                }
                 if (valueBool.HasValue)
                 {
                     // we don't need to check otherValue type since every key is supposed to always have same value type
@@ -98,7 +104,12 @@ public class ReGoapState : ICloneable
                 }
                 else // generic version
                 {
-                    if (!pair.Value.Equals(otherValue))
+                    if (pair.Value == null)
+                    {
+                        if (otherValue != null)
+                            add = true;
+                    }
+                    else if (!pair.Value.Equals(otherValue))
                         add = true;
                 }
                 if (add && (predicate == null || predicate(pair, otherValue)))

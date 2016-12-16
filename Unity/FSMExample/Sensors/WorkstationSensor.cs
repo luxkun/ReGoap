@@ -22,7 +22,7 @@ public class WorkstationSensor : GoapSensor
         }
     }
 
-    void FixedUpdate()
+    public override void UpdateSensor()
     {
         var worldState = memory.GetWorldState();
         worldState.Set("seeWorkstation", WorkstationsManager.instance != null && WorkstationsManager.instance.workstations.Length > 0);
@@ -32,10 +32,11 @@ public class WorkstationSensor : GoapSensor
         if (nearestStation != null &&
             (transform.position - nearestStation.transform.position).sqrMagnitude < minPowDistanceToBeNear)
         {
-            worldState.Set("isAt", "workstation");
-        } else if (worldState.Get<string>("isAt") == "workstation")
+            worldState.Set("isAtTransform", nearestStation.transform);
+        }
+        else if (nearestStation != null && worldState.Get<Transform>("isAtTransform") == nearestStation.transform)
         {
-            worldState.Set("isAt", "");
+            worldState.Set<Transform>("isAtTransform", null);
         }
     }
 }

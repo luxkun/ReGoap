@@ -36,7 +36,7 @@ public class ReGoapNode : INode<ReGoapState>
         //state = (ReGoapState)state.Clone(); // no need anymore since ReGoapState add operator now returns a new state
         if (action != null)
         {
-            var effects = (ReGoapState)action.GetEffects(goal).Clone();
+            var effects = (ReGoapState)action.GetEffects(goal, parent == null ? null : parent.action).Clone();
             state += effects;
             g += action.GetCost(goal);
         }
@@ -87,21 +87,23 @@ public class ReGoapNode : INode<ReGoapState>
         for (var index = 0; index < actions.Count; index++)
         {
             var possibleAction = actions[index];
-            var precond = possibleAction.GetPreconditions(goal);
-            var effects = possibleAction.GetEffects(goal);
-            if (possibleAction == action || !possibleAction.CheckProceduralCondition(agent, goal))
+            var precond = possibleAction.GetPreconditions(goal, action);
+            var effects = possibleAction.GetEffects(goal, action);
+            if (possibleAction == action)
                 continue;
             if (backwardSearch)
             {
                 if (effects.HasAny(goal) && // any effect is the current goal
                     !goal.HasAnyConflict(effects) && // no effect is conflicting with the goal
-                    !goal.HasAnyConflict(precond)) // no precondition is conflicting with the goal
+                    !goal.HasAnyConflict(precond) && // no precondition is conflicting with the goal
+                    possibleAction.CheckProceduralCondition(agent, goal, parent != null ? parent.action : null)) 
                     yield return possibleAction;
             }
             else
             {
                 if (precond.MissingDifference(state, 1) == 0 && // check precondition is validated
-                    !goal.HasAnyConflict(effects)) // no effect is conflicting with the goal
+                    !goal.HasAnyConflict(effects) &&
+                    possibleAction.CheckProceduralCondition(agent, goal)) // no effect is conflicting with the goal
                     yield return possibleAction;
             }
         }
@@ -145,9 +147,10 @@ public class ReGoapNode : INode<ReGoapState>
                 for (int i = 0; i < result.Count; i++)
                 {
                     var action = result[i];
-                    if (action.GetPreconditions(goal).MissingDifference(memory) == 0)
+                    IReGoapAction nextAction = i + 1 < result.Count ? result[i + 1] : null;
+                    if (action.GetPreconditions(goal, nextAction).MissingDifference(memory) == 0)
                     {
-                        foreach (var effectsPair in action.GetEffects(goal).GetValues())
+                        foreach (var effectsPair in action.GetEffects(goal, nextAction).GetValues())
                         {
                             memory.Set(effectsPair.Key, effectsPair.Value);
                         }
