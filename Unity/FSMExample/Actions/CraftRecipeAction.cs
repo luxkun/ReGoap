@@ -5,14 +5,14 @@ using System.Collections;
 [RequireComponent(typeof(ResourcesBag))]
 public class CraftRecipeAction : GoapAction
 {
-    public ScriptableObject rawRecipe;
+    public ScriptableObject RawRecipe;
     private IRecipe recipe;
     private ResourcesBag resourcesBag;
 
     protected override void Awake()
     {
         base.Awake();
-        recipe = rawRecipe as IRecipe;
+        recipe = RawRecipe as IRecipe;
         if (recipe == null)
             throw new UnityException("[CraftRecipeAction] The rawRecipe ScriptableObject must implement IRecipe.");
         resourcesBag = GetComponent<ResourcesBag>();
@@ -22,7 +22,6 @@ public class CraftRecipeAction : GoapAction
         {
             preconditions.Set("has" + pair.Key, true);
         }
-        preconditions.Set<Transform>("isAtTransform", null);
         preconditions.Set("has" + recipe.GetCraftedResource(), false); // do not permit duplicates in the bag
         effects.Set("has" + recipe.GetCraftedResource(), true);
     }
@@ -30,15 +29,15 @@ public class CraftRecipeAction : GoapAction
     public override void Precalculations(IReGoapAgent goapAgent, ReGoapState goalState)
     {
         base.Precalculations(goapAgent, goalState);
-        var workstation = GetNearestWorkstation();
-        if (workstation != null)
-            preconditions.Set("isAtTransform", workstation.transform);
+        var workstationPosition = agent.GetMemory().GetWorldState().Get<Vector3>("nearestWorkstationPosition");
+        if (workstationPosition != default(Vector3))
+            preconditions.Set("isAtPosition", workstationPosition);
     }
 
     public override void Run(IReGoapAction previous, IReGoapAction next, ReGoapState goalState, Action<IReGoapAction> done, Action<IReGoapAction> fail)
     {
         base.Run(previous, next, goalState, done, fail);
-        var workstation = GetNearestWorkstation();
+        var workstation = agent.GetMemory().GetWorldState().Get<Workstation>("nearestWorkstation");
         if (workstation.CraftResource(resourcesBag, recipe))
         {
             done(this);
@@ -47,11 +46,6 @@ public class CraftRecipeAction : GoapAction
         {
             fail(this);
         }
-    }
-
-    private Workstation GetNearestWorkstation()
-    {
-        return agent.GetMemory().GetWorldState().Get<Workstation>("nearestWorkstation");
     }
 
     public override string ToString()

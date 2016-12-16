@@ -11,12 +11,12 @@ public class WorkstationSensor : GoapSensor
 {
     private Dictionary<Workstation, Vector3> workstations;
 
-    public float minPowDistanceToBeNear = 1f;
+    public float MinPowDistanceToBeNear = 1f;
 
     void Start()
     {
-        workstations = new Dictionary<Workstation, Vector3>(WorkstationsManager.instance.workstations.Length);
-        foreach (var workstation in WorkstationsManager.instance.workstations)
+        workstations = new Dictionary<Workstation, Vector3>(WorkstationsManager.Instance.Workstations.Length);
+        foreach (var workstation in WorkstationsManager.Instance.Workstations)
         {
             workstations[workstation] = workstation.transform.position; // workstations are static
         }
@@ -25,12 +25,13 @@ public class WorkstationSensor : GoapSensor
     public override void UpdateSensor()
     {
         var worldState = memory.GetWorldState();
-        worldState.Set("seeWorkstation", WorkstationsManager.instance != null && WorkstationsManager.instance.workstations.Length > 0);
+        worldState.Set("seeWorkstation", WorkstationsManager.Instance != null && WorkstationsManager.Instance.Workstations.Length > 0);
 
         var nearestStation = Utilities.GetNearest(transform.position, workstations);
         worldState.Set("nearestWorkstation", nearestStation);
+        worldState.Set("nearestWorkstationPosition", nearestStation != null ? nearestStation.transform.position : Vector3.zero);
         if (nearestStation != null &&
-            (transform.position - nearestStation.transform.position).sqrMagnitude < minPowDistanceToBeNear)
+            (transform.position - nearestStation.transform.position).sqrMagnitude < MinPowDistanceToBeNear)
         {
             worldState.Set("isAtTransform", nearestStation.transform);
         }

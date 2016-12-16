@@ -4,9 +4,9 @@ using System.Collections;
 // one resourcemanager per type
 public class ResourceManager : MonoBehaviour, IResourceManager
 {
-    public string resourceName = "ResourceName";
-    public MonoBehaviour[] rawResources; // add resources directly in Unity
-    public IResource[] resources;
+    public string ResourceName = "ResourceName";
+    public MonoBehaviour[] RawResources; // add resources directly in Unity
+    public IResource[] Resources;
     private int currentIndex;
 
     #region UnityFunctions
@@ -14,13 +14,13 @@ public class ResourceManager : MonoBehaviour, IResourceManager
     {
         currentIndex = 0;
 
-        resources = new IResource[rawResources.Length];
-        for (int index = 0; index < rawResources.Length; index++)
+        Resources = new IResource[RawResources.Length];
+        for (int index = 0; index < RawResources.Length; index++)
         {
-            var resource = rawResources[index];
+            var resource = RawResources[index];
             var iresource = resource as IResource;
             if (iresource != null)
-                resources[index] = iresource;
+                Resources[index] = iresource;
             else
                 throw new UnityException(string.Format("[{0}] rawResources has a behaviour which does not implement IResource.", GetType().FullName));
         }
@@ -42,23 +42,23 @@ public class ResourceManager : MonoBehaviour, IResourceManager
     #region IResourceManager
     public virtual string GetResourceName()
     {
-        return resourceName;
+        return ResourceName;
     }
 
     public virtual int GetResourcesCount()
     {
-        return resources.Length;
+        return Resources.Length;
     }
 
     public virtual IResource[] GetResources()
     {
-        return resources;
+        return Resources;
     }
 
     public virtual IResource GetResource()
     {
-        var result = resources[currentIndex];
-        currentIndex = currentIndex++%resources.Length;
+        var result = Resources[currentIndex];
+        currentIndex = currentIndex++%Resources.Length;
         return result;
     }
     #endregion

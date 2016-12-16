@@ -8,12 +8,12 @@ public class BankSensor : GoapSensor
 {
     private Dictionary<Bank, Vector3> banks;
 
-    public float minPowDistanceToBeNear = 1f;
+    public float MinPowDistanceToBeNear = 1f;
 
     void Start()
     {
-        banks = new Dictionary<Bank, Vector3>(BankManager.instance.banks.Length);
-        foreach (var bank in BankManager.instance.banks)
+        banks = new Dictionary<Bank, Vector3>(BankManager.Instance.Banks.Length);
+        foreach (var bank in BankManager.Instance.Banks)
         {
             banks[bank] = bank.transform.position;
         }
@@ -22,12 +22,13 @@ public class BankSensor : GoapSensor
     public override void UpdateSensor()
     {
         var worldState = memory.GetWorldState();
-        worldState.Set("seeBank", BankManager.instance != null && BankManager.instance.banks.Length > 0);
+        worldState.Set("seeBank", BankManager.Instance != null && BankManager.Instance.Banks.Length > 0);
 
         var nearestBank = Utilities.GetNearest(transform.position, banks);
         worldState.Set("nearestBank", nearestBank);
+        worldState.Set("nearestBankPosition", nearestBank != null ? nearestBank.transform.position : Vector3.zero);
         if (nearestBank != null &&
-            (transform.position - nearestBank.transform.position).sqrMagnitude < minPowDistanceToBeNear)
+            (transform.position - nearestBank.transform.position).sqrMagnitude < MinPowDistanceToBeNear)
         {
             worldState.Set("isAtTransform", nearestBank.transform);
         }

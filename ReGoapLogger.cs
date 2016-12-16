@@ -58,7 +58,7 @@ public class ReGoapLogger
     }
 #endif
 
-    public bool enabled;
+    public bool Enabled;
 
     private static readonly ReGoapLogger instance = new ReGoapLogger();
     public static ReGoapLogger Instance
@@ -75,24 +75,24 @@ public class ReGoapLogger
 #else
         listener = new GenericTraceListener();
 #endif
-        enabled = true;
+        Enabled = true;
     }
 
     public static void Log(string message)
     {
-        if (!instance.enabled) return;
+        if (!instance.Enabled) return;
         instance.listener.Write(message);
     }
 
     public static void LogWarning(string message)
     {
-        if (!instance.enabled) return;
+        if (!instance.Enabled) return;
         instance.listener.Write(message, "warning");
     }
 
     public static void LogError(string message)
     {
-        if (!instance.enabled) return;
+        if (!instance.Enabled) return;
         instance.listener.Write(message, "error");
     }
 }

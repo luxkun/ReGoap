@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngine.VR;
 
 // you could also create a generic ExternalGoToAction : GenericGoToAction
 //  which let you add effects / preconditions from some source (Unity, external file, etc.)
@@ -68,6 +69,24 @@ public class GenericGoToAction : GoapAction
             effects.Set("isAtTransform", ReGoapState.WildCard);
         }
         return base.GetEffects(goalState, next);
+    }
+
+    public override int GetCost(ReGoapState goalState, IReGoapAction next = null)
+    {
+        var distance = 0;
+        if (next != null)
+        {
+            GetObjective(next);
+            if (objectivePosition != default(Vector3))
+            {
+                distance += Mathf.RoundToInt(Cost * (transform.position - objectivePosition).sqrMagnitude);
+            }
+            else if (objectiveTransform != null)
+            {
+                distance += Mathf.RoundToInt(Cost * (transform.position - objectiveTransform.transform.position).sqrMagnitude);
+            }
+        }
+        return base.GetCost(goalState, next) + distance;
     }
 
     protected virtual void OnFailureMovement()

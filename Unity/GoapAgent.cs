@@ -7,8 +7,8 @@ using UnityEngine;
 public class GoapAgent : MonoBehaviour, IReGoapAgent
 {
     public string Name;
-    public float calculationDelay = 0.5f;
-    public bool blackListGoalOnFailure;
+    public float CalculationDelay = 0.5f;
+    public bool BlackListGoalOnFailure;
 
     protected float lastCalculationTime;
 
@@ -27,12 +27,12 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
     protected bool interruptOnNextTransistion;
 
     protected PlanWork? currentPlanWorker;
-    public bool isPlanning
+    public bool IsPlanning
     {
-        get { return currentPlanWorker != null && currentPlanWorker.Value.newGoal == null; }
+        get { return currentPlanWorker != null && currentPlanWorker.Value.NewGoal == null; }
     }
 
-    public bool workInFixedUpdate;
+    public bool WorkInFixedUpdate;
 
     #region UnityFunctions
     protected virtual void Awake()
@@ -52,13 +52,13 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
 
     protected virtual void FixedUpdate()
     {
-        if (!workInFixedUpdate) return;
+        if (!WorkInFixedUpdate) return;
         Tick();
     }
 
     protected virtual void Update()
     {
-        if (workInFixedUpdate) return;
+        if (WorkInFixedUpdate) return;
         Tick();
     }
 
@@ -68,7 +68,7 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
 
         if (currentAction == null)
         {
-            if (!isPlanning)
+            if (!IsPlanning)
                 CalculateNewGoal();
             return;
         }
@@ -112,16 +112,16 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
 
     protected virtual bool CalculateNewGoal(bool forceStart = false)
     {
-        if (isPlanning)
+        if (IsPlanning)
             return false;
-        if (!forceStart && (Time.time - lastCalculationTime <= calculationDelay))
+        if (!forceStart && (Time.time - lastCalculationTime <= CalculationDelay))
             return false;
         lastCalculationTime = Time.time;
 
         interruptOnNextTransistion = false;
         UpdatePossibleGoals();
         //var watch = System.Diagnostics.Stopwatch.StartNew();
-        currentPlanWorker = GoapPlannerManager.instance.Plan(this, blackListGoalOnFailure ? currentGoal : null,
+        currentPlanWorker = GoapPlannerManager.Instance.Plan(this, BlackListGoalOnFailure ? currentGoal : null,
             currentGoal != null ? currentGoal.GetPlan() : null, OnDonePlanning);
 
         return true;
@@ -203,7 +203,7 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
             ReGoapLogger.LogWarning(string.Format("[GoapAgent] Action {0} warned for failure but is not current action.", action));
             return;
         }
-        if (blackListGoalOnFailure)
+        if (BlackListGoalOnFailure)
             goalBlacklist[currentGoal] = Time.time + currentGoal.GetErrorDelay();
         CalculateNewGoal(true);
     }

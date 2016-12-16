@@ -13,6 +13,6 @@ public class ReGoapTestGoal : GoapGoal
 
     public void SetPriority(int priority)
     {
-        this.priority = priority;
+        this.Priority = priority;
     }
 }

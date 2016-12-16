@@ -3,13 +3,13 @@ using System.Collections;
 
 public class TreeResourceManager : ResourceManager
 {
-    public static TreeResourceManager instance;
+    public static TreeResourceManager Instance;
 
     protected override void Awake()
     {
         base.Awake();
-        if (instance != null)
+        if (Instance != null)
             throw new UnityException("[TreeResourceManager] Can have only one instance per scene.");
-        instance = this;
+        Instance = this;
     }
 }

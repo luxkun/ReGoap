@@ -21,7 +21,7 @@ public class ReGoapTestsHelper
         foreach (var pair in preconditionsBools)
             preconditions.Set(pair.Key, pair.Value);
         customAction.SetPreconditions(preconditions);
-        customAction.cost = cost;
+        customAction.Cost = cost;
         return customAction;
     }
 

@@ -4,13 +4,12 @@ using System.Collections;
 
 public class ChopTreeAction : GoapAction
 {
-    public float resourcePerChop = 1f;
+    public float ResourcePerChop = 1f;
     private ResourcesBag bag;
 
     protected override void Awake()
     {
         base.Awake();
-        preconditions.Set<Transform>("isAtTransform", null);
         preconditions.Set("hasLog", false);
         effects.Set("hasLog", true);
 
@@ -20,16 +19,11 @@ public class ChopTreeAction : GoapAction
     public override void Precalculations(IReGoapAgent goapAgent, ReGoapState goalState)
     {
         base.Precalculations(goapAgent, goalState);
-        var tree = GetNearestTree();
-        if (tree != null)
+        var treePosition = agent.GetMemory().GetWorldState().Get<Vector3>("nearestTreePosition");
+        if (treePosition != default(Vector3))
         {
-            preconditions.Set("isAtTransform", tree.GetTransform());
+            preconditions.Set("isAtPosition", treePosition);
         }
-    }
-
-    IResource GetNearestTree()
-    {
-        return agent.GetMemory().GetWorldState().Get<IResource>("nearestTree");
     }
 
     public override bool CheckProceduralCondition(IReGoapAgent goapAgent, ReGoapState goalState, IReGoapAction next = null)
@@ -41,14 +35,14 @@ public class ChopTreeAction : GoapAction
     {
         base.Run(previous, next, goalState, done, fail);
         // should not happen since treeSensor filters already trees with low capacity
-        var tree = GetNearestTree();
-        if (tree == null || tree.GetCapacity() < resourcePerChop) 
+        var tree = agent.GetMemory().GetWorldState().Get<IResource>("nearestTree");
+        if (tree == null || tree.GetCapacity() < ResourcePerChop) 
             failCallback(this);
         else
         {
-            ReGoapLogger.Log("[ChopTreeAction] chopped " + resourcePerChop + " logs.");
-            tree.RemoveResource(resourcePerChop);
-            bag.AddResource(TreeResourceManager.instance.GetResourceName(), resourcePerChop);
+            ReGoapLogger.Log("[ChopTreeAction] chopped " + ResourcePerChop + " logs.");
+            tree.RemoveResource(ResourcePerChop);
+            bag.AddResource(TreeResourceManager.Instance.GetResourceName(), ResourcePerChop);
             doneCallback(this);
         }
     }

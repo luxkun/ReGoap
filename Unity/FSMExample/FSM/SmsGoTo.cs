@@ -21,18 +21,18 @@ public class SmsGoTo : SmState
     private GoToState currentState;
     private Rigidbody body;
 
-    public bool workInFixedUpdate;
-    public bool useRigidbodyVelocity;
-    public float speed;
+    public bool WorkInFixedUpdate;
+    public bool UseRigidbodyVelocity;
+    public float Speed;
     // when the magnitude of the difference between the objective and self is <= of this then we're done
-    public float minDistanceToObjective = 0.2f;
+    public float MinDistanceToObjective = 0.2f;
 
     // additional feature, check for stuck, userful when using rigidbody or raycasts for movements
     private Vector3 lastStuckCheckUpdatePosition;
     private float stuckCheckCooldown;
-    public bool checkForStuck;
-    public float stuckCheckDelay = 1f;
-    public float maxStuckDistance = 0.1f;
+    public bool CheckForStuck;
+    public float StuckCheckDelay = 1f;
+    public float MaxStuckDistance = 0.1f;
 
     protected override void Awake()
     {
@@ -43,21 +43,21 @@ public class SmsGoTo : SmState
     // if your games handle the speed from something else (ex. stats class) you can override this function
     protected virtual float GetSpeed()
     {
-        return speed;
+        return Speed;
     }
 
     #region Work
     protected override void FixedUpdate()
     {
         base.FixedUpdate();
-        if (!workInFixedUpdate) return;
+        if (!WorkInFixedUpdate) return;
         Tick();
     }
 
     protected override void Update()
     {
         base.Update();
-        if (workInFixedUpdate) return;
+        if (WorkInFixedUpdate) return;
         Tick();
     }
 
@@ -75,7 +75,7 @@ public class SmsGoTo : SmState
         var movement = delta.normalized * GetSpeed();
         if (body != null)
         {
-            if (useRigidbodyVelocity)
+            if (UseRigidbodyVelocity)
             {
                 body.velocity = movement;
             }
@@ -88,11 +88,11 @@ public class SmsGoTo : SmState
         {
             transform.position += movement * Time.deltaTime;
         }
-        if (delta.magnitude <= minDistanceToObjective)
+        if (delta.magnitude <= MinDistanceToObjective)
         {
             currentState = GoToState.Success;
         }
-        if (checkForStuck && CheckIfStuck())
+        if (CheckForStuck && CheckIfStuck())
         {
             currentState = GoToState.Failure;
         }
@@ -102,8 +102,8 @@ public class SmsGoTo : SmState
     {
         if (Time.time > stuckCheckCooldown)
         {
-            stuckCheckCooldown = Time.time + stuckCheckDelay;
-            if ((lastStuckCheckUpdatePosition - transform.position).magnitude < maxStuckDistance)
+            stuckCheckCooldown = Time.time + StuckCheckDelay;
+            if ((lastStuckCheckUpdatePosition - transform.position).magnitude < MaxStuckDistance)
             {
                 ReGoapLogger.Log("[SmsGoTo] '" + name + "' is stuck.");
                 return true;

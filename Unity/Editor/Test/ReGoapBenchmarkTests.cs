@@ -20,7 +20,7 @@ public class ReGoapBenchmarkTests
         func();
 
         var watch = new Stopwatch();
-        ReGoapLogger.Instance.enabled = false;
+        ReGoapLogger.Instance.Enabled = false;
 
         // clean up
         GC.Collect();
@@ -37,7 +37,7 @@ public class ReGoapBenchmarkTests
         // clean up
         GC.Collect();
 
-        ReGoapLogger.Instance.enabled = true;
+        ReGoapLogger.Instance.Enabled = true;
 
         ReGoapLogger.Log(string.Format("[Profile] {0} took {1}ms (iters: {2} ; avg: {3}ms).", description, watch.Elapsed.TotalMilliseconds, iterations, watch.Elapsed.TotalMilliseconds / iterations));
         return watch.Elapsed.TotalMilliseconds;
@@ -51,24 +51,14 @@ public class ReGoapBenchmarkTests
     }
 
     [Test]
-    public void SimpleChainedPlanBenchmarkForward()
-    {
-        Profile("SimpleChainedPlanBenchmarkForward", tests.TestSimpleChainedPlanForward);
-    }
-    [Test]
     public void SimpleChainedPlanBenchmarkBackward()
     {
-        Profile("SimpleChainedPlanBenchmarkBackward", tests.TestSimpleChainedPlanBackward);
+        Profile("SimpleChainedPlanBenchmarkBackward", tests.TestSimpleChainedPlan);
     }
 
     [Test]
-    public void TwoPhaseChainedPlanBenchmarkForward()
-    {
-        Profile("TwoPhaseChainedPlanBenchmarkForward", tests.TestTwoPhaseChainedPlanForward);
-    }
-    [Test]
     public void TwoPhaseChainedPlanBenchmarkBackward()
     {
-        Profile("TwoPhaseChainedPlanBenchmarkBackward", tests.TestTwoPhaseChainedPlanBackward);
+        Profile("TwoPhaseChainedPlanBenchmarkBackward", tests.TestTwoPhaseChainedPlan);
     }
 }

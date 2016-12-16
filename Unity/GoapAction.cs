@@ -11,7 +11,7 @@ public class GoapAction : MonoBehaviour, IReGoapAction
 
     protected ReGoapState preconditions;
     protected ReGoapState effects;
-    public int cost = 1;
+    public int Cost = 1;
 
     protected Action<IReGoapAction> doneCallback;
     protected Action<IReGoapAction> failCallback;
@@ -90,9 +90,9 @@ public class GoapAction : MonoBehaviour, IReGoapAction
         return effects;
     }
 
-    public virtual int GetCost(ReGoapState goalState, IReGoapAction next)
+    public virtual int GetCost(ReGoapState goalState, IReGoapAction next = null)
     {
-        return cost;
+        return Cost;
     }
 
     public virtual bool CheckProceduralCondition(IReGoapAgent goapAgent, ReGoapState goalState, IReGoapAction next = null)

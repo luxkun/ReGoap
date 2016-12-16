@@ -13,7 +13,6 @@ public class ReGoapNode : INode<ReGoapState>
     private readonly int h;
 
     private readonly int heuristicMultiplier = 1;
-    private readonly bool backwardSearch;
 
     public ReGoapNode(IGoapPlanner planner, ReGoapState newGoal, ReGoapNode parent, IReGoapAction action)
     {
@@ -21,7 +20,6 @@ public class ReGoapNode : INode<ReGoapState>
         this.parent = parent;
         this.action = action;
         goal = (ReGoapState)newGoal.Clone();
-        backwardSearch = planner.GetSettings().backwardSearch;
 
         if (this.parent != null)
         {
@@ -36,14 +34,15 @@ public class ReGoapNode : INode<ReGoapState>
         //state = (ReGoapState)state.Clone(); // no need anymore since ReGoapState add operator now returns a new state
         if (action != null)
         {
-            var effects = (ReGoapState)action.GetEffects(goal, parent == null ? null : parent.action).Clone();
+            var nextAction = parent == null ? null : parent.action;
+            var effects = (ReGoapState)action.GetEffects(goal, nextAction).Clone();
             state += effects;
-            g += action.GetCost(goal);
+            g += action.GetCost(goal, action);
         }
         // missing states from goal
         // h(node)
         // we calculate this after getting the heuristic value so actions that gives us goal state will go first
-        if (backwardSearch && action != null)
+        if (action != null)
         {
             var diff = new ReGoapState();
             // backward search does NOT support negative preconditions
@@ -53,16 +52,9 @@ public class ReGoapNode : INode<ReGoapState>
         }
         // f(node) = g(node) + h(node)
         cost = g + h * heuristicMultiplier;
-        if (backwardSearch) // after calculating the heuristic for astar we change it to the real value
-        {
-            var missingState = new ReGoapState();
-            h = goal.MissingDifference(state, ref missingState);
-            goal = missingState;
-        }
-        else
-        {
-            h = goal.MissingDifference(state);
-        }
+        var missingState = new ReGoapState();
+        h = goal.MissingDifference(state, ref missingState);
+        goal = missingState;
     }
 
     public int GetPathCost()
@@ -91,21 +83,11 @@ public class ReGoapNode : INode<ReGoapState>
             var effects = possibleAction.GetEffects(goal, action);
             if (possibleAction == action)
                 continue;
-            if (backwardSearch)
-            {
-                if (effects.HasAny(goal) && // any effect is the current goal
-                    !goal.HasAnyConflict(effects) && // no effect is conflicting with the goal
-                    !goal.HasAnyConflict(precond) && // no precondition is conflicting with the goal
-                    possibleAction.CheckProceduralCondition(agent, goal, parent != null ? parent.action : null)) 
-                    yield return possibleAction;
-            }
-            else
-            {
-                if (precond.MissingDifference(state, 1) == 0 && // check precondition is validated
-                    !goal.HasAnyConflict(effects) &&
-                    possibleAction.CheckProceduralCondition(agent, goal)) // no effect is conflicting with the goal
-                    yield return possibleAction;
-            }
+            if (effects.HasAny(goal) && // any effect is the current goal
+                !goal.HasAnyConflict(effects) && // no effect is conflicting with the goal
+                !goal.HasAnyConflict(precond) && // no precondition is conflicting with the goal
+                possibleAction.CheckProceduralCondition(agent, goal, parent != null ? parent.action : null)) 
+                yield return possibleAction;
         }
     }
 
@@ -137,38 +119,30 @@ public class ReGoapNode : INode<ReGoapState>
             node = (ReGoapNode)node.GetParent();
         }
         // we need to order path in backward search
-        if (backwardSearch)
+        var orderedResults = new List<IReGoapAction>(result.Count);
+        var memory = (ReGoapState)planner.GetCurrentAgent().GetMemory().GetWorldState().Clone();
+        while (orderedResults.Count < result.Count)
         {
-            var orderedResults = new List<IReGoapAction>(result.Count);
-            var memory = (ReGoapState)planner.GetCurrentAgent().GetMemory().GetWorldState().Clone();
-            while (orderedResults.Count < result.Count)
+            var index = -1;
+            for (int i = 0; i < result.Count; i++)
             {
-                var index = -1;
-                for (int i = 0; i < result.Count; i++)
+                var thisAction = result[i];
+                IReGoapAction nextAction = i + 1 < result.Count ? result[i + 1] : null;
+                if (thisAction.GetPreconditions(goal, nextAction).MissingDifference(memory) == 0)
                 {
-                    var action = result[i];
-                    IReGoapAction nextAction = i + 1 < result.Count ? result[i + 1] : null;
-                    if (action.GetPreconditions(goal, nextAction).MissingDifference(memory) == 0)
+                    foreach (var effectsPair in thisAction.GetEffects(goal, nextAction).GetValues())
                     {
-                        foreach (var effectsPair in action.GetEffects(goal, nextAction).GetValues())
-                        {
-                            memory.Set(effectsPair.Key, effectsPair.Value);
-                        }
-                        orderedResults.Add(action);
-                        index = i;
+                        memory.Set(effectsPair.Key, effectsPair.Value);
                     }
+                    orderedResults.Add(thisAction);
+                    index = i;
                 }
-                if (index == -1)
-                    throw new Exception("[ReGoapNode] Error with plan, could not order it.");
-                result.RemoveAt(index);
             }
-            result = orderedResults;
-            //planner.GetCurrentGoal().GetGoalState().MissingDifference(memory, 1) == 0;
+            if (index == -1)
+                throw new Exception("[ReGoapNode] Error with plan, could not order it.");
+            result.RemoveAt(index);
         }
-        else
-        {
-            result.Reverse();
-        }
+        result = orderedResults;
         return new Queue<IReGoapAction>(result);
     }
 

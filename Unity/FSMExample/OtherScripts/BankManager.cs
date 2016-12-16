@@ -3,26 +3,26 @@ using System.Collections;
 
 public class BankManager : MonoBehaviour
 {
-    public static BankManager instance;
-    public Bank[] banks;
+    public static BankManager Instance;
+    public Bank[] Banks;
     private int currentIndex;
 
     protected virtual void Awake()
     {
-        if (instance != null)
+        if (Instance != null)
             throw new UnityException("[BankManager] Can have only one instance per scene.");
-        instance = this;
+        Instance = this;
     }
 
     public Bank GetBank()
     {
-        var result = banks[currentIndex];
-        currentIndex = currentIndex++ % banks.Length;
+        var result = Banks[currentIndex];
+        currentIndex = currentIndex++ % Banks.Length;
         return result;
     }
 
     public int GetBanksCount()
     {
-        return banks.Length;
+        return Banks.Length;
     }
 }
