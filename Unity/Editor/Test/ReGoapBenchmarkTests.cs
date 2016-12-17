@@ -51,14 +51,14 @@ public class ReGoapBenchmarkTests
     }
 
     [Test]
-    public void SimpleChainedPlanBenchmarkBackward()
+    public void SimpleChainedPlanBenchmark()
     {
-        Profile("SimpleChainedPlanBenchmarkBackward", tests.TestSimpleChainedPlan);
+        Profile("SimpleChainedPlanBenchmark", tests.TestSimpleChainedPlan);
     }
 
     [Test]
-    public void TwoPhaseChainedPlanBenchmarkBackward()
+    public void TwoPhaseChainedPlanBenchmark()
     {
-        Profile("TwoPhaseChainedPlanBenchmarkBackward", tests.TestTwoPhaseChainedPlan);
+        Profile("TwoPhaseChainedPlanBenchmark", tests.TestTwoPhaseChainedPlan);
     }
 }

@@ -3,16 +3,16 @@ using System.Collections.Generic;
 
 public class ReGoapNode : INode<ReGoapState>
 {
-    private readonly int cost;
+    private readonly float cost;
     private readonly IGoapPlanner planner;
     private readonly ReGoapNode parent;
     private readonly IReGoapAction action;
     private readonly ReGoapState state;
     private readonly ReGoapState goal;
-    private readonly int g;
-    private readonly int h;
+    private readonly float g;
+    private readonly float h;
 
-    private readonly int heuristicMultiplier = 1;
+    private readonly float heuristicMultiplier = 1;
 
     public ReGoapNode(IGoapPlanner planner, ReGoapState newGoal, ReGoapNode parent, IReGoapAction action)
     {
@@ -57,12 +57,12 @@ public class ReGoapNode : INode<ReGoapState>
         goal = missingState;
     }
 
-    public int GetPathCost()
+    public float GetPathCost()
     {
         return g;
     }
 
-    public int GetHeuristicCost()
+    public float GetHeuristicCost()
     {
         return h;
     }
@@ -166,10 +166,10 @@ public class ReGoapNode : INode<ReGoapState>
 
     public int CompareTo(INode<ReGoapState> other)
     {
-        return cost - other.GetCost();
+        return cost.CompareTo(other.GetCost());
     }
 
-    public int GetCost()
+    public float GetCost()
     {
         return cost;
     }
@@ -184,7 +184,7 @@ public class ReGoapNode : INode<ReGoapState>
         return h == 0;
     }
 
-    public int Priority { get; set; }
+    public float Priority { get; set; }
     public long InsertionIndex { get; set; }
     public int QueueIndex { get; set; }
 }

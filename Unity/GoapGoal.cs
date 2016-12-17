@@ -8,7 +8,7 @@ using UnityEngine;
 public class GoapGoal : MonoBehaviour, IReGoapGoal
 {
     public string Name = "GenericGoal";
-    public int Priority = 1;
+    public float Priority = 1;
     public float ErrorDelay = 0.5f;
 
     protected ReGoapState goal;
@@ -53,7 +53,7 @@ public class GoapGoal : MonoBehaviour, IReGoapGoal
         return Name;
     }
 
-    public virtual int GetPriority()
+    public virtual float GetPriority()
     {
         return Priority;
     }

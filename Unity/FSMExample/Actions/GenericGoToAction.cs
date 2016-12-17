@@ -71,7 +71,7 @@ public class GenericGoToAction : GoapAction
         return base.GetEffects(goalState, next);
     }
 
-    public override int GetCost(ReGoapState goalState, IReGoapAction next = null)
+    public override float GetCost(ReGoapState goalState, IReGoapAction next = null)
     {
         var distance = 0;
         if (next != null)

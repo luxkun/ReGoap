@@ -10,7 +10,7 @@ public interface IReGoapGoal
     void Precalculations(IGoapPlanner goapPlanner);
     bool IsGoalPossible();
     ReGoapState GetGoalState();
-    int GetPriority();
+    float GetPriority();
     void SetPlan(Queue<IReGoapAction> path);
     float GetErrorDelay();
 }

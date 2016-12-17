@@ -16,7 +16,7 @@ public interface IReGoapAction
     ReGoapState GetPreconditions(ReGoapState goalState, IReGoapAction next = null);
     ReGoapState GetEffects(ReGoapState goalState, IReGoapAction next = null);
     bool CheckProceduralCondition(IReGoapAgent goapAgent, ReGoapState goalState, IReGoapAction nextAction = null);
-    int GetCost(ReGoapState goalState, IReGoapAction next = null);
+    float GetCost(ReGoapState goalState, IReGoapAction next = null);
     // DO NOT CHANGE RUNTIME ACTION VARIABLES, precalculation can be runned many times even while an action is running
     void Precalculations(IReGoapAgent goapAgent, ReGoapState goalState);
 }
