@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 public class ReGoapNode : INode<ReGoapState>
 {
@@ -37,7 +38,7 @@ public class ReGoapNode : INode<ReGoapState>
             var nextAction = parent == null ? null : parent.action;
             var effects = (ReGoapState)action.GetEffects(goal, nextAction).Clone();
             state += effects;
-            g += action.GetCost(goal, action);
+            g += action.GetCost(goal, parent != null ? parent.GetAction() : null);
         }
         // missing states from goal
         // h(node)
@@ -108,59 +109,25 @@ public class ReGoapNode : INode<ReGoapState>
         return result;
     }
 
-    public Queue<IReGoapAction> CalculateGoalPath()
-    {
-        var result = new List<IReGoapAction>();
-        var node = this;
-        while (node != null)
-        {
-            if (node.GetAction() != null) //first
-                result.Add(node.GetAction());
-            node = (ReGoapNode)node.GetParent();
-        }
-        // we need to order path in backward search
-        var orderedResults = new List<IReGoapAction>(result.Count);
-        var memory = (ReGoapState)planner.GetCurrentAgent().GetMemory().GetWorldState().Clone();
-        while (orderedResults.Count < result.Count)
-        {
-            var index = -1;
-            for (int i = 0; i < result.Count; i++)
-            {
-                var thisAction = result[i];
-                IReGoapAction nextAction = i + 1 < result.Count ? result[i + 1] : null;
-                if (thisAction.GetPreconditions(goal, nextAction).MissingDifference(memory) == 0)
-                {
-                    foreach (var effectsPair in thisAction.GetEffects(goal, nextAction).GetValues())
-                    {
-                        memory.Set(effectsPair.Key, effectsPair.Value);
-                    }
-                    orderedResults.Add(thisAction);
-                    index = i;
-                }
-            }
-            if (index == -1)
-                throw new Exception("[ReGoapNode] Error with plan, could not order it.");
-            result.RemoveAt(index);
-        }
-        result = orderedResults;
-        return new Queue<IReGoapAction>(result);
-    }
-
     private IReGoapAction GetAction()
     {
         return action;
     }
 
-    public List<INode<ReGoapState>> CalculatePath()
+    public Queue<IReGoapAction> CalculatePath()
     {
-        var result = new List<INode<ReGoapState>>();
-        var node = (INode<ReGoapState>)this;
+        var listResult = new List<IReGoapAction>();
+        var node = this;
         while (node.GetParent() != null)
         {
-            result.Add(node);
-            node = node.GetParent();
+            listResult.Add(node.action);
+            node = (ReGoapNode)node.GetParent();
         }
-        result.Reverse();
+        var result = new Queue<IReGoapAction>(listResult.Count);
+        foreach (var thisAction in listResult)
+        {
+            result.Enqueue(thisAction);
+        }
         return result;
     }
 

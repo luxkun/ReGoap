@@ -67,9 +67,6 @@ public interface INode<T>
 {
     T GetState();
     List<INode<T>> Expand();
-
-    List<INode<T>> CalculatePath();
-
     int CompareTo(INode<T> other);
     float GetCost();
     float GetHeuristicCost();

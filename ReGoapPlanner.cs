@@ -63,7 +63,7 @@ public class ReGoapPlanner : IGoapPlanner
                 currentGoal = null;
                 continue;
             }
-            var path = leaf.CalculateGoalPath();
+            var path = leaf.CalculatePath();
             if (currentPlan != null && currentPlan == path)
             {
                 currentGoal = null;
