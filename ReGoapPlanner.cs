@@ -48,7 +48,7 @@ public class ReGoapPlanner : IGoapPlanner
                 // check if the effects of all actions can archieve currentGoal
                 var previous = wantedGoalCheck;
                 wantedGoalCheck = new ReGoapState();
-                previous.MissingDifference(action.GetEffects(wantedGoalCheck), ref wantedGoalCheck, acceptWildcard: true);
+                previous.MissingDifference(action.GetEffects(wantedGoalCheck), ref wantedGoalCheck);
             }
             // can't validate goal 
             if (wantedGoalCheck.Count > 0)

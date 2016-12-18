@@ -1,12 +1,10 @@
 ﻿using System;
-using System;
 using System.Collections.Generic;
 
 public class ReGoapState : ICloneable
 {
     // can change to object
     private volatile Dictionary<string, object> values;
-    public static char WildCard = '*';
 
     public ReGoapState(ReGoapState old)
     {
@@ -79,7 +77,7 @@ public class ReGoapState : ICloneable
     }
 
     // write differences in "difference"
-    public int MissingDifference(ReGoapState other, ref ReGoapState difference, int stopAt = int.MaxValue, Func<KeyValuePair<string, object>, object, bool> predicate = null, bool acceptWildcard = false)
+    public int MissingDifference(ReGoapState other, ref ReGoapState difference, int stopAt = int.MaxValue, Func<KeyValuePair<string, object>, object, bool> predicate = null)
     {
         lock (values)
         {
@@ -90,11 +88,6 @@ public class ReGoapState : ICloneable
                 var valueBool = pair.Value as bool?;
                 object otherValue;
                 other.values.TryGetValue(pair.Key, out otherValue);
-                // wildcard is any possible value (ex. a GoTo's action isAtPosition)
-                if (acceptWildcard && otherValue != null && otherValue.Equals(WildCard))
-                {
-                    continue;
-                }
                 if (valueBool.HasValue)
                 {
                     // we don't need to check otherValue type since every key is supposed to always have same value type

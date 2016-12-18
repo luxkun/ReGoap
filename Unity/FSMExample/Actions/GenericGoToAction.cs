@@ -23,9 +23,14 @@ public class GenericGoToAction : GoapAction
     {
         base.Awake();
 
-        effects.Set("isAtPosition", ReGoapState.WildCard);
-        effects.Set("isAtTransform", ReGoapState.WildCard);
+        SetDefaultEffects();
         smsGoto = GetComponent<SmsGoTo>();
+    }
+
+    private void SetDefaultEffects()
+    {
+        effects.Set("isAtPosition", default(Vector3));
+        effects.Set<Transform>("isAtTransform", null);
     }
 
     public override void Run(IReGoapAction previous, IReGoapAction next, ReGoapState goalState, Action<IReGoapAction> done, Action<IReGoapAction> fail)
@@ -65,8 +70,7 @@ public class GenericGoToAction : GoapAction
         }
         else
         {
-            effects.Set("isAtPosition", ReGoapState.WildCard);
-            effects.Set("isAtTransform", ReGoapState.WildCard);
+            SetDefaultEffects();
         }
         return base.GetEffects(goalState, next);
     }
