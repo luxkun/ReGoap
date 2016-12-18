@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngine.VR;
 
-// this is just an helper class, you could also create a generic ExternalGoToAction : GenericGoToAction
+// you could also create a generic ExternalGoToAction : GenericGoToAction
 //  which let you add effects / preconditions from some source (Unity, external file, etc.)
 //  and then add multiple ExternalGoToAction to your agent's gameobject's behaviours
-// abstract because added like this won't work (no effect/precondition): check GoToWoodCollectorAction
+// you can use this without any helper class by having the actions that need to move to a position
+//  or transform to have a precondition isAtPosition or isAtTransform
 [RequireComponent(typeof(SmsGoTo))]
-public abstract class GenericGoToAction : GoapAction
+public class GenericGoToAction : GoapAction
 {
     // sometimes a Transform is better (moving target), sometimes you do not have one (last target position)
     protected Transform objectiveTransform;
@@ -21,38 +23,74 @@ public abstract class GenericGoToAction : GoapAction
     {
         base.Awake();
 
+        SetDefaultEffects();
         smsGoto = GetComponent<SmsGoTo>();
+    }
+
+    private void SetDefaultEffects()
+    {
+        effects.Set("isAtPosition", default(Vector3));
+        effects.Set<Transform>("isAtTransform", null);
     }
 
     public override void Run(IReGoapAction previous, IReGoapAction next, ReGoapState goalState, Action<IReGoapAction> done, Action<IReGoapAction> fail)
     {
         base.Run(previous, next, goalState, done, fail);
 
-        GetObjective();
+        GetObjective(next);
         if (objectiveTransform != null)
             smsGoto.GoTo(objectiveTransform, OnDoneMovement, OnFailureMovement);
-        else
+        else if (objectivePosition != default(Vector3))
             smsGoto.GoTo(objectivePosition, OnDoneMovement, OnFailureMovement);
+        else
+            failCallback(this);
     }
 
     // generic behaviour, get from the next action's generic values: 'objective' or 'objectiveTransform'
     // most of goto actions will override this function and set objective themselves
     protected virtual void GetObjective()
     {
-        var objective = nextAction.GetGenericValues()["objective"];
-        var objectiveTransform = nextAction.GetGenericValues()["objectiveTransform"];
-        if (objectiveTransform != null)
+        GetObjective(nextAction);
+    }
+
+    protected virtual void GetObjective(IReGoapAction next)
+    {
+        var nextPreconditions = next.GetPreconditions(null, previousAction);
+        objectivePosition = nextPreconditions.Get<Vector3>("isAtPosition");
+        objectiveTransform = nextPreconditions.Get<Transform>("isAtTransform");
+    }
+
+    public override ReGoapState GetEffects(ReGoapState goalState, IReGoapAction next = null)
+    {
+        if (next != null)
         {
-            this.objectiveTransform = (Transform)objectiveTransform;
-        }
-        else if (objective != null)
-        {
-            this.objectivePosition = (Vector3)objective;
+            GetObjective(next);
+            effects.Set("isAtPosition", objectivePosition);
+            effects.Set("isAtTransform", objectiveTransform);
         }
         else
         {
-            throw new UnityException(string.Format("[{0}] Next action's does not have a generic value 'objective' (Vector3) or 'objectiveTransform' (Transform).", GetType().FullName));
+            SetDefaultEffects();
         }
+        return base.GetEffects(goalState, next);
+    }
+
+    public override float GetCost(ReGoapState goalState, IReGoapAction next = null)
+    {
+        var distance = 0;
+        if (next != null)
+        {
+            GetObjective(next);
+            if (objectivePosition != default(Vector3))
+            {
+                distance += Mathf.RoundToInt(Cost * (transform.position - objectivePosition).sqrMagnitude);
+            }
+            else if (objectiveTransform != null)
+            {
+                distance += Mathf.RoundToInt(Cost * (transform.position - objectiveTransform.transform.position).sqrMagnitude);
+            }
+        }
+        return base.GetCost(goalState, next) + distance;
     }
 
     protected virtual void OnFailureMovement()

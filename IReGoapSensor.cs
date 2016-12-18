@@ -11,4 +11,5 @@ public interface IReGoapSensor
 {
     void Init(IReGoapMemory memory);
     IReGoapMemory GetMemory();
+    void UpdateSensor();
 }

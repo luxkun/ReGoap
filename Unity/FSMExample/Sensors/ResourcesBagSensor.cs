@@ -9,7 +9,7 @@ public class ResourcesBagSensor : GoapSensor {
         resourcesBag = GetComponent<ResourcesBag>();
     }
 
-    void FixedUpdate()
+    public override void UpdateSensor()
     {
         var state = memory.GetWorldState();
         foreach (var pair in resourcesBag.GetResources())

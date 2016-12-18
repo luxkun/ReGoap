@@ -16,4 +16,9 @@ public class GoapSensor : MonoBehaviour, IReGoapSensor
     {
         return memory;
     }
+
+    public virtual void UpdateSensor()
+    {
+
+    }
 }

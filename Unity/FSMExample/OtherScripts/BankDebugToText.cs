@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 public class BankDebugToText : MonoBehaviour
 {
-    public Text text;
+    public Text Text;
     private Bank bank;
 
     void Awake()
@@ -19,6 +19,6 @@ public class BankDebugToText : MonoBehaviour
 	    {
 	        result += string.Format("{0}: {1}\n", pair.Key, pair.Value);
 	    }
-	    text.text = result;
+	    Text.text = result;
 	}
 }

@@ -15,33 +15,23 @@ public class ReGoapTests
     {
     }
 
-    IGoapPlanner GetPlanner(bool backward)
+    IGoapPlanner GetPlanner()
     {
         // not using early exit to have precise results, probably wouldn't care in a game for performance reasons
         return new ReGoapPlanner(
-            new ReGoapPlannerSettings { planningEarlyExit = false, backwardSearch = backward }
+            new ReGoapPlannerSettings { PlanningEarlyExit = false }
         );
     }
     [Test]
-    public void TestSimpleChainedPlanForward()
+    public void TestSimpleChainedPlan()
     {
-        TestSimpleChainedPlan(GetPlanner(false));
-    }
-    [Test]
-    public void TestSimpleChainedPlanBackward()
-    {
-        TestSimpleChainedPlan(GetPlanner(true));
+        TestSimpleChainedPlan(GetPlanner());
     }
 
     [Test]
-    public void TestTwoPhaseChainedPlanForward()
+    public void TestTwoPhaseChainedPlan()
     {
-        TestTwoPhaseChainedPlan(GetPlanner(false));
-    }
-    [Test]
-    public void TestTwoPhaseChainedPlanBackward()
-    {
-        TestTwoPhaseChainedPlan(GetPlanner(true));
+        TestTwoPhaseChainedPlan(GetPlanner());
     }
 
     [Test]

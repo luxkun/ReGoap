@@ -7,13 +7,13 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "Recipe", menuName = "New Recipe", order = 1)]
 public class Recipe : ScriptableObject, IRecipe
 {
-    public List<string> neededResourcesName;
-    public string craftName;
+    public List<string> NeededResourcesName;
+    public string CraftName;
 
     public Dictionary<string, float> GetNeededResources()
     {
         var dict = new Dictionary<string, float>();
-        foreach (var resourceName in neededResourcesName)
+        foreach (var resourceName in NeededResourcesName)
         {
             // could implement a more flexible system that has dynamic resources's count (need to create ad-hoc actions or a generic one that handle number of resources)
             dict[resourceName] = 1f;
@@ -23,7 +23,7 @@ public class Recipe : ScriptableObject, IRecipe
 
     public string GetCraftedResource()
     {
-        return craftName;
+        return CraftName;
     }
 }
 

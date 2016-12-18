@@ -5,21 +5,21 @@ public class ReGoapPlanner : IGoapPlanner
 {
     private IReGoapAgent goapAgent;
     private IReGoapGoal currentGoal;
-    public bool calculated;
+    public bool Calculated;
     private readonly AStar<ReGoapState> astar;
     private readonly ReGoapPlannerSettings settings;
 
     public ReGoapPlanner(ReGoapPlannerSettings settings = null)
     {
         this.settings = settings ?? new ReGoapPlannerSettings();
-        astar = new AStar<ReGoapState>(this.settings.maxNodesToExpand);
+        astar = new AStar<ReGoapState>(this.settings.MaxNodesToExpand);
     }
 
     public IReGoapGoal Plan(IReGoapAgent agent, IReGoapGoal blacklistGoal = null, Queue<IReGoapAction> currentPlan = null, Action<IReGoapGoal> callback = null)
     {
         ReGoapLogger.Log("[ReGoalPlanner] Starting planning calculation for agent: " + agent);
         goapAgent = agent;
-        calculated = false;
+        Calculated = false;
         currentGoal = null;
         var possibleGoals = new List<IReGoapGoal>();
         foreach (var goal in goapAgent.GetGoalsSet())
@@ -57,7 +57,7 @@ public class ReGoapPlanner : IGoapPlanner
                 continue;
             }
             var leaf = (ReGoapNode)astar.Run(
-                new ReGoapNode(this, goalState, null, null), goalState, settings.maxIterations, settings.planningEarlyExit);
+                new ReGoapNode(this, goalState, null, null), goalState, settings.MaxIterations, settings.PlanningEarlyExit);
             if (leaf == null)
             {
                 currentGoal = null;
@@ -72,7 +72,7 @@ public class ReGoapPlanner : IGoapPlanner
             currentGoal.SetPlan(path);
             break;
         }
-        calculated = true;
+        Calculated = true;
 
         if (callback != null)
             callback(currentGoal);
@@ -95,7 +95,7 @@ public class ReGoapPlanner : IGoapPlanner
 
     public bool IsPlanning()
     {
-        return !calculated;
+        return !Calculated;
     }
 
     public ReGoapPlannerSettings GetSettings()
@@ -116,10 +116,8 @@ public interface IGoapPlanner
 [Serializable]
 public class ReGoapPlannerSettings
 {
-    // from 10% to 200% faster, way less memory usage
-    public bool backwardSearch = true;
-    public bool planningEarlyExit = false;
+    public bool PlanningEarlyExit = false;
     // increase both if your agent has a lot of actions
-    public int maxIterations = 100;
-    public int maxNodesToExpand = 1000;
+    public int MaxIterations = 100;
+    public int MaxNodesToExpand = 1000;
 }

@@ -8,14 +8,14 @@ using UnityEngine;
 public class GoapGoal : MonoBehaviour, IReGoapGoal
 {
     public string Name = "GenericGoal";
-    public int priority = 1;
-    public float errorDelay = 0.5f;
+    public float Priority = 1;
+    public float ErrorDelay = 0.5f;
 
     protected ReGoapState goal;
     protected Queue<IReGoapAction> plan;
     protected IGoapPlanner planner;
 
-    public float warnDelay = 2f;
+    public float WarnDelay = 2f;
     private float warnCooldown;
 
     #region UnityFunctions
@@ -36,7 +36,7 @@ public class GoapGoal : MonoBehaviour, IReGoapGoal
     {
         if ((planner != null) && !planner.IsPlanning() && Time.time > warnCooldown)
         {
-            warnCooldown = Time.time + warnDelay;
+            warnCooldown = Time.time + WarnDelay;
             // check if this goal is not active but CAN be activated
             if ((planner.GetCurrentGoal() != this) && IsGoalPossible())
                 planner.GetCurrentAgent().WarnPossibleGoal(this);
@@ -53,9 +53,9 @@ public class GoapGoal : MonoBehaviour, IReGoapGoal
         return Name;
     }
 
-    public virtual int GetPriority()
+    public virtual float GetPriority()
     {
-        return priority;
+        return Priority;
     }
 
     public virtual bool IsGoalPossible()
@@ -89,7 +89,7 @@ public class GoapGoal : MonoBehaviour, IReGoapGoal
 
     public virtual float GetErrorDelay()
     {
-        return errorDelay;
+        return ErrorDelay;
     }
     #endregion
 

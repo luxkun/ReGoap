@@ -7,18 +7,18 @@ using UnityEngine;
 // craftable items as well primitive resources
 public class Resource : MonoBehaviour, IResource
 {
-    public string resourceName;
-    public float capacity = 1f;
+    public string ResourceName;
+    public float Capacity = 1f;
     protected float startingCapacity;
 
     protected virtual void Awake()
     {
-        startingCapacity = capacity;
+        startingCapacity = Capacity;
     }
 
     public string GetName()
     {
-        return resourceName;
+        return ResourceName;
     }
 
     public virtual Transform GetTransform()
@@ -28,12 +28,12 @@ public class Resource : MonoBehaviour, IResource
 
     public virtual float GetCapacity()
     {
-        return capacity;
+        return Capacity;
     }
 
     public virtual void RemoveResource(float value)
     {
-        capacity -= value;
+        Capacity -= value;
     }
 }
 

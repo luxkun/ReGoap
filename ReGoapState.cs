@@ -1,5 +1,4 @@
 ﻿using System;
-using System;
 using System.Collections.Generic;
 
 public class ReGoapState : ICloneable
@@ -62,9 +61,9 @@ public class ReGoapState : ICloneable
                 values.TryGetValue(pair.Key, out thisValue);
                 var otherValue = pair.Value;
                 // ex. this["isAt"] = "enemy" and other["isAt"] = "base"
-                if (backwardSearch && otherValue.Equals(false)) // backward search does NOT support false preconditions
+                if (backwardSearch && (otherValue == null || otherValue.Equals(false))) // backward search does NOT support false preconditions
                     continue;
-                if (thisValue != null && !otherValue.Equals(thisValue))
+                if (thisValue != null && otherValue != null && !otherValue.Equals(thisValue))
                     return true;
             }
             return false;
@@ -98,7 +97,12 @@ public class ReGoapState : ICloneable
                 }
                 else // generic version
                 {
-                    if (!pair.Value.Equals(otherValue))
+                    if (pair.Value == null)
+                    {
+                        if (otherValue != null)
+                            add = true;
+                    }
+                    else if (!pair.Value.Equals(otherValue))
                         add = true;
                 }
                 if (add && (predicate == null || predicate(pair, otherValue)))

@@ -51,7 +51,7 @@ public class GoapPlannerThread
         if (checkWork != null)
         {
             var work = checkWork.Value;
-            planner.Plan(work.agent, work.blacklistGoal, work.actions,
+            planner.Plan(work.Agent, work.BlacklistGoal, work.Actions,
                 (newGoal) => onDonePlan(this, work, newGoal));
         }
     }
@@ -60,9 +60,9 @@ public class GoapPlannerThread
 // behaviour that should be added once (and only once) to a gameobject in your unity's scene
 public class GoapPlannerManager : MonoBehaviour
 {
-    public static GoapPlannerManager instance;
+    public static GoapPlannerManager Instance;
 
-    public int threadsCount = 4;
+    public int ThreadsCount = 4;
     private GoapPlannerThread[] planners;
 
     private AutoResetEvent threadEvents;
@@ -70,13 +70,13 @@ public class GoapPlannerManager : MonoBehaviour
     private volatile List<PlanWork> doneWorks;
     private Thread[] threads;
 
-    public bool workInFixedUpdate = true;
-    public ReGoapPlannerSettings plannerSettings;
+    public bool WorkInFixedUpdate = true;
+    public ReGoapPlannerSettings PlannerSettings;
 
     #region UnityFunctions
     protected virtual void Awake()
     {
-        if (instance != null)
+        if (Instance != null)
         {
             Destroy(this);
             var errorString =
@@ -84,20 +84,20 @@ public class GoapPlannerManager : MonoBehaviour
             ReGoapLogger.LogError(errorString);
             throw new UnityException(errorString);
         }
-        instance = this;
+        Instance = this;
 
         doneWorks = new List<PlanWork>();
         worksQueue = new Queue<PlanWork>();
-        planners = new GoapPlannerThread[threadsCount];
-        threads = new Thread[threadsCount];
+        planners = new GoapPlannerThread[ThreadsCount];
+        threads = new Thread[ThreadsCount];
         threadEvents = new AutoResetEvent(false);
-        if (threadsCount > 1)
+        if (ThreadsCount > 1)
         {
             ReGoapLogger.Log("[GoapPlannerManager] Running in multi-thread mode.");
-            for (int i = 0; i < threadsCount; i++)
+            for (int i = 0; i < ThreadsCount; i++)
             {
-                planners[i] = new GoapPlannerThread(threadEvents, plannerSettings, worksQueue, OnDonePlan);
-                var thread = new Thread(planners[i].MainLoop) {IsBackground = true};
+                planners[i] = new GoapPlannerThread(threadEvents, PlannerSettings, worksQueue, OnDonePlan);
+                var thread = new Thread(planners[i].MainLoop) { IsBackground = true };
                 thread.Start();
                 threads[i] = thread;
             }
@@ -105,7 +105,7 @@ public class GoapPlannerManager : MonoBehaviour
         else
         {
             ReGoapLogger.Log("[GoapPlannerManager] Running in single-thread mode.");
-            planners[0] = new GoapPlannerThread(threadEvents, plannerSettings, worksQueue, OnDonePlan);
+            planners[0] = new GoapPlannerThread(threadEvents, PlannerSettings, worksQueue, OnDonePlan);
         }
     }
 
@@ -129,13 +129,13 @@ public class GoapPlannerManager : MonoBehaviour
 
     protected virtual void Update()
     {
-        if (workInFixedUpdate) return;
+        if (WorkInFixedUpdate) return;
         Tick();
     }
 
     protected virtual void FixedUpdate()
     {
-        if (!workInFixedUpdate) return;
+        if (!WorkInFixedUpdate) return;
         Tick();
     }
 
@@ -150,11 +150,11 @@ public class GoapPlannerManager : MonoBehaviour
                 doneWorks.Clear();
                 foreach (var work in doneWorksCopy)
                 {
-                    work.callback(work.newGoal);
+                    work.Callback(work.NewGoal);
                 }
             }
         }
-        if (threadsCount <= 1)
+        if (ThreadsCount <= 1)
         {
             planners[0].CheckWorkers();
         }
@@ -164,16 +164,16 @@ public class GoapPlannerManager : MonoBehaviour
     // called in another thread
     private void OnDonePlan(GoapPlannerThread plannerThread, PlanWork work, IReGoapGoal newGoal)
     {
-        work.newGoal = newGoal;
+        work.NewGoal = newGoal;
         lock (doneWorks)
         {
             doneWorks.Add(work);
 #if DEBUG
-            if (work.newGoal != null)
+            if (work.NewGoal != null)
             {
                 ReGoapLogger.Log("[GoapPlannerManager] Done calculating plan, actions list:");
                 var i = 0;
-                foreach (var action in work.newGoal.GetPlan())
+                foreach (var action in work.NewGoal.GetPlan())
                 {
                     ReGoapLogger.Log(string.Format("{0}: {1}", i++, action));
                 }
@@ -196,18 +196,18 @@ public class GoapPlannerManager : MonoBehaviour
 
 public struct PlanWork
 {
-    public readonly IReGoapAgent agent;
-    public readonly IReGoapGoal blacklistGoal;
-    public readonly Queue<IReGoapAction> actions;
-    public readonly Action<IReGoapGoal> callback;
+    public readonly IReGoapAgent Agent;
+    public readonly IReGoapGoal BlacklistGoal;
+    public readonly Queue<IReGoapAction> Actions;
+    public readonly Action<IReGoapGoal> Callback;
 
-    public IReGoapGoal newGoal;
+    public IReGoapGoal NewGoal;
 
     public PlanWork(IReGoapAgent agent, IReGoapGoal blacklistGoal, Queue<IReGoapAction> actions, Action<IReGoapGoal> callback) : this()
     {
-        this.agent = agent;
-        this.blacklistGoal = blacklistGoal;
-        this.actions = actions;
-        this.callback = callback;
+        Agent = agent;
+        BlacklistGoal = blacklistGoal;
+        Actions = actions;
+        Callback = callback;
     }
 }

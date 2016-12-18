@@ -11,8 +11,8 @@ public class TreeSensor : ResourceSensor
     private static float cacheUpdateDelay;
     private static float cacheUpdateCooldown = 1f;
 
-    public float minResourceValue = 1f;
-    public float minPowDistanceToBeNear = 1f;
+    public float MinResourceValue = 1f;
+    public float MinPowDistanceToBeNear = 1f;
     private ResourcesBag resourcesBag;
 
     public override void Init(IReGoapMemory memory)
@@ -21,27 +21,29 @@ public class TreeSensor : ResourceSensor
         resourcesBag = GetComponent<ResourcesBag>();
     }
 
-    void FixedUpdate()
+    public override void UpdateSensor()
     {
         var worldState = memory.GetWorldState();
-        worldState.Set("seeTree", TreeResourceManager.instance.GetResourcesCount() >= minResourceValue);
+        worldState.Set("seeTree", TreeResourceManager.Instance.GetResourcesCount() >= MinResourceValue);
 
         // since every agent will use same trees we cache this function
         if (Time.time > cacheUpdateDelay || cachedResources == null)
         {
-            UpdateResources(TreeResourceManager.instance);
+            UpdateResources(TreeResourceManager.Instance);
             cachedResources = resourcesPosition;
             cacheUpdateDelay = Time.time + cacheUpdateCooldown;
         }
         var nearestTree = Utilities.GetNearest(transform.position, cachedResources);
         worldState.Set("nearestTree", nearestTree);
+        worldState.Set("nearestTreePosition", nearestTree != null ? nearestTree.GetTransform().position : Vector3.zero);
         if (nearestTree != null &&
-            (transform.position - nearestTree.GetTransform().position).sqrMagnitude < minPowDistanceToBeNear)
+            (transform.position - nearestTree.GetTransform().position).sqrMagnitude < MinPowDistanceToBeNear)
         {
-            worldState.Set("isAt", "tree");
-        } else if (worldState.Get<string>("isAt") == "tree")
+            worldState.Set("isAtTransform", nearestTree.GetTransform());
+        }
+        else if (nearestTree != null && worldState.Get<Transform>("isAtTransform") == nearestTree.GetTransform())
         {
-            worldState.Set("isAt", "");
+            worldState.Set<Transform>("isAtTransform", null);
         }
     }
 }

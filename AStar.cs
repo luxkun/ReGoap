@@ -71,14 +71,14 @@ public interface INode<T>
     List<INode<T>> CalculatePath();
 
     int CompareTo(INode<T> other);
-    int GetCost();
-    int GetHeuristicCost();
-    int GetPathCost();
+    float GetCost();
+    float GetHeuristicCost();
+    float GetPathCost();
     INode<T> GetParent();
     bool IsGoal(T goal);
 
     int QueueIndex { get; set; }
-    int Priority { get; set; }
+    float Priority { get; set; }
 }
 
 public class NodeComparer<T> : IComparer<INode<T>>
