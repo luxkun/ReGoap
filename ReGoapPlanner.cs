@@ -15,7 +15,7 @@ public class ReGoapPlanner : IGoapPlanner
         astar = new AStar<ReGoapState>(this.settings.MaxNodesToExpand);
     }
 
-    public IReGoapGoal Plan(IReGoapAgent agent, IReGoapGoal blacklistGoal = null, Queue<IReGoapAction> currentPlan = null, Action<IReGoapGoal> callback = null)
+    public IReGoapGoal Plan(IReGoapAgent agent, IReGoapGoal blacklistGoal = null, Queue<ReGoapActionState> currentPlan = null, Action<IReGoapGoal> callback = null)
     {
         ReGoapLogger.Log("[ReGoalPlanner] Starting planning calculation for agent: " + agent);
         goapAgent = agent;
@@ -38,24 +38,29 @@ public class ReGoapPlanner : IGoapPlanner
             possibleGoals.RemoveAt(possibleGoals.Count - 1);
             var goalState = currentGoal.GetGoalState();
 
-            var wantedGoalCheck = currentGoal.GetGoalState();
-            // we check if the goal can be archived through actions first, so we don't brute force it with A* if we can't
-            foreach (var action in goapAgent.GetActionsSet())
+            // can't work with dynamic actions, of course
+            if (!settings.UsingDynamicActions)
             {
-                action.Precalculations(goapAgent, goalState);
-                if (!action.CheckProceduralCondition(goapAgent, wantedGoalCheck))
+                var wantedGoalCheck = currentGoal.GetGoalState();
+                // we check if the goal can be archived through actions first, so we don't brute force it with A* if we can't
+                foreach (var action in goapAgent.GetActionsSet())
+                {
+                    action.Precalculations(goapAgent, goalState);
+                    if (!action.CheckProceduralCondition(goapAgent, wantedGoalCheck))
+                        continue;
+                    // check if the effects of all actions can archieve currentGoal
+                    var previous = wantedGoalCheck;
+                    wantedGoalCheck = new ReGoapState();
+                    previous.MissingDifference(action.GetEffects(wantedGoalCheck), ref wantedGoalCheck);
+                }
+                // can't validate goal 
+                if (wantedGoalCheck.Count > 0)
+                {
+                    currentGoal = null;
                     continue;
-                // check if the effects of all actions can archieve currentGoal
-                var previous = wantedGoalCheck;
-                wantedGoalCheck = new ReGoapState();
-                previous.MissingDifference(action.GetEffects(wantedGoalCheck), ref wantedGoalCheck);
+                }
             }
-            // can't validate goal 
-            if (wantedGoalCheck.Count > 0)
-            {
-                currentGoal = null;
-                continue;
-            }
+
             var leaf = (ReGoapNode)astar.Run(
                 new ReGoapNode(this, goalState, null, null), goalState, settings.MaxIterations, settings.PlanningEarlyExit);
             if (leaf == null)
@@ -102,22 +107,4 @@ public class ReGoapPlanner : IGoapPlanner
     {
         return settings;
     }
-}
-
-public interface IGoapPlanner
-{
-    IReGoapGoal Plan(IReGoapAgent goapAgent, IReGoapGoal blacklistGoal, Queue<IReGoapAction> currentPlan, Action<IReGoapGoal> callback);
-    IReGoapGoal GetCurrentGoal();
-    IReGoapAgent GetCurrentAgent();
-    bool IsPlanning();
-    ReGoapPlannerSettings GetSettings();
-}
-
-[Serializable]
-public class ReGoapPlannerSettings
-{
-    public bool PlanningEarlyExit = false;
-    // increase both if your agent has a lot of actions
-    public int MaxIterations = 100;
-    public int MaxNodesToExpand = 1000;
 }

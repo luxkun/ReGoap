@@ -1,29 +1,19 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 // one resourcemanager per type
 public class ResourceManager : MonoBehaviour, IResourceManager
 {
-    public string ResourceName = "ResourceName";
-    public MonoBehaviour[] RawResources; // add resources directly in Unity
-    public IResource[] Resources;
+    private List<IResource> resources;
     private int currentIndex;
+    public string ResourceName;
 
     #region UnityFunctions
     protected virtual void Awake()
     {
         currentIndex = 0;
-
-        Resources = new IResource[RawResources.Length];
-        for (int index = 0; index < RawResources.Length; index++)
-        {
-            var resource = RawResources[index];
-            var iresource = resource as IResource;
-            if (iresource != null)
-                Resources[index] = iresource;
-            else
-                throw new UnityException(string.Format("[{0}] rawResources has a behaviour which does not implement IResource.", GetType().FullName));
-        }
+        resources = new List<IResource>();
     }
 
     protected virtual void Start()
@@ -47,20 +37,26 @@ public class ResourceManager : MonoBehaviour, IResourceManager
 
     public virtual int GetResourcesCount()
     {
-        return Resources.Length;
+        return resources.Count;
     }
 
-    public virtual IResource[] GetResources()
+    public virtual List<IResource> GetResources()
     {
-        return Resources;
+        return resources;
     }
 
     public virtual IResource GetResource()
     {
-        var result = Resources[currentIndex];
-        currentIndex = currentIndex++%Resources.Length;
+        var result = resources[currentIndex];
+        currentIndex = currentIndex++%resources.Count;
         return result;
     }
+
+    public void AddResource(IResource resource)
+    {
+        resources.Add(resource);
+    }
+
     #endregion
 }
 
@@ -68,7 +64,8 @@ public interface IResourceManager
 {
     string GetResourceName();
     int GetResourcesCount();
-    IResource[] GetResources();
+    List<IResource> GetResources();
     // preferably should get a different transform every call
     IResource GetResource();
+    void AddResource(IResource resource);
 }

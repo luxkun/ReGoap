@@ -27,14 +27,5 @@ public class BankSensor : GoapSensor
         var nearestBank = Utilities.GetNearest(transform.position, banks);
         worldState.Set("nearestBank", nearestBank);
         worldState.Set("nearestBankPosition", nearestBank != null ? nearestBank.transform.position : Vector3.zero);
-        if (nearestBank != null &&
-            (transform.position - nearestBank.transform.position).sqrMagnitude < MinPowDistanceToBeNear)
-        {
-            worldState.Set("isAtTransform", nearestBank.transform);
-        }
-        else if (nearestBank != null && worldState.Get<Transform>("isAtTransform") == nearestBank.transform)
-        {
-            worldState.Set<Transform>("isAtTransform", null);
-        }
     }
 }

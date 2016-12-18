@@ -20,26 +20,28 @@ public class CraftRecipeAction : GoapAction
         // could implement a more flexible system that handles dynamic resources's count
         foreach (var pair in recipe.GetNeededResources())
         {
-            preconditions.Set("has" + pair.Key, true);
+            preconditions.Set("hasResource" + pair.Key, true);
         }
-        preconditions.Set("has" + recipe.GetCraftedResource(), false); // do not permit duplicates in the bag
-        effects.Set("has" + recipe.GetCraftedResource(), true);
+        preconditions.Set("hasResource" + recipe.GetCraftedResource(), false); // do not permit duplicates in the bag
+        effects.Set("hasResource" + recipe.GetCraftedResource(), true);
     }
 
     public override void Precalculations(IReGoapAgent goapAgent, ReGoapState goalState)
     {
         base.Precalculations(goapAgent, goalState);
         var workstationPosition = agent.GetMemory().GetWorldState().Get<Vector3>("nearestWorkstationPosition");
-        if (workstationPosition != default(Vector3))
-            preconditions.Set("isAtPosition", workstationPosition);
+        preconditions.Set("isAtPosition", workstationPosition);
+        // todo: workaround to resolve the need to do this
+        effects.Set("isAtPosition", Vector3.zero);
     }
 
-    public override void Run(IReGoapAction previous, IReGoapAction next, ReGoapState goalState, Action<IReGoapAction> done, Action<IReGoapAction> fail)
+    public override void Run(IReGoapAction previous, IReGoapAction next, IReGoapActionSettings settings, ReGoapState goalState, Action<IReGoapAction> done, Action<IReGoapAction> fail)
     {
-        base.Run(previous, next, goalState, done, fail);
+        base.Run(previous, next, settings, goalState, done, fail);
         var workstation = agent.GetMemory().GetWorldState().Get<Workstation>("nearestWorkstation");
         if (workstation.CraftResource(resourcesBag, recipe))
         {
+            ReGoapLogger.Log("[CraftRecipeAction] crafted recipe " + recipe.GetCraftedResource());
             done(this);
         }
         else

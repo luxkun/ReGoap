@@ -20,8 +20,9 @@ public class GoapAction : MonoBehaviour, IReGoapAction
 
     protected IReGoapAgent agent;
     protected Dictionary<string, object> genericValues;
-    protected GoapActionSettings settings;
     protected bool interruptWhenPossible;
+
+    protected IReGoapActionSettings settings = null;
 
     #region UnityFunctions
     protected virtual void Awake()
@@ -32,17 +33,16 @@ public class GoapAction : MonoBehaviour, IReGoapAction
         preconditions = new ReGoapState();
 
         genericValues = new Dictionary<string, object>();
-        settings = new GoapActionSettings();
     }
 
     protected virtual void Start()
     {
-        
+
     }
 
     protected virtual void Update()
     {
-        
+
     }
 
     protected virtual void FixedUpdate()
@@ -75,7 +75,7 @@ public class GoapAction : MonoBehaviour, IReGoapAction
         agent = goapAgent;
     }
 
-    public virtual GoapActionSettings GetSettings(IReGoapAgent goapAgent, ReGoapState goalState)
+    public virtual IReGoapActionSettings GetSettings(IReGoapAgent goapAgent, ReGoapState goalState)
     {
         return settings;
     }
@@ -100,8 +100,8 @@ public class GoapAction : MonoBehaviour, IReGoapAction
         return true;
     }
 
-    public virtual void Run(IReGoapAction previous, IReGoapAction next, ReGoapState goalState, Action<IReGoapAction> done,
-        Action<IReGoapAction> fail)
+    public virtual void Run(IReGoapAction previous, IReGoapAction next, IReGoapActionSettings settings,
+        ReGoapState goalState, Action<IReGoapAction> done, Action<IReGoapAction> fail)
     {
         interruptWhenPossible = false;
         enabled = true;

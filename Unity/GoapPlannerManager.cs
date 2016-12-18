@@ -175,14 +175,14 @@ public class GoapPlannerManager : MonoBehaviour
                 var i = 0;
                 foreach (var action in work.NewGoal.GetPlan())
                 {
-                    ReGoapLogger.Log(string.Format("{0}: {1}", i++, action));
+                    ReGoapLogger.Log(string.Format("{0}: {1}", i++, action.Action));
                 }
             }
 #endif
         }
     }
 
-    public PlanWork Plan(IReGoapAgent agent, IReGoapGoal blacklistGoal, Queue<IReGoapAction> currentPlan, Action<IReGoapGoal> callback)
+    public PlanWork Plan(IReGoapAgent agent, IReGoapGoal blacklistGoal, Queue<ReGoapActionState> currentPlan, Action<IReGoapGoal> callback)
     {
         var work = new PlanWork(agent, blacklistGoal, currentPlan, callback);
         lock (worksQueue)
@@ -198,12 +198,12 @@ public struct PlanWork
 {
     public readonly IReGoapAgent Agent;
     public readonly IReGoapGoal BlacklistGoal;
-    public readonly Queue<IReGoapAction> Actions;
+    public readonly Queue<ReGoapActionState> Actions;
     public readonly Action<IReGoapGoal> Callback;
 
     public IReGoapGoal NewGoal;
 
-    public PlanWork(IReGoapAgent agent, IReGoapGoal blacklistGoal, Queue<IReGoapAction> actions, Action<IReGoapGoal> callback) : this()
+    public PlanWork(IReGoapAgent agent, IReGoapGoal blacklistGoal, Queue<ReGoapActionState> actions, Action<IReGoapGoal> callback) : this()
     {
         Agent = agent;
         BlacklistGoal = blacklistGoal;

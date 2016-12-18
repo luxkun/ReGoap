@@ -8,7 +8,7 @@ public class CollectResourceGoal : GoapGoal
     protected override void Awake()
     {
         base.Awake();
-        goal.Set("collected" + ResourceName, true);
+        goal.Set("collectedResource" + ResourceName, true);
     }
 
     public override string ToString()

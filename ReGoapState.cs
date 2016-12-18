@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class ReGoapState : ICloneable
 {
@@ -51,7 +52,7 @@ public class ReGoapState : ICloneable
             return false;
         }
     }
-    public bool HasAnyConflict(ReGoapState other, bool backwardSearch = true) // used only in backward for now
+    public bool HasAnyConflict(ReGoapState other) // used only in backward for now
     {
         lock (values) lock (other.values)
         {
@@ -60,10 +61,9 @@ public class ReGoapState : ICloneable
                 object thisValue;
                 values.TryGetValue(pair.Key, out thisValue);
                 var otherValue = pair.Value;
-                // ex. this["isAt"] = "enemy" and other["isAt"] = "base"
-                if (backwardSearch && (otherValue == null || otherValue.Equals(false))) // backward search does NOT support false preconditions
+                if (otherValue == null || otherValue.Equals(false)) // backward search does NOT support false preconditions
                     continue;
-                if (thisValue != null && otherValue != null && !otherValue.Equals(thisValue))
+                if (thisValue != null && !otherValue.Equals(thisValue))
                     return true;
             }
             return false;
@@ -77,7 +77,7 @@ public class ReGoapState : ICloneable
     }
 
     // write differences in "difference"
-    public int MissingDifference(ReGoapState other, ref ReGoapState difference, int stopAt = int.MaxValue, Func<KeyValuePair<string, object>, object, bool> predicate = null)
+    public int MissingDifference(ReGoapState other, ref ReGoapState difference, int stopAt = int.MaxValue, Func<KeyValuePair<string, object>, object, bool> predicate = null, bool test = false)
     {
         lock (values)
         {
@@ -97,13 +97,15 @@ public class ReGoapState : ICloneable
                 }
                 else // generic version
                 {
-                    if (pair.Value == null)
+                    var valueVector3 = pair.Value as Vector3?;
+                    if (valueVector3 != null && test)
                     {
-                        if (otherValue != null)
-                            add = true;
-                    }
-                    else if (!pair.Value.Equals(otherValue))
                         add = true;
+                    }
+                    else if ((pair.Value == null && otherValue != null) || (!pair.Value.Equals(otherValue)))
+                    {
+                        add = true;
+                    }
                 }
                 if (add && (predicate == null || predicate(pair, otherValue)))
                 {
@@ -170,5 +172,10 @@ public class ReGoapState : ICloneable
     {
         lock (values)
             return values.ContainsKey(key);
+    }
+
+    public void Clear()
+    {
+        values.Clear();
     }
 }

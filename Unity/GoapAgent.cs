@@ -17,12 +17,12 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
     protected IReGoapMemory memory;
     protected IReGoapGoal currentGoal;
 
-    protected IReGoapAction currentAction;
+    protected ReGoapActionState currentActionState;
 
     protected Dictionary<IReGoapGoal, float> goalBlacklist;
     protected List<IReGoapGoal> possibleGoals;
     protected bool possibleGoalsDirty;
-    protected List<IReGoapAction> startingPlan;
+    protected List<ReGoapActionState> startingPlan;
     protected Dictionary<string, object> planValues;
     protected bool interruptOnNextTransistion;
 
@@ -47,7 +47,6 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
 
     protected virtual void Start()
     {
-        CalculateNewGoal();
     }
 
     protected virtual void FixedUpdate()
@@ -66,7 +65,7 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
     {
         possibleGoalsDirty = true;
 
-        if (currentAction == null)
+        if (currentActionState == null)
         {
             if (!IsPlanning)
                 CalculateNewGoal();
@@ -74,8 +73,8 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
         }
         // check if current action preconditions are still valid, else invalid action and restart planning
         var state = memory.GetWorldState();
-        if (currentAction.GetPreconditions(state).MissingDifference(state, 1) > 0)
-            TryWarnActionFailure(currentAction);
+        if (currentActionState.Action.GetPreconditions(state).MissingDifference(state, 1) > 0)
+            TryWarnActionFailure(currentActionState.Action);
     }
     #endregion
 
@@ -136,16 +135,16 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
             else
                 return;
 
-        if (currentAction != null)
-            currentAction.Exit(null);
-        currentAction = null;
+        if (currentActionState != null)
+            currentActionState.Action.Exit(null);
+        currentActionState = null;
         currentGoal = newGoal;
         var plan = currentGoal.GetPlan();
         startingPlan = plan.ToList();
         ClearPlanValues();
-        foreach (var action in startingPlan)
+        foreach (var actionState in startingPlan)
         {
-            action.PostPlanCalculations(this);
+            actionState.Action.PostPlanCalculations(this);
         }
         currentGoal.Run(WarnGoalEnd);
         PushAction();
@@ -164,9 +163,9 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
         return result;
     }
 
-    public virtual void WarnActionEnd(IReGoapAction action)
+    public virtual void WarnActionEnd(IReGoapAction thisAction)
     {
-        if (action != currentAction)
+        if (thisAction != currentActionState.Action)
             return;
         PushAction();
     }
@@ -185,22 +184,22 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
         }
         else
         {
-            var previous = currentAction;
-            currentAction = plan.Dequeue();
+            var previous = currentActionState;
+            currentActionState = plan.Dequeue();
             IReGoapAction next = null;
             if (plan.Count > 0)
-                next = plan.Peek();
+                next = plan.Peek().Action;
             if (previous != null)
-                previous.Exit(currentAction);
-            currentAction.Run(previous, next, currentGoal.GetGoalState(), WarnActionEnd, WarnActionFailure);
+                previous.Action.Exit(currentActionState.Action);
+            currentActionState.Action.Run(previous != null ? previous.Action : null, next, currentActionState.Settings, currentGoal.GetGoalState(), WarnActionEnd, WarnActionFailure);
         }
     }
 
-    public virtual void WarnActionFailure(IReGoapAction action)
+    public virtual void WarnActionFailure(IReGoapAction thisAction)
     {
-        if (action != currentAction)
+        if (thisAction != currentActionState.Action)
         {
-            ReGoapLogger.LogWarning(string.Format("[GoapAgent] Action {0} warned for failure but is not current action.", action));
+            ReGoapLogger.LogWarning(string.Format("[GoapAgent] Action {0} warned for failure but is not current action.", thisAction));
             return;
         }
         if (BlackListGoalOnFailure)
@@ -222,10 +221,10 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
     {
         if ((currentGoal != null) && (goal.GetPriority() <= currentGoal.GetPriority()))
             return;
-        if (currentAction != null && !currentAction.IsInterruptable())
+        if (currentActionState != null && !currentActionState.Action.IsInterruptable())
         {
             interruptOnNextTransistion = true;
-            currentAction.AskForInterruption();
+            currentActionState.Action.AskForInterruption();
         }
         else
             CalculateNewGoal();
@@ -236,7 +235,7 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
         return enabled;
     }
 
-    public virtual List<IReGoapAction> GetStartingPlan()
+    public virtual List<ReGoapActionState> GetStartingPlan()
     {
         return startingPlan;
     }

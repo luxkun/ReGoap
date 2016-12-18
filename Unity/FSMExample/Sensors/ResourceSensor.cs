@@ -12,8 +12,8 @@ public class ResourceSensor : GoapSensor
     protected virtual void UpdateResources(IResourceManager manager)
     {
         var resources = manager.GetResources();
-        resourcesPosition = new Dictionary<IResource, Vector3>(resources.Length);
-        for (int index = 0; index < resources.Length; index++)
+        resourcesPosition = new Dictionary<IResource, Vector3>(resources.Count);
+        for (int index = 0; index < resources.Count; index++)
         {
             var resource = resources[index];
             if (resource.GetCapacity() > 0)

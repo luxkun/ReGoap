@@ -44,8 +44,8 @@ public class ReGoapTestsHelper
     {
         foreach (var action in plan.GetPlan())
         {
-            Assert.That(action.GetPreconditions(plan.GetGoalState()).MissingDifference(memory.GetWorldState(), 1) == 0);
-            foreach (var effectsPair in action.GetEffects(plan.GetGoalState()).GetValues())
+            Assert.That(action.Action.GetPreconditions(plan.GetGoalState()).MissingDifference(memory.GetWorldState(), 1) == 0);
+            foreach (var effectsPair in action.Action.GetEffects(plan.GetGoalState()).GetValues())
             {   // in a real game this should be done by memory itself
                 //  e.x. isNearTarget = (transform.position - target.position).magnitude < minRangeForCC
                 memory.SetValue(effectsPair.Key, effectsPair.Value);

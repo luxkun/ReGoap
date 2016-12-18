@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using UnityEngine.VR;
 
 public class ReGoapNodeBaseEditor : EditorWindow
 {
@@ -163,8 +164,11 @@ public class ReGoapNodeBaseEditor : EditorWindow
             var text = string.Format("<b>POSS.ACTION</b> <i>{0}</i>\n", action.GetName());
             text += "-<b>preconditions</b>-\n";
             ReGoapState preconditionsDifferences = new ReGoapState();
-            action.GetPreconditions(null).MissingDifference(worldState, ref preconditionsDifferences);
-            foreach (var preconditionPair in action.GetPreconditions(null).GetValues())
+            var preconditions = action.GetPreconditions(null);
+            if (preconditions == null)
+                continue;
+            preconditions.MissingDifference(worldState, ref preconditionsDifferences);
+            foreach (var preconditionPair in preconditions.GetValues())
             {
                 curHeight += 13;
                 var color = "#004d00";
@@ -195,11 +199,11 @@ public class ReGoapNodeBaseEditor : EditorWindow
             foreach (var action in agent.GetStartingPlan().ToArray())
             {
                 var style = actionNodeStyle;
-                if (action.IsActive())
+                if (action.Action.IsActive())
                 {
                     style = activeActionNodeStyle;
                 }
-                var text = string.Format("<b>ACTION</b> <i>{0}</i>\n", action.GetName());
+                var text = string.Format("<b>ACTION</b> <i>{0}</i>\n", action.Action.GetName());
                 DrawGenericNode(text, width, height, style, ref nodePosition);
             }
         }

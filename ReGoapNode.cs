@@ -8,6 +8,7 @@ public class ReGoapNode : INode<ReGoapState>
     private readonly IGoapPlanner planner;
     private readonly ReGoapNode parent;
     private readonly IReGoapAction action;
+    private readonly IReGoapActionSettings actionSettings;
     private readonly ReGoapState state;
     private readonly ReGoapState goal;
     private readonly float g;
@@ -21,6 +22,8 @@ public class ReGoapNode : INode<ReGoapState>
         this.parent = parent;
         this.action = action;
         goal = (ReGoapState)newGoal.Clone();
+        if (action != null)
+            actionSettings = action.GetSettings(planner.GetCurrentAgent(), goal);
 
         if (this.parent != null)
         {
@@ -32,13 +35,14 @@ public class ReGoapNode : INode<ReGoapState>
         {
             state = planner.GetCurrentAgent().GetMemory().GetWorldState();
         }
+
+        var nextAction = parent == null ? null : parent.action;
         //state = (ReGoapState)state.Clone(); // no need anymore since ReGoapState add operator now returns a new state
         if (action != null)
         {
-            var nextAction = parent == null ? null : parent.action;
             var effects = (ReGoapState)action.GetEffects(goal, nextAction).Clone();
             state += effects;
-            g += action.GetCost(goal, parent != null ? parent.GetAction() : null);
+            g += action.GetCost(goal, nextAction);
         }
         // missing states from goal
         // h(node)
@@ -47,14 +51,14 @@ public class ReGoapNode : INode<ReGoapState>
         {
             var diff = new ReGoapState();
             // backward search does NOT support negative preconditions
-            action.GetPreconditions(goal)
-                .MissingDifference(state, ref diff, predicate: (pair, otherValue) => !pair.Value.Equals(false));
+            h = action.GetPreconditions(goal, nextAction)
+                .MissingDifference(state, ref diff, predicate: (pair, otherValue) => !pair.Value.Equals(false), test: true);
             goal += diff;
         }
         // f(node) = g(node) + h(node)
         cost = g + h * heuristicMultiplier;
         var missingState = new ReGoapState();
-        h = goal.MissingDifference(state, ref missingState);
+        h += goal.MissingDifference(state, ref missingState);
         goal = missingState;
     }
 
@@ -80,6 +84,7 @@ public class ReGoapNode : INode<ReGoapState>
         for (var index = 0; index < actions.Count; index++)
         {
             var possibleAction = actions[index];
+            possibleAction.Precalculations(agent, goal);
             var precond = possibleAction.GetPreconditions(goal, action);
             var effects = possibleAction.GetEffects(goal, action);
             if (possibleAction == action)
@@ -87,7 +92,7 @@ public class ReGoapNode : INode<ReGoapState>
             if (effects.HasAny(goal) && // any effect is the current goal
                 !goal.HasAnyConflict(effects) && // no effect is conflicting with the goal
                 !goal.HasAnyConflict(precond) && // no precondition is conflicting with the goal
-                possibleAction.CheckProceduralCondition(agent, goal, parent != null ? parent.action : null)) 
+                possibleAction.CheckProceduralCondition(agent, goal, parent != null ? parent.action : null))
                 yield return possibleAction;
         }
     }
@@ -114,19 +119,19 @@ public class ReGoapNode : INode<ReGoapState>
         return action;
     }
 
-    public Queue<IReGoapAction> CalculatePath()
+    public Queue<ReGoapActionState> CalculatePath()
     {
-        var listResult = new List<IReGoapAction>();
+        var listResult = new List<ReGoapActionState>();
         var node = this;
         while (node.GetParent() != null)
         {
-            listResult.Add(node.action);
+            listResult.Add(new ReGoapActionState(node.action, node.actionSettings));
             node = (ReGoapNode)node.GetParent();
         }
-        var result = new Queue<IReGoapAction>(listResult.Count);
-        foreach (var thisAction in listResult)
+        var result = new Queue<ReGoapActionState>(listResult.Count);
+        foreach (var thisActionState in listResult)
         {
-            result.Enqueue(thisAction);
+            result.Enqueue(thisActionState);
         }
         return result;
     }

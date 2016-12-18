@@ -5,33 +5,49 @@ using System.Collections;
 [RequireComponent(typeof(ResourcesBag))]
 public class AddResourceToBankAction : GoapAction
 {
-    public string ResourceName;
     private ResourcesBag resourcesBag;
 
     protected override void Awake()
     {
         base.Awake();
         resourcesBag = GetComponent<ResourcesBag>();
-
-        preconditions.Set("has" + ResourceName, true);
-        preconditions.Set("collected" + ResourceName, false);
-        effects.Set("collected" + ResourceName, true);
     }
 
     public override void Precalculations(IReGoapAgent goapAgent, ReGoapState goalState)
     {
         base.Precalculations(goapAgent, goalState);
         var bankPosition = agent.GetMemory().GetWorldState().Get<Vector3>("nearestBankPosition");
-        if (bankPosition != default(Vector3))
-            preconditions.Set("isAtPosition", bankPosition);
+        preconditions.Set("isAtPosition", bankPosition);
+        effects.Set("isAtPosition", Vector3.zero);
+
+        foreach (var pair in goalState.GetValues())
+        {
+            if (pair.Key.StartsWith("collectedResource"))
+            {
+                var resourceName = pair.Key.Substring(17);
+                preconditions.Set("hasResource" + resourceName, true);
+                preconditions.Set("collectedResource" + resourceName, false);
+                effects.Set("collectedResource" + resourceName, true);
+                var resourcePosition =
+                    agent.GetMemory().GetWorldState().Get<Vector3>(string.Format("nearest{0}Position", resourceName));
+                var resource = agent.GetMemory().GetWorldState().Get<IResource>("nearest" + resourcePosition);
+                settings = new AddResourceToBankSettings
+                {
+                    Resource = resource, 
+                    ResourcePosition = resourcePosition
+                };
+                break;
+            }
+        }
     }
 
 
-    public override void Run(IReGoapAction previous, IReGoapAction next, ReGoapState goalState, Action<IReGoapAction> done, Action<IReGoapAction> fail)
+    public override void Run(IReGoapAction previous, IReGoapAction next, IReGoapActionSettings settings, ReGoapState goalState, Action<IReGoapAction> done, Action<IReGoapAction> fail)
     {
-        base.Run(previous, next, goalState, done, fail);
+        base.Run(previous, next, settings, goalState, done, fail);
+        this.settings = (AddResourceToBankSettings) settings;
         var bank = agent.GetMemory().GetWorldState().Get<Bank>("nearestBank");
-        if (bank.AddResource(resourcesBag, ResourceName))
+        if (bank.AddResource(resourcesBag, ((AddResourceToBankSettings) settings).Resource.GetName()))
         {
             done(this);
         }
@@ -43,6 +59,12 @@ public class AddResourceToBankAction : GoapAction
 
     public override string ToString()
     {
-        return string.Format("GoapAction('{0}', '{1}')", Name, ResourceName);
+        return string.Format("GoapAction('{0}')", Name);
     }
+}
+
+public class AddResourceToBankSettings : IReGoapActionSettings
+{
+    public IResource Resource;
+    public Vector3 ResourcePosition;
 }

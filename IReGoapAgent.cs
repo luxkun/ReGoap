@@ -6,7 +6,7 @@ public interface IReGoapAgent
     IReGoapGoal GetCurrentGoal();
     void WarnPossibleGoal(IReGoapGoal goal);
     bool IsActive();
-    List<IReGoapAction> GetStartingPlan();
+    List<ReGoapActionState> GetStartingPlan();
     T GetPlanValue<T>(string key);
     void SetPlanValue<T>(string key, T value);
     bool HasPlanValue(string target);

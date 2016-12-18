@@ -12,7 +12,7 @@ public class GoapGoal : MonoBehaviour, IReGoapGoal
     public float ErrorDelay = 0.5f;
 
     protected ReGoapState goal;
-    protected Queue<IReGoapAction> plan;
+    protected Queue<ReGoapActionState> plan;
     protected IGoapPlanner planner;
 
     public float WarnDelay = 2f;
@@ -63,7 +63,7 @@ public class GoapGoal : MonoBehaviour, IReGoapGoal
         return true;
     }
 
-    public virtual Queue<IReGoapAction> GetPlan()
+    public virtual Queue<ReGoapActionState> GetPlan()
     {
         return plan;
     }
@@ -73,7 +73,7 @@ public class GoapGoal : MonoBehaviour, IReGoapGoal
         return goal;
     }
 
-    public virtual void SetPlan(Queue<IReGoapAction> path)
+    public virtual void SetPlan(Queue<ReGoapActionState> path)
     {
         plan = path;
     }

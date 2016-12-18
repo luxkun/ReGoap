@@ -3,8 +3,11 @@ using System.Collections.Generic;
 
 public interface IReGoapAction
 {
-    GoapActionSettings GetSettings(IReGoapAgent goapAgent, ReGoapState goalState);
-    void Run(IReGoapAction previousAction, IReGoapAction nextAction, ReGoapState goalState, Action<IReGoapAction> done, Action<IReGoapAction> fail);
+    // this should return current's action calculated parameter, will be added to the run method
+    // userful for dynamic actions, for example a GoTo action can save some informations (wanted position)
+    // while being chosen from the planner, we save this information and give it back when we run the method
+    IReGoapActionSettings GetSettings(IReGoapAgent goapAgent, ReGoapState goalState);
+    void Run(IReGoapAction previousAction, IReGoapAction nextAction, IReGoapActionSettings settings, ReGoapState goalState, Action<IReGoapAction> done, Action<IReGoapAction> fail);
     void Exit(IReGoapAction nextAction);
     Dictionary<string, object> GetGenericValues();
     string GetName();
@@ -21,6 +24,6 @@ public interface IReGoapAction
     void Precalculations(IReGoapAgent goapAgent, ReGoapState goalState);
 }
 
-public class GoapActionSettings
+public interface IReGoapActionSettings
 {
 }

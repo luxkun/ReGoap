@@ -30,14 +30,5 @@ public class WorkstationSensor : GoapSensor
         var nearestStation = Utilities.GetNearest(transform.position, workstations);
         worldState.Set("nearestWorkstation", nearestStation);
         worldState.Set("nearestWorkstationPosition", nearestStation != null ? nearestStation.transform.position : Vector3.zero);
-        if (nearestStation != null &&
-            (transform.position - nearestStation.transform.position).sqrMagnitude < MinPowDistanceToBeNear)
-        {
-            worldState.Set("isAtTransform", nearestStation.transform);
-        }
-        else if (nearestStation != null && worldState.Get<Transform>("isAtTransform") == nearestStation.transform)
-        {
-            worldState.Set<Transform>("isAtTransform", null);
-        }
     }
 }
