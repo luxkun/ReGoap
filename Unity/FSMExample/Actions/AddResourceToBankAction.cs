@@ -17,6 +17,9 @@ public class AddResourceToBankAction : GoapAction
     {
         base.Precalculations(goapAgent, goalState);
         var bankPosition = agent.GetMemory().GetWorldState().Get<Vector3>("nearestBankPosition");
+
+        preconditions.Clear();
+        effects.Clear();
         preconditions.Set("isAtPosition", bankPosition);
         effects.Set("isAtPosition", Vector3.zero);
 
@@ -28,13 +31,9 @@ public class AddResourceToBankAction : GoapAction
                 preconditions.Set("hasResource" + resourceName, true);
                 preconditions.Set("collectedResource" + resourceName, false);
                 effects.Set("collectedResource" + resourceName, true);
-                var resourcePosition =
-                    agent.GetMemory().GetWorldState().Get<Vector3>(string.Format("nearest{0}Position", resourceName));
-                var resource = agent.GetMemory().GetWorldState().Get<IResource>("nearest" + resourcePosition);
                 settings = new AddResourceToBankSettings
                 {
-                    Resource = resource, 
-                    ResourcePosition = resourcePosition
+                    ResourceName = resourceName
                 };
                 break;
             }
@@ -47,7 +46,7 @@ public class AddResourceToBankAction : GoapAction
         base.Run(previous, next, settings, goalState, done, fail);
         this.settings = (AddResourceToBankSettings) settings;
         var bank = agent.GetMemory().GetWorldState().Get<Bank>("nearestBank");
-        if (bank.AddResource(resourcesBag, ((AddResourceToBankSettings) settings).Resource.GetName()))
+        if (bank.AddResource(resourcesBag, ((AddResourceToBankSettings) settings).ResourceName))
         {
             done(this);
         }
@@ -65,6 +64,5 @@ public class AddResourceToBankAction : GoapAction
 
 public class AddResourceToBankSettings : IReGoapActionSettings
 {
-    public IResource Resource;
-    public Vector3 ResourcePosition;
+    public string ResourceName;
 }
