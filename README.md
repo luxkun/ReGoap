@@ -101,7 +101,7 @@ git clone https://github.com/luxkun/ReGoap.git
 5. [optional | repeat as needed] Add your own sensor class that inherit GoapSensor or implements IReGoapSensor
 6. [repeat as needed] Add your own class that inherit GoapAction or implements IReGoapAction (choose wisely what preconditions and effects should this action have) and implement the action logic by overriding the Run function, this function will be called by the GoapAgent.
 7. [repeat as needed] Add your own class that inherit GoapGoal or implements IReGoapGoal (choose wisely what goal state the goal has)
-8. Add ONE GoapPlannerManager to any GameObject (not the agent!), this will handle all the planning in multiple-threads. It's highly advised to use Backward search, it's less tested but is way faster and have more features (such as having a single key with multiple values in many actions, like 'isAt': 'node')
+8. Add ONE GoapPlannerManager to any GameObject (not the agent!), this will handle all the planning in multiple-threads.
 9. Play the game :-)
 
 What's more? nothing really, the library will handle all the planning, choose the actions to complete a goal and run the first one until it's done, then the second one and so on, all you need to do is implement your own actions and goals.
@@ -142,12 +142,17 @@ As written before the GoapAction does not, by default, write the effects on the 
     {
         base.Exit(next);
 
-var worldState = agent.GetMemory().GetWorldState();
+        var worldState = agent.GetMemory().GetWorldState();
         foreach (var pair in effects) {
             worldState.Set(pair.Key, pair.Value);
         }
     }
 ```
+
+You can also have preconditions and effects that are dynamically changed based on the next action's preconditions/effects, for example this how you can handle a GoTo action in your agent.
+
+Check out FSMExample to see how to do this:
+https://github.com/luxkun/ReGoap/blob/master/Unity/FSMExample/Actions/GenericGoToAction.cs
 
 ####How to implement your own GoapGoal
 This is less tricky, most of the goal will only override the Awake function to add your own goal state (objectives).
