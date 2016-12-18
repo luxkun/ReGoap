@@ -125,7 +125,7 @@ public class MyGoapAction : GoapAction
         preconditions.Set("myPrecondition", myValue); // myValue can be anything, it's an object internally
         effects.Set("myEffects", myValue);
     }
-    public override void Run(IReGoapAction previous, IReGoapAction next, ReGoapState goalState, Action<IReGoapAction> done, Action<IReGoapAction> fail)
+    public override void Run(IReGoapAction previous, IReGoapAction next, IReGoapActionSettings settings, ReGoapState goalState, Action<IReGoapAction> done, Action<IReGoapAction> fail)
     {
         base.Run(previous, next, goalState, done, fail);
         // do your own game logic here
