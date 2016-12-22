@@ -26,7 +26,7 @@ git clone https://github.com/luxkun/ReGoap.git
 ```
 (in windows you can do the same with command line or any git client, also you can just click on "Clone or Download" and then "Download ZIP")
 
-Also you can just download the last release's unity package, which probably won't have latest changes, [here, https://github.com/luxkun/ReGoap/releases/tag/0](https://github.com/luxkun/ReGoap/releases/) or on the [unity asset store](https://www.assetstore.unity3d.com/en/#!/content/77376).
+Also you can just download the last release's unity package, which probably won't have latest changes, [here](https://github.com/luxkun/ReGoap/releases/) or on the [unity asset store](https://www.assetstore.unity3d.com/en/#!/content/77376).
 
 ---
 
