@@ -63,6 +63,7 @@ Examples:
 * *'Equip weapon': [pre: {'hasWeapon': true}, effects: {'weaponEquipped': true}]*
 * *'Patrol': [pre: {'canMove': true}, effects: {'isPatrolling': true}]*
 
+*IMPORTANT*: false preconditions are NOT supported
 *IMPORTANT*: the action effects aren't written in the memory when the action is done, this is a wanted behaviour because in most of the games you will want to set these variables from the memory or from the sensors.
 If you want you can override Exit in your GoapAction and set the effects to the memory, example following.
 
