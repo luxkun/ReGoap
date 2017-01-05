@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using UnityEngine;
-using UnityEditor;
 using NUnit.Framework;
+using UnityEngine;
 
 public class ReGoapTests
 {
@@ -19,9 +18,10 @@ public class ReGoapTests
     {
         // not using early exit to have precise results, probably wouldn't care in a game for performance reasons
         return new ReGoapPlanner(
-            new ReGoapPlannerSettings { PlanningEarlyExit = false }
+            new ReGoapPlannerSettings {PlanningEarlyExit = false}
         );
     }
+
     [Test]
     public void TestSimpleChainedPlan()
     {
@@ -44,7 +44,7 @@ public class ReGoapTests
         var otherState = new ReGoapState();
         otherState.Set("var1", "stringDifferent");
         otherState.Set("var2", 1);
-        ReGoapState differences = new ReGoapState();
+        var differences = new ReGoapState();
         var count = state.MissingDifference(otherState, ref differences);
         Assert.That(count, Is.EqualTo(2));
         Assert.That(differences.Get<bool>("var0"), Is.EqualTo(true));
@@ -77,23 +77,24 @@ public class ReGoapTests
     {
         var gameObject = new GameObject();
 
-        var createAxeAction = ReGoapTestsHelper.GetCustomAction(gameObject, "CreateAxe",
-            new Dictionary<string, bool> { { "hasAxe", false }, { "hasWood", true }, { "hasSteel", true } },
-            new Dictionary<string, bool> { { "hasAxe", true }, { "hasWood", false }, { "hasSteel", false } }, 10);
-        var chopTreeAction = ReGoapTestsHelper.GetCustomAction(gameObject, "ChopTree",
-            new Dictionary<string, bool> { { "hasRawWood", false } },
-            new Dictionary<string, bool> { { "hasRawWood", true } }, 2);
-        var worksWoodAction = ReGoapTestsHelper.GetCustomAction(gameObject, "WorksWood",
-            new Dictionary<string, bool> { { "hasWood", false }, { "hasRawWood", true } },
-            new Dictionary<string, bool> { { "hasWood", true }, { "hasRawWood", false } }, 5);
-        var mineOreAction = ReGoapTestsHelper.GetCustomAction(gameObject, "MineOre",
-            new Dictionary<string, bool> { { "hasOre", false } },
-            new Dictionary<string, bool> { { "hasOre", true } }, 10);
-        var smeltOreAction = ReGoapTestsHelper.GetCustomAction(gameObject, "SmeltOre",
-            new Dictionary<string, bool> { { "hasOre", true }, { "hasSteel", false } },
-            new Dictionary<string, bool> { { "hasSteel", true }, { "hasOre", false } }, 10);
+        ReGoapTestsHelper.GetCustomAction(gameObject, "CreateAxe",
+            new Dictionary<string, bool> {{"hasWood", true}, {"hasSteel", true}},
+            new Dictionary<string, bool> {{"hasAxe", true}, {"hasWood", false}, {"hasSteel", false}}, 10);
+        ReGoapTestsHelper.GetCustomAction(gameObject, "ChopTree",
+            new Dictionary<string, bool> {},
+            new Dictionary<string, bool> {{"hasRawWood", true}}, 2);
+        ReGoapTestsHelper.GetCustomAction(gameObject, "WorksWood",
+            new Dictionary<string, bool> {{"hasRawWood", true}},
+            new Dictionary<string, bool> {{"hasWood", true}, {"hasRawWood", false}}, 5);
+        ReGoapTestsHelper.GetCustomAction(gameObject, "MineOre",
+            new Dictionary<string, bool> {{"hasOre", false}},
+            new Dictionary<string, bool> {{"hasOre", true}}, 10);
+        ReGoapTestsHelper.GetCustomAction(gameObject, "SmeltOre",
+            new Dictionary<string, bool> {{"hasOre", true}, {"hasSteel", false}},
+            new Dictionary<string, bool> {{"hasSteel", true}, {"hasOre", false}}, 10);
 
-        var hasAxeGoal = ReGoapTestsHelper.GetCustomGoal(gameObject, "HasAxeGoal", new Dictionary<string, bool> { { "hasAxe", true } });
+        var hasAxeGoal = ReGoapTestsHelper.GetCustomGoal(gameObject, "HasAxeGoal",
+            new Dictionary<string, bool> {{"hasAxe", true}});
 
         var memory = gameObject.AddComponent<ReGoapTestMemory>();
         memory.Init();
@@ -112,32 +113,36 @@ public class ReGoapTests
     {
         var gameObject = new GameObject();
 
-        var closeCombatAction = ReGoapTestsHelper.GetCustomAction(gameObject, "CCAction",
-            new Dictionary<string, bool> { { "hasWeaponEquipped", true }, { "killedEnemy", false }, { "isNearEnemy", true } },
-            new Dictionary<string, bool> { { "killedEnemy", true } }, 4);
-        var equipAxe = ReGoapTestsHelper.GetCustomAction(gameObject, "EquipAxe",
-            new Dictionary<string, bool> { { "hasAxe", true }, { "hasWeaponEquipped", false } },
-            new Dictionary<string, bool> { { "hasWeaponEquipped", true } }, 1);
-        var goToEnemy = ReGoapTestsHelper.GetCustomAction(gameObject, "GoToEnemy",
-            new Dictionary<string, bool> { { "isNearEnemy", false }, { "hasTarget", true } },
-            new Dictionary<string, bool> { { "isNearEnemy", true } }, 3);
-        var createAxeAction = ReGoapTestsHelper.GetCustomAction(gameObject, "CreateAxe",
-            new Dictionary<string, bool> { { "hasAxe", false }, { "hasWood", true }, { "hasSteel", true } },
-            new Dictionary<string, bool> { { "hasAxe", true }, { "hasWood", false }, { "hasSteel", false } }, 10);
-        var chopTreeAction = ReGoapTestsHelper.GetCustomAction(gameObject, "ChopTree",
-            new Dictionary<string, bool> { { "hasRawWood", false } }, new Dictionary<string, bool> { { "hasRawWood", true } }, 2);
-        var worksWoodAction = ReGoapTestsHelper.GetCustomAction(gameObject, "WorksWood",
-            new Dictionary<string, bool> { { "hasWood", false }, { "hasRawWood", true } },
-            new Dictionary<string, bool> { { "hasWood", true }, { "hasRawWood", false } }, 5);
-        var mineOreAction = ReGoapTestsHelper.GetCustomAction(gameObject, "MineOre", new Dictionary<string, bool> { { "hasOre", false } },
-            new Dictionary<string, bool> { { "hasOre", true } }, 10);
-        var smeltOreAction = ReGoapTestsHelper.GetCustomAction(gameObject, "SmeltOre",
-            new Dictionary<string, bool> { { "hasOre", true }, { "hasSteel", false } },
-            new Dictionary<string, bool> { { "hasSteel", true }, { "hasOre", false } }, 10);
+        ReGoapTestsHelper.GetCustomAction(gameObject, "CCAction",
+            new Dictionary<string, bool> {{"hasWeaponEquipped", true}, {"isNearEnemy", true}},
+            new Dictionary<string, bool> {{"killedEnemy", true}}, 4);
+        ReGoapTestsHelper.GetCustomAction(gameObject, "EquipAxe",
+            new Dictionary<string, bool> {{"hasAxe", true}},
+            new Dictionary<string, bool> {{"hasWeaponEquipped", true}}, 1);
+        ReGoapTestsHelper.GetCustomAction(gameObject, "GoToEnemy",
+            new Dictionary<string, bool> {{"hasTarget", true}},
+            new Dictionary<string, bool> {{"isNearEnemy", true}}, 3);
+        ReGoapTestsHelper.GetCustomAction(gameObject, "CreateAxe",
+            new Dictionary<string, bool> {{"hasWood", true}, {"hasSteel", true}},
+            new Dictionary<string, bool> {{"hasAxe", true}, {"hasWood", false}, {"hasSteel", false}}, 10);
+        ReGoapTestsHelper.GetCustomAction(gameObject, "ChopTree",
+            new Dictionary<string, bool> {}, 
+            new Dictionary<string, bool> {{"hasRawWood", true}}, 2);
+        ReGoapTestsHelper.GetCustomAction(gameObject, "WorksWood",
+            new Dictionary<string, bool> {{"hasRawWood", true}},
+            new Dictionary<string, bool> {{"hasWood", true}, {"hasRawWood", false}}, 5);
+        ReGoapTestsHelper.GetCustomAction(gameObject, "MineOre", new Dictionary<string, bool> {{"hasOre", false}},
+            new Dictionary<string, bool> {{"hasOre", true}}, 10);
+        ReGoapTestsHelper.GetCustomAction(gameObject, "SmeltOre",
+            new Dictionary<string, bool> {{"hasOre", true}},
+            new Dictionary<string, bool> {{"hasSteel", true}, {"hasOre", false}}, 10);
 
-        var readyToFightGoal = ReGoapTestsHelper.GetCustomGoal(gameObject, "ReadyToFightGoal", new Dictionary<string, bool> { { "hasWeaponEquipped", true } }, 2);
-        var hasAxeGoal = ReGoapTestsHelper.GetCustomGoal(gameObject, "HasAxeGoal", new Dictionary<string, bool> { { "hasAxe", true } });
-        var killEnemyGoal = ReGoapTestsHelper.GetCustomGoal(gameObject, "KillEnemyGoal", new Dictionary<string, bool> { { "killedEnemy", true } }, 3);
+        var readyToFightGoal = ReGoapTestsHelper.GetCustomGoal(gameObject, "ReadyToFightGoal",
+            new Dictionary<string, bool> {{"hasWeaponEquipped", true}}, 2);
+        ReGoapTestsHelper.GetCustomGoal(gameObject, "HasAxeGoal",
+            new Dictionary<string, bool> {{"hasAxe", true}});
+        var killEnemyGoal = ReGoapTestsHelper.GetCustomGoal(gameObject, "KillEnemyGoal",
+            new Dictionary<string, bool> {{"killedEnemy", true}}, 3);
 
         var memory = gameObject.AddComponent<ReGoapTestMemory>();
         memory.Init();

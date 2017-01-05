@@ -14,6 +14,7 @@ using UnityEngine.VR;
 public class GenericGoToAction : GoapAction
 {
     // sometimes a Transform is better (moving target), sometimes you do not have one (last target position)
+    //  but if you're using multi-thread approach you can't use a transform or any unity's API
     protected Vector3 objectivePosition;
 
     protected SmsGoTo smsGoto;

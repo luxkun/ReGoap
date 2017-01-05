@@ -16,3 +16,4 @@ public class CollectResourceGoal : GoapGoal
         return string.Format("GoapGoal('{0}', '{1}')", Name, ResourceName);
     }
 }
+

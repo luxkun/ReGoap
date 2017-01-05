@@ -27,22 +27,18 @@ public class StateMachine : MonoBehaviour
 
     public MonoBehaviour initialState;
 
-    private bool started;
     public bool permitLoopTransistion = true;
 
     public bool orderTransistions;
 
     void OnDisable()
     {
-        started = false;
         if (CurrentState != null)
             CurrentState.Exit();
     }
 
     void Awake()
     {
-        started = true;
-
         enabled = true;
         states = new Dictionary<Type, ISmState>();
         values = new Dictionary<string, object>();

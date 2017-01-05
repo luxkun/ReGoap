@@ -21,7 +21,6 @@ public class ReGoapNode : INode<ReGoapState>
         this.planner = planner;
         this.parent = parent;
         this.action = action;
-        goal = (ReGoapState)newGoal.Clone();
         if (action != null)
             actionSettings = action.GetSettings(planner.GetCurrentAgent(), goal);
 
@@ -37,29 +36,38 @@ public class ReGoapNode : INode<ReGoapState>
         }
 
         var nextAction = parent == null ? null : parent.action;
-        //state = (ReGoapState)state.Clone(); // no need anymore since ReGoapState add operator now returns a new state
         if (action != null)
         {
-            var effects = (ReGoapState)action.GetEffects(goal, nextAction).Clone();
+            // backward search does NOT support negative preconditions
+            // since in backward search we relax the problem all preconditions are valid but are added to the current goal
+            var preconditions = action.GetPreconditions(newGoal, nextAction);
+            goal = newGoal + preconditions;
+
+            var effects = action.GetEffects(newGoal, nextAction);
             state += effects;
-            g += action.GetCost(goal, nextAction);
+            g += action.GetCost(newGoal, nextAction);
+
+            // removing current action effects from goal, no need to do with to the whole state
+            //  since the state is the sum of all the previous actions's effects.
+            var missingState = new ReGoapState();
+            goal.MissingDifference(effects, ref missingState);
+            goal = missingState;
+
+            // this is needed every step to make sure that any precondition is not already satisfied
+            //  by the world state
+            var worldMissingState = new ReGoapState();
+            goal.MissingDifference(planner.GetCurrentAgent().GetMemory().GetWorldState(), ref worldMissingState);
+            goal = worldMissingState;
         }
-        // missing states from goal
-        // h(node)
-        // we calculate this after getting the heuristic value so actions that gives us goal state will go first
-        if (action != null)
+        else
         {
             var diff = new ReGoapState();
-            // backward search does NOT support negative preconditions
-            h = action.GetPreconditions(goal, nextAction)
-                .MissingDifference(state, ref diff, predicate: (pair, otherValue) => !pair.Value.Equals(false), test: true);
-            goal += diff;
+            newGoal.MissingDifference(state, ref diff);
+            goal = diff;
         }
+        h = goal.Count;
         // f(node) = g(node) + h(node)
         cost = g + h * heuristicMultiplier;
-        var missingState = new ReGoapState();
-        h += goal.MissingDifference(state, ref missingState);
-        goal = missingState;
     }
 
     public float GetPathCost()

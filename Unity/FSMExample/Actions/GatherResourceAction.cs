@@ -43,9 +43,9 @@ public class GatherResourceAction : GoapAction
                         .GetWorldState()
                         .Get<Vector3>(string.Format("nearest{0}Position", newNeededResourceName));
                 preconditions.Set("isAtPosition", resourcePosition);
-                preconditions.Set("hasResource" + newNeededResourceName, false);
+                // false preconditions are not supported
+                //preconditions.Set("hasResource" + newNeededResourceName, false);
                 effects.Set("hasResource" + newNeededResourceName, true);
-                effects.Set("isAtPosition", Vector3.zero);
 
                 settings = new GatherResourceSettings
                 {

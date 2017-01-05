@@ -22,7 +22,8 @@ public class CraftRecipeAction : GoapAction
         {
             preconditions.Set("hasResource" + pair.Key, true);
         }
-        preconditions.Set("hasResource" + recipe.GetCraftedResource(), false); // do not permit duplicates in the bag
+        // false preconditions are not supported
+        //preconditions.Set("hasResource" + recipe.GetCraftedResource(), false); // do not permit duplicates in the bag
         effects.Set("hasResource" + recipe.GetCraftedResource(), true);
     }
 
@@ -31,8 +32,7 @@ public class CraftRecipeAction : GoapAction
         base.Precalculations(goapAgent, goalState);
         var workstationPosition = agent.GetMemory().GetWorldState().Get<Vector3>("nearestWorkstationPosition");
         preconditions.Set("isAtPosition", workstationPosition);
-        // todo: workaround to resolve the need to do this
-        effects.Set("isAtPosition", Vector3.zero);
+        //effects.Set("isAtPosition", Vector3.zero);
     }
 
     public override void Run(IReGoapAction previous, IReGoapAction next, IReGoapActionSettings settings, ReGoapState goalState, Action<IReGoapAction> done, Action<IReGoapAction> fail)

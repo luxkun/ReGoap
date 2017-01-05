@@ -38,10 +38,10 @@ public class GoapGoal : MonoBehaviour, IReGoapGoal
         {
             warnCooldown = Time.time + WarnDelay;
             // check if this goal is not active but CAN be activated
-            if ((planner.GetCurrentGoal() != this) && IsGoalPossible())
+            if (((GoapGoal) planner.GetCurrentGoal() != this) && IsGoalPossible())
                 planner.GetCurrentAgent().WarnPossibleGoal(this);
             // if this goal is active but isn't anymore possible
-            if ((planner.GetCurrentGoal() == this) && !IsGoalPossible())
+            if (((GoapGoal) planner.GetCurrentGoal() == this) && !IsGoalPossible())
                 planner.GetCurrentAgent().WarnPossibleGoal(this);
         }
     }
