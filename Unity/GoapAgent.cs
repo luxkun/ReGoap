@@ -130,10 +130,11 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
     {
         currentPlanWorker = null;
         if (newGoal == null)
+        {
             if (currentGoal == null)
-                throw new UnityException("GoapAgent " + this + " could not find a plan.");
-            else
-                return;
+                Debug.LogWarning("GoapAgent " + this + " could not find a plan.");
+            return;
+        }
 
         if (currentActionState != null)
             currentActionState.Action.Exit(null);
