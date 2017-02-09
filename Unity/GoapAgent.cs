@@ -132,7 +132,7 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
         if (newGoal == null)
         {
             if (currentGoal == null)
-                Debug.LogWarning("GoapAgent " + this + " could not find a plan.");
+                ReGoapLogger.LogWarning("GoapAgent " + this + " could not find a plan.");
             return;
         }
 
