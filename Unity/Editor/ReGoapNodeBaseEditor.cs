@@ -21,15 +21,11 @@ public class ReGoapNodeBaseEditor : EditorWindow
     private IReGoapAgent agent;
     private GUIStyle possibleActionStyle;
 
-    private float repaintCooldown;
-    private float repaintDelay = 0.33f;
-
     [MenuItem("Window/ReGoap Debugger")]
     private static void OpenWindow()
     {
         ReGoapNodeBaseEditor window = GetWindow<ReGoapNodeBaseEditor>();
         window.titleContent = new GUIContent("ReGoap Debugger");
-        EditorApplication.update += window.Update;
     }
 
     private void OnEnable()
@@ -99,15 +95,6 @@ public class ReGoapNodeBaseEditor : EditorWindow
         ProcessNodeEvents(Event.current);
         ProcessEvents(Event.current);
 
-        if (GUI.changed) Repaint();
-    }
-
-    void Update()
-    {
-        if (Time.time < repaintCooldown)
-            return;
-        repaintCooldown = repaintDelay + Time.time;
-        UpdateGoapNodes(Selection.activeGameObject);
         Repaint();
     }
 

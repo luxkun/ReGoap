@@ -142,9 +142,9 @@ public class GoapPlannerManager : MonoBehaviour
     // check all threads for done work
     protected virtual void Tick()
     {
-        lock (doneWorks)
+        if (doneWorks.Count > 0)
         {
-            if (doneWorks.Count > 0)
+            lock (doneWorks)
             {
                 var doneWorksCopy = doneWorks.ToArray();
                 doneWorks.Clear();

@@ -8,7 +8,7 @@ using UnityEngine;
 public class MultipleResourcesSensor : ResourceSensor
 {
     private static Dictionary<string, Dictionary<IResource, Vector3>> cachedResources;
-    private static float cacheUpdateDelay;
+    private Dictionary<string, float> cacheUpdateDelays;
     private static float cacheUpdateCooldown = 1f;
 
     public float MinResourceValue = 1f;
@@ -23,13 +23,17 @@ public class MultipleResourcesSensor : ResourceSensor
             worldState.Set("see" + resourceManager.GetResourceName(), resourceManager.GetResourcesCount() >= MinResourceValue);
 
             if (cachedResources == null)
+            {
                 cachedResources = new Dictionary<string, Dictionary<IResource, Vector3>>();
+                cacheUpdateDelays = new Dictionary<string, float>();
+            }
             // since every agent will use same resources we cache this function
-            if (Time.time > cacheUpdateDelay || !cachedResources.ContainsKey(resourceManager.GetResourceName()))
+            float cacheUpdateDelay;
+            if (!cacheUpdateDelays.TryGetValue(resourceManager.GetResourceName(), out cacheUpdateDelay) || Time.time > cacheUpdateDelay)
             {
                 UpdateResources(resourceManager);
                 cachedResources[resourceManager.GetResourceName()] = resourcesPosition;
-                cacheUpdateDelay = Time.time + cacheUpdateCooldown;
+                cacheUpdateDelays[resourceManager.GetResourceName()] = Time.time + cacheUpdateCooldown;
             }
             var nearestResource = Utilities.GetNearest(transform.position, cachedResources[resourceManager.GetResourceName()]);
             worldState.Set("nearest" + resourceManager.GetResourceName(), nearestResource);

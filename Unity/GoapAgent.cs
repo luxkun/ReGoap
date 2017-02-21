@@ -33,6 +33,7 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
     }
 
     public bool WorkInFixedUpdate;
+    public bool ValidateActiveAction;
 
     #region UnityFunctions
     protected virtual void Awake()
@@ -72,9 +73,12 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
             return;
         }
         // check if current action preconditions are still valid, else invalid action and restart planning
-        var state = memory.GetWorldState();
-        if (currentActionState.Action.GetPreconditions(state).MissingDifference(state, 1) > 0)
-            TryWarnActionFailure(currentActionState.Action);
+        if (ValidateActiveAction)
+        {
+            var state = memory.GetWorldState();
+            if (currentActionState.Action.GetPreconditions(state).MissingDifference(state, 1) > 0)
+                TryWarnActionFailure(currentActionState.Action);
+        }
     }
     #endregion
 
@@ -129,10 +133,11 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
     protected virtual void OnDonePlanning(IReGoapGoal newGoal)
     {
         currentPlanWorker = null;
-        if (newGoal == null)
-        {
+        if (newGoal == null) { 
             if (currentGoal == null)
+            {
                 ReGoapLogger.LogWarning("GoapAgent " + this + " could not find a plan.");
+            }
             return;
         }
 
@@ -181,6 +186,8 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
         var plan = currentGoal.GetPlan();
         if (plan.Count == 0)
         {
+            currentActionState.Action.Exit(currentActionState.Action);
+            currentActionState = null;
             CalculateNewGoal();
         }
         else
