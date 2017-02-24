@@ -50,6 +50,21 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
     {
     }
 
+    protected virtual void OnEnable()
+    {
+
+    }
+
+    protected virtual void OnDisable()
+    {
+        if (currentActionState != null)
+        {
+            currentActionState.Action.Exit(null);
+            currentActionState = null;
+            currentGoal = null;
+        }
+    }
+
     protected virtual void FixedUpdate()
     {
         if (!WorkInFixedUpdate) return;
@@ -205,7 +220,7 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
 
     public virtual void WarnActionFailure(IReGoapAction thisAction)
     {
-        if (thisAction != currentActionState.Action)
+        if (currentActionState != null && thisAction != currentActionState.Action)
         {
             ReGoapLogger.LogWarning(string.Format("[GoapAgent] Action {0} warned for failure but is not current action.", thisAction));
             return;
