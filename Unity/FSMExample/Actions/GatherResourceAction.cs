@@ -4,10 +4,13 @@ using System.Collections;
 
 public class GatherResourceAction : GoapAction
 {
+    public float TimeToGather = 0.5f;
     public float ResourcePerAction = 1f;
     protected ResourcesBag bag;
     protected Vector3 resourcePosition;
     protected IResource resource;
+
+    private float gatherCooldown;
 
     protected override void Awake()
     {
@@ -70,10 +73,7 @@ public class GatherResourceAction : GoapAction
             failCallback(this);
         else
         {
-            ReGoapLogger.Log("[GatherResourceAction] acquired " + ResourcePerAction + " " + resource.GetName());
-            resource.RemoveResource(ResourcePerAction);
-            bag.AddResource(resource.GetName(), ResourcePerAction);
-            doneCallback(this);
+            gatherCooldown = Time.time + TimeToGather;
         }
     }
 
@@ -82,6 +82,22 @@ public class GatherResourceAction : GoapAction
         var thisSettings = (GatherResourceSettings) settings;
         resourcePosition = thisSettings.ResourcePosition;
         resource = thisSettings.Resource;
+    }
+
+    protected override void Update()
+    {
+        base.Update();
+
+        if (resource == null || resource.GetCapacity() < ResourcePerAction)
+            failCallback(this);
+        else if (Time.time > gatherCooldown)
+        {
+            gatherCooldown = float.MaxValue;
+            ReGoapLogger.Log("[GatherResourceAction] acquired " + ResourcePerAction + " " + resource.GetName());
+            resource.RemoveResource(ResourcePerAction);
+            bag.AddResource(resource.GetName(), ResourcePerAction);
+            doneCallback(this);
+        }
     }
 }
 

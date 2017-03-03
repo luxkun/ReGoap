@@ -25,7 +25,7 @@ public class SmsGoTo : SmState
     public bool UseRigidbodyVelocity;
     public float Speed;
     // when the magnitude of the difference between the objective and self is <= of this then we're done
-    public float MinDistanceToObjective = 0.2f;
+    public float MinDistanceToObjective = 0.5f;
 
     // additional feature, check for stuck, userful when using rigidbody or raycasts for movements
     private Vector3 lastStuckCheckUpdatePosition;

@@ -14,7 +14,7 @@ public class ResourcesBagSensor : GoapSensor {
         var state = memory.GetWorldState();
         foreach (var pair in resourcesBag.GetResources())
         {
-            state.Set("has" + pair.Key, pair.Value > 0);
+            state.Set("hasResource" + pair.Key, pair.Value > 0);
         }
     }
 }

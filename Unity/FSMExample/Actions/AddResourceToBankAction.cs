@@ -29,8 +29,6 @@ public class AddResourceToBankAction : GoapAction
             {
                 var resourceName = pair.Key.Substring(17);
                 preconditions.Set("hasResource" + resourceName, true);
-                // false preconditions are not supported
-                //preconditions.Set("collectedResource" + resourceName, false);
                 effects.Set("collectedResource" + resourceName, true);
                 settings = new AddResourceToBankSettings
                 {
