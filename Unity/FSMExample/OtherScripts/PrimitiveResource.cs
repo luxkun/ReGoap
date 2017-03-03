@@ -8,12 +8,13 @@ public class PrimitiveResource : Resource
 
     protected override void Awake ()
     {
+        base.Awake();
 	    startingScale = transform.localScale;
 	}
 
     public override void RemoveResource(float value)
     {
         base.RemoveResource(value);
-        startingScale = startingScale * MinScalePercentage + (1f - MinScalePercentage) * startingScale *(Capacity/startingCapacity); // scale down based on capacity
+        transform.localScale = startingScale * (MinScalePercentage + (1f - MinScalePercentage) * (Capacity / startingCapacity)); // scale down based on capacity
     }
 }
