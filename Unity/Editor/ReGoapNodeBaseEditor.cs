@@ -20,6 +20,9 @@ public class ReGoapNodeBaseEditor : EditorWindow
     private Vector2 totalDrag;
     private IReGoapAgent agent;
     private GUIStyle possibleActionStyle;
+    private GUIStyle menuNodeStyle;
+    private GUIStyle selectedMenuNodeStyle;
+    private bool agentLocked;
 
     [MenuItem("Window/ReGoap Debugger")]
     private static void OpenWindow()
@@ -73,15 +76,33 @@ public class ReGoapNodeBaseEditor : EditorWindow
         selectedNodeStyle.border = new RectOffset(12, 12, 12, 12);
         selectedNodeStyle.richText = true;
         selectedNodeStyle.padding = textOffset;
+
+        menuNodeStyle = new GUIStyle();
+        menuNodeStyle.normal.background = EditorGUIUtility.Load("builtin skins/darkskin/images/node5.png") as Texture2D;
+        menuNodeStyle.border = new RectOffset(10, 10, 10, 10);
+        menuNodeStyle.richText = true;
+        menuNodeStyle.padding = textOffset;
+
+        selectedMenuNodeStyle = new GUIStyle();
+        selectedMenuNodeStyle.normal.background = EditorGUIUtility.Load("builtin skins/darkskin/images/node6 on.png") as Texture2D;
+        selectedMenuNodeStyle.border = new RectOffset(10, 10, 10, 10);
+        selectedMenuNodeStyle.richText = true;
+        selectedMenuNodeStyle.padding = textOffset;
+
+        // menu
+
     }
 
     private void OnGUI()
     {
         if (Selection.activeGameObject != null)
         {
-            agent = Selection.activeGameObject.GetComponent<IReGoapAgent>();
-            if (agent == null)
-                return;
+            if (agent == null || !agentLocked)
+            {
+                agent = Selection.activeGameObject.GetComponent<IReGoapAgent>();
+                if (agent == null)
+                    return;
+            }
         }
         else
             return;
@@ -90,6 +111,7 @@ public class ReGoapNodeBaseEditor : EditorWindow
         DrawGrid(100, 0.4f, Color.gray);
 
         UpdateGoapNodes(Selection.activeGameObject);
+        UpdateMenuNodes();
         DrawNodes();
 
         ProcessNodeEvents(Event.current);
@@ -101,9 +123,9 @@ public class ReGoapNodeBaseEditor : EditorWindow
     #region GOAP
     ReGoapNodeEditor DrawGenericNode(string text, float width, float height, GUIStyle style, ref Vector2 nodePosition)
     {
-        var node = new ReGoapNodeEditor(nodePosition + totalDrag, width, height, style, selectedNodeStyle)
+        var node = new ReGoapNodeEditor(nodePosition + totalDrag, width, height, style)
         {
-            title = text
+            Title = text
         };
         nodes.Add(node);
         nodePosition += new Vector2(width, 0f);
@@ -122,7 +144,7 @@ public class ReGoapNodeBaseEditor : EditorWindow
         nodes.Clear();
         var width = 250f;
         var height = 70f;
-        var nodePosition = Vector2.zero;
+        var nodePosition = new Vector2(0f, 60f);
 
         foreach (var goal in gameObj.GetComponents<IReGoapGoal>())
         {
@@ -209,7 +231,29 @@ public class ReGoapNodeBaseEditor : EditorWindow
             DrawGenericNode(nodeText, width, height, worldStateStyle, ref nodePosition);
         }
     }
-#endregion
+    private void UpdateMenuNodes()
+    {
+        if (agent == null || !agent.IsActive() || agent.GetMemory() == null)
+            return;
+
+        var lockNodePosition = new Vector2(0f, 0f);
+
+        var lockNode = DrawGenericNode("<b>LOCK AGENT</b>", 110f, 40f, agentLocked ? selectedMenuNodeStyle : menuNodeStyle, ref lockNodePosition);
+        lockNode.OnEvent = OnLockEvent;
+
+        var agentInfoTitle = string.Format("<b>Selected agent:</b> {0}: {1}", agent, ((MonoBehaviour)agent).name);
+        var agentInfoNode = DrawGenericNode(agentInfoTitle, agentInfoTitle.Length * 6f, 40f, menuNodeStyle, ref lockNodePosition);
+    }
+
+    private void OnLockEvent(ReGoapNodeEditor node, Event e)
+    {
+        if (e.isMouse && e.type == EventType.MouseDown && e.button == 0 && node.Rect.Contains(e.mousePosition))
+        {
+            agentLocked = !agentLocked;
+        }
+    }
+
+    #endregion
 
     private void DrawGrid(float gridSpacing, float gridOpacity, Color gridColor)
     {

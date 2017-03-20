@@ -4,76 +4,38 @@ using UnityEngine;
 
 public class ReGoapNodeEditor
 {
-    public Rect rect;
-    public string title;
-    public bool isDragged;
-    public bool isSelected;
+    public Rect Rect;
+    public string Title;
+    public bool IsSelected;
 
-    public GUIStyle style;
-    public GUIStyle defaultNodeStyle;
-    public GUIStyle selectedNodeStyle;
+    public GUIStyle Style;
+    public GUIStyle DefaultNodeStyle;
 
-    public ReGoapNodeEditor(Vector2 position, float width, float height, GUIStyle nodeStyle, GUIStyle selectedStyle)
+    public Action<ReGoapNodeEditor, Event> OnEvent;
+
+    public ReGoapNodeEditor(Vector2 position, float width, float height, GUIStyle nodeStyle)
     {
-        rect = new Rect(position.x, position.y, width, height);
-        style = nodeStyle;
-        defaultNodeStyle = nodeStyle;
-        selectedNodeStyle = selectedStyle;
+        Rect = new Rect(position.x, position.y, width, height);
+        Style = nodeStyle;
+        DefaultNodeStyle = nodeStyle;
     }
 
     public void Drag(Vector2 delta)
     {
-        rect.position += delta;
+        Rect.position += delta;
     }
 
     public void Draw()
     {
-        GUI.Box(rect, title, style);
+        GUI.Box(Rect, Title, Style);
     }
 
     public bool ProcessEvents(Event e)
     {
-        switch (e.type)
+        if (OnEvent != null)
         {
-            case EventType.MouseDown:
-                if (e.button == 0)
-                {
-                    if (rect.Contains(e.mousePosition))
-                    {
-                        isDragged = true;
-                        GUI.changed = true;
-                        isSelected = true;
-                        style = selectedNodeStyle;
-                    }
-                    else
-                    {
-                        GUI.changed = true;
-                        isSelected = false;
-                        style = defaultNodeStyle;
-                    }
-                }
-
-                if (e.button == 1 && isSelected && rect.Contains(e.mousePosition))
-                {
-                    ProcessContextMenu();
-                    e.Use();
-                }
-                break;
-
-            case EventType.MouseUp:
-                isDragged = false;
-                break;
-
-            case EventType.MouseDrag:
-                if (e.button == 0 && isDragged)
-                {
-                    Drag(e.delta);
-                    e.Use();
-                    return true;
-                }
-                break;
+            OnEvent(this, e);
         }
-
         return false;
     }
 
