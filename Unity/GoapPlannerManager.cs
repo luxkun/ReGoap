@@ -73,9 +73,12 @@ public class GoapPlannerManager : MonoBehaviour
     public bool WorkInFixedUpdate = true;
     public ReGoapPlannerSettings PlannerSettings;
 
+    public bool EnableLogger = true;
+
     #region UnityFunctions
     protected virtual void Awake()
     {
+        ReGoapLogger.Instance.Enabled = EnableLogger;
         if (Instance != null)
         {
             Destroy(this);
@@ -129,6 +132,10 @@ public class GoapPlannerManager : MonoBehaviour
 
     protected virtual void Update()
     {
+        if (EnableLogger != ReGoapLogger.Instance.Enabled)
+        {
+            ReGoapLogger.Instance.Enabled = EnableLogger;
+        }
         if (WorkInFixedUpdate) return;
         Tick();
     }

@@ -58,7 +58,7 @@ public class ReGoapLogger
     }
 #endif
 
-    public bool Enabled;
+    public bool Enabled = true;
 
     private static readonly ReGoapLogger instance = new ReGoapLogger();
     public static ReGoapLogger Instance
@@ -75,7 +75,6 @@ public class ReGoapLogger
 #else
         listener = new GenericTraceListener();
 #endif
-        Enabled = true;
     }
 
     public static void Log(string message)
