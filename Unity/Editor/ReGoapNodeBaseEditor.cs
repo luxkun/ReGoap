@@ -33,6 +33,8 @@ public class ReGoapNodeBaseEditor : EditorWindow
 
     private void OnEnable()
     {
+        agentLocked = false;
+
         var textOffset = new RectOffset(12, 0, 10, 0);//new Vector2(9f, 7f);
 
         nodeStyle = new GUIStyle();
@@ -121,12 +123,9 @@ public class ReGoapNodeBaseEditor : EditorWindow
     }
 
     #region GOAP
-    ReGoapNodeEditor DrawGenericNode(string text, float width, float height, GUIStyle style, ref Vector2 nodePosition)
+    ReGoapNodeEditor DrawGenericNode(string title, float width, float height, GUIStyle style, ref Vector2 nodePosition, bool isSelected = false, ReGoapNodeEditor.ReGoapNodeEditorEvent onEvent = null)
     {
-        var node = new ReGoapNodeEditor(nodePosition + totalDrag, width, height, style)
-        {
-            Title = text
-        };
+        var node = new ReGoapNodeEditor(title, nodePosition + totalDrag, width, height, style, isSelected, onEvent);
         nodes.Add(node);
         nodePosition += new Vector2(width, 0f);
         return node;
@@ -134,7 +133,7 @@ public class ReGoapNodeBaseEditor : EditorWindow
 
     private void UpdateGoapNodes(GameObject gameObj)
     {
-        if (agent == null || !agent.IsActive() || agent.GetMemory() == null)
+        if (gameObj == null || agent == null || !agent.IsActive() || agent.GetMemory() == null)
             return;
 
         if (nodes == null)
@@ -142,10 +141,12 @@ public class ReGoapNodeBaseEditor : EditorWindow
             nodes = new List<ReGoapNodeEditor>();
         }
         nodes.Clear();
-        var width = 250f;
+        var width = 300f;
         var height = 70f;
         var nodePosition = new Vector2(0f, 60f);
+        var nodeMiddleY = new Vector2(0f, height * 0.5f);
 
+        ReGoapNodeEditor? previousNode = null;
         foreach (var goal in gameObj.GetComponents<IReGoapGoal>())
         {
             if (goal.GetGoalState() == null)
@@ -160,8 +161,16 @@ public class ReGoapNodeBaseEditor : EditorWindow
             {
                 style = activeStyle;
             }
-            DrawGenericNode(text, width, height, style, ref nodePosition);
+            var newNode = DrawGenericNode(text, width, height, style, ref nodePosition);
+            if (previousNode.HasValue)
+            {
+                var startPosition = previousNode.Value.Rect.max - nodeMiddleY - new Vector2(10f, 0f);
+                var endPosition = newNode.Rect.min + nodeMiddleY + new Vector2(10f, 0f);
+                Handles.DrawLine(startPosition, endPosition);
+            }
+            previousNode = newNode;
         }
+        previousNode = null;
         
         nodePosition = new Vector2(0f, nodePosition.y + height + 10);
         height = 66;
@@ -198,11 +207,23 @@ public class ReGoapNodeBaseEditor : EditorWindow
             text += string.Format("<color={0}>-<b>proceduralCondition</b>: {1}</color>\n", proceduralCheck ? "#004d00" : "#800000", proceduralCheck);
 
             maxHeight = Mathf.Max(maxHeight, curHeight);
-            DrawGenericNode(text, width, curHeight, possibleActionStyle, ref nodePosition);
+
+            nodeMiddleY = new Vector2(0f, curHeight * 0.5f);
+            var newNode = DrawGenericNode(text, width, curHeight, possibleActionStyle, ref nodePosition);
+            if (previousNode.HasValue)
+            {
+                var startPosition = previousNode.Value.Rect.max - nodeMiddleY - new Vector2(10f, 0f);
+                var endPosition = newNode.Rect.min + nodeMiddleY + new Vector2(10f, 0f);
+                Handles.DrawLine(startPosition, endPosition);
+            }
+            previousNode = newNode;
         }
+        previousNode = null;
+
         nodePosition.x = 0;
         nodePosition.y += maxHeight + 10;
         height = 40;
+        nodeMiddleY = new Vector2(0f, height * 0.5f);
         if (agent.GetCurrentGoal() != null)
         {
             foreach (var action in agent.GetStartingPlan().ToArray())
@@ -213,7 +234,15 @@ public class ReGoapNodeBaseEditor : EditorWindow
                     style = activeActionNodeStyle;
                 }
                 var text = string.Format("<b>ACTION</b> <i>{0}</i>\n", action.Action.GetName());
-                DrawGenericNode(text, width, height, style, ref nodePosition);
+                
+                var newNode = DrawGenericNode(text, width, height, style, ref nodePosition);
+                if (previousNode.HasValue)
+                {
+                    var startPosition = previousNode.Value.Rect.max - nodeMiddleY - new Vector2(10f, 0f);
+                    var endPosition = newNode.Rect.min + nodeMiddleY + new Vector2(10f, 0f);
+                    Handles.DrawLine(startPosition, endPosition);
+                }
+                previousNode = newNode;
             }
         }
 
@@ -222,6 +251,7 @@ public class ReGoapNodeBaseEditor : EditorWindow
             nodePosition = new Vector2(0, nodePosition.y + height + 10);
             width = 500;
             height = 40;
+            nodeMiddleY = new Vector2(0f, height * 0.5f);
             var nodeText = "<b>WORLD STATE</b>\n";
             foreach (var pair in agent.GetMemory().GetWorldState().GetValues())
             {
@@ -238,8 +268,7 @@ public class ReGoapNodeBaseEditor : EditorWindow
 
         var lockNodePosition = new Vector2(0f, 0f);
 
-        var lockNode = DrawGenericNode("<b>LOCK AGENT</b>", 110f, 40f, agentLocked ? selectedMenuNodeStyle : menuNodeStyle, ref lockNodePosition);
-        lockNode.OnEvent = OnLockEvent;
+        var lockNode = DrawGenericNode("<b>LOCK AGENT</b>", 110f, 40f, agentLocked ? selectedMenuNodeStyle : menuNodeStyle, ref lockNodePosition, false, OnLockEvent);
 
         var agentInfoTitle = string.Format("<b>Selected agent:</b> {0}: {1}", agent, ((MonoBehaviour)agent).name);
         var agentInfoNode = DrawGenericNode(agentInfoTitle, agentInfoTitle.Length * 6f, 40f, menuNodeStyle, ref lockNodePosition);
