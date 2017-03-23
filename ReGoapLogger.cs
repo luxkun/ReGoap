@@ -42,7 +42,7 @@ public class ReGoapLogger
 
         public void Write(string message, string category)
         {
-            System.Diagnostics.Debug.WriteLine(message, category);
+            Console.WriteLine(message);
         }
     }
 #endif
