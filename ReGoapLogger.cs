@@ -42,23 +42,17 @@ public class ReGoapLogger
 
         public void Write(string message, string category)
         {
-            switch (category)
-            {
-                case "error":
-                    System.Diagnostics.Debug.WriteLine(message);
-                    break;
-                case "warning":
-                    System.Diagnostics.Debug.WriteLine(message);
-                    break;
-                default:
-                    System.Diagnostics.Debug.WriteLine(message);
-                    break;
-            }
+            System.Diagnostics.Debug.WriteLine(message, category);
         }
     }
 #endif
 
-    public bool Enabled = true;
+    [Flags]
+    public enum DebugLevel
+    {
+        None, ErrorsOnly, WarningsOnly, Full
+    }
+    public DebugLevel Level = DebugLevel.Full;
 
     private static readonly ReGoapLogger instance = new ReGoapLogger();
     public static ReGoapLogger Instance
@@ -79,19 +73,19 @@ public class ReGoapLogger
 
     public static void Log(string message)
     {
-        if (!instance.Enabled) return;
+        if (Instance.Level != DebugLevel.Full) return;
         instance.listener.Write(message);
     }
 
     public static void LogWarning(string message)
     {
-        if (!instance.Enabled) return;
+        if (Instance.Level >= DebugLevel.WarningsOnly) return;
         instance.listener.Write(message, "warning");
     }
 
     public static void LogError(string message)
     {
-        if (!instance.Enabled) return;
+        if (Instance.Level >= DebugLevel.ErrorsOnly) return;
         instance.listener.Write(message, "error");
     }
 }

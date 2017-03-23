@@ -20,7 +20,7 @@ public class ReGoapBenchmarkTests
         func();
 
         var watch = new Stopwatch();
-        ReGoapLogger.Instance.Enabled = false;
+        ReGoapLogger.Instance.Level = ReGoapLogger.DebugLevel.None;
 
         // clean up
         GC.Collect();
@@ -37,7 +37,7 @@ public class ReGoapBenchmarkTests
         // clean up
         GC.Collect();
 
-        ReGoapLogger.Instance.Enabled = true;
+        ReGoapLogger.Instance.Level = ReGoapLogger.DebugLevel.Full;
 
         ReGoapLogger.Log(string.Format("[Profile] {0} took {1}ms (iters: {2} ; avg: {3}ms).", description, watch.Elapsed.TotalMilliseconds, iterations, watch.Elapsed.TotalMilliseconds / iterations));
         return watch.Elapsed.TotalMilliseconds;
