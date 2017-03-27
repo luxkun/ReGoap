@@ -130,10 +130,10 @@ public class ReGoapState : ICloneable
             return count;
         }
     }
+
     public object Clone()
     {
-        var clone = Instantiate(this);
-        return clone;
+        return Instantiate(this);
     }
 
 

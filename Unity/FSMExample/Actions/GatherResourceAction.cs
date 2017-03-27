@@ -33,9 +33,13 @@ public class GatherResourceAction : GoapAction
 
     public override void Precalculations(IReGoapAgent goapAgent, ReGoapState goalState)
     {
+        base.Precalculations(goapAgent, goalState);
+    }
+
+    public override ReGoapState GetPreconditions(ReGoapState goalState, IReGoapAction next = null)
+    {
         var newNeededResourceName = GetNeededResourceFromGoal(goalState);
         preconditions.Clear();
-        effects.Clear();
         if (newNeededResourceName != null)
         {
             resource = agent.GetMemory().GetWorldState().Get<IResource>("nearest" + newNeededResourceName);
@@ -46,8 +50,24 @@ public class GatherResourceAction : GoapAction
                         .GetWorldState()
                         .Get<Vector3>(string.Format("nearest{0}Position", newNeededResourceName));
                 preconditions.Set("isAtPosition", resourcePosition);
-                // false preconditions are not supported
-                //preconditions.Set("hasResource" + newNeededResourceName, false);
+            }
+        }
+        return preconditions;
+    }
+
+    public override ReGoapState GetEffects(ReGoapState goalState, IReGoapAction next = null)
+    {
+        var newNeededResourceName = GetNeededResourceFromGoal(goalState);
+        effects.Clear();
+        if (newNeededResourceName != null)
+        {
+            resource = agent.GetMemory().GetWorldState().Get<IResource>("nearest" + newNeededResourceName);
+            if (resource != null)
+            {
+                resourcePosition =
+                    agent.GetMemory()
+                        .GetWorldState()
+                        .Get<Vector3>(string.Format("nearest{0}Position", newNeededResourceName));
                 effects.Set("hasResource" + newNeededResourceName, true);
 
                 settings = new GatherResourceSettings
@@ -57,7 +77,31 @@ public class GatherResourceAction : GoapAction
                 };
             }
         }
-        base.Precalculations(goapAgent, goalState);
+        return effects;
+    }
+
+    public override IReGoapActionSettings GetSettings(IReGoapAgent goapAgent, ReGoapState goalState)
+    {
+        var newNeededResourceName = GetNeededResourceFromGoal(goalState);
+        settings = null;
+        if (newNeededResourceName != null)
+        {
+            resource = agent.GetMemory().GetWorldState().Get<IResource>("nearest" + newNeededResourceName);
+            if (resource != null)
+            {
+                resourcePosition =
+                    agent.GetMemory()
+                        .GetWorldState()
+                        .Get<Vector3>(string.Format("nearest{0}Position", newNeededResourceName));
+
+                settings = new GatherResourceSettings
+                {
+                    ResourcePosition = resourcePosition,
+                    Resource = resource
+                };
+            }
+        }
+        return settings;
     }
 
     public override bool CheckProceduralCondition(IReGoapAgent goapAgent, ReGoapState goalState, IReGoapAction next = null)

@@ -27,14 +27,14 @@ public class AStar<T>
         createdNodes.Clear();
     }
 
-    public INode<T> Run(INode<T> start, T goal, int maxIterations = 100, bool earlyExit = true, bool clearNodes = true)
+    public INode<T> Run(INode<T> start, T goal, int maxIterations = 100, bool earlyExit = true, bool clearNodes = false)
     {
         frontier.Clear();
         stateToNode.Clear();
         explored.Clear();
         if (clearNodes)
         {
-            createdNodes.Clear();
+            ClearNodes();
             createdNodes.Add(start);
         }
 
@@ -52,7 +52,10 @@ public class AStar<T>
             explored[node.GetState()] = node;
             foreach (var child in node.Expand())
             {
-                createdNodes.Add(child);
+                if (clearNodes)
+                {
+                    createdNodes.Add(child);
+                }
                 if (earlyExit && child.IsGoal(goal))
                 {
                     ReGoapLogger.Log("[Astar] (early exit) Success iterations: " + iterations);

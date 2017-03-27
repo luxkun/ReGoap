@@ -201,8 +201,11 @@ public class GoapAgent : MonoBehaviour, IReGoapAgent
         var plan = currentGoal.GetPlan();
         if (plan.Count == 0)
         {
-            currentActionState.Action.Exit(currentActionState.Action);
-            currentActionState = null;
+            if (currentActionState != null)
+            {
+                currentActionState.Action.Exit(currentActionState.Action);
+                currentActionState = null;
+            }
             CalculateNewGoal();
         }
         else

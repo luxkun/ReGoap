@@ -53,6 +53,7 @@ public class ReGoapLogger
         None, ErrorsOnly, WarningsOnly, Full
     }
     public DebugLevel Level = DebugLevel.Full;
+    public bool RunOnlyOnMainThread = true;
 
     private static readonly ReGoapLogger instance = new ReGoapLogger();
     public static ReGoapLogger Instance
@@ -62,8 +63,12 @@ public class ReGoapLogger
 
     private readonly IListener listener;
 
+    private readonly int mainThreadId;
+
     private ReGoapLogger()
     {
+        mainThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
+
 #if UNITY_5_3_OR_NEWER
         listener = new UnityTraceListener();
 #else
@@ -71,21 +76,26 @@ public class ReGoapLogger
 #endif
     }
 
+    private static bool InMainThread()
+    {
+        return !instance.RunOnlyOnMainThread || System.Threading.Thread.CurrentThread.ManagedThreadId == instance.mainThreadId;
+    }
+
     public static void Log(string message)
     {
-        if (Instance.Level != DebugLevel.Full) return;
+        if (Instance.Level != DebugLevel.Full || !InMainThread()) return;
         instance.listener.Write(message);
     }
 
     public static void LogWarning(string message)
     {
-        if (Instance.Level >= DebugLevel.WarningsOnly) return;
+        if (Instance.Level < DebugLevel.WarningsOnly || !InMainThread()) return;
         instance.listener.Write(message, "warning");
     }
 
     public static void LogError(string message)
     {
-        if (Instance.Level >= DebugLevel.ErrorsOnly) return;
+        if (Instance.Level < DebugLevel.ErrorsOnly || !InMainThread()) return;
         instance.listener.Write(message, "error");
     }
 }

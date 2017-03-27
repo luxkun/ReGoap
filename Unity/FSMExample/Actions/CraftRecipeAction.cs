@@ -30,9 +30,12 @@ public class CraftRecipeAction : GoapAction
     public override void Precalculations(IReGoapAgent goapAgent, ReGoapState goalState)
     {
         base.Precalculations(goapAgent, goalState);
-        var workstationPosition = agent.GetMemory().GetWorldState().Get<Vector3>("nearestWorkstationPosition");
-        preconditions.Set("isAtPosition", workstationPosition);
-        //effects.Set("isAtPosition", Vector3.zero);
+    }
+
+    public override ReGoapState GetPreconditions(ReGoapState goalState, IReGoapAction next = null)
+    {
+        preconditions.Set("isAtPosition", agent.GetMemory().GetWorldState().Get<Vector3>("nearestWorkstationPosition"));
+        return preconditions;
     }
 
     public override void Run(IReGoapAction previous, IReGoapAction next, IReGoapActionSettings settings, ReGoapState goalState, Action<IReGoapAction> done, Action<IReGoapAction> fail)

@@ -16,17 +16,22 @@ public class ReGoapNode : INode<ReGoapState>
 
     private float heuristicMultiplier = 1;
 
-    private List<INode<ReGoapState>> expandList;
+    private readonly List<INode<ReGoapState>> expandList;
+
+    private ReGoapNode()
+    {
+        expandList = new List<INode<ReGoapState>>();
+    }
 
     private void Init(IGoapPlanner planner, ReGoapState newGoal, ReGoapNode parent, IReGoapAction action)
     {
-        expandList = new List<INode<ReGoapState>>();
+        expandList.Clear();
 
         this.planner = planner;
         this.parent = parent;
         this.action = action;
         if (action != null)
-            actionSettings = action.GetSettings(planner.GetCurrentAgent(), goal);
+            actionSettings = action.GetSettings(planner.GetCurrentAgent(), newGoal);
 
         if (this.parent != null)
         {
@@ -36,7 +41,7 @@ public class ReGoapNode : INode<ReGoapState>
         }
         else
         {
-            state = planner.GetCurrentAgent().GetMemory().GetWorldState();
+            state = (ReGoapState) planner.GetCurrentAgent().GetMemory().GetWorldState().Clone();
         }
 
         var nextAction = parent == null ? null : parent.action;
@@ -91,7 +96,9 @@ public class ReGoapNode : INode<ReGoapState>
     public void Recycle()
     {
         state.Recycle();
+        state = null;
         goal.Recycle();
+        goal = null;
         cachedNodes.Push(this);
     }
 

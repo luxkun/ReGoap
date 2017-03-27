@@ -16,20 +16,16 @@ public class AddResourceToBankAction : GoapAction
     public override void Precalculations(IReGoapAgent goapAgent, ReGoapState goalState)
     {
         base.Precalculations(goapAgent, goalState);
-        var bankPosition = agent.GetMemory().GetWorldState().Get<Vector3>("nearestBankPosition");
+    }
 
-        preconditions.Clear();
-        effects.Clear();
-        preconditions.Set("isAtPosition", bankPosition);
-        effects.Set("isAtPosition", Vector3.zero);
-
+    public override IReGoapActionSettings GetSettings(IReGoapAgent goapAgent, ReGoapState goalState)
+    {
+        settings = null;
         foreach (var pair in goalState.GetValues())
         {
             if (pair.Key.StartsWith("collectedResource"))
             {
                 var resourceName = pair.Key.Substring(17);
-                preconditions.Set("hasResource" + resourceName, true);
-                effects.Set("collectedResource" + resourceName, true);
                 settings = new AddResourceToBankSettings
                 {
                     ResourceName = resourceName
@@ -37,6 +33,45 @@ public class AddResourceToBankAction : GoapAction
                 break;
             }
         }
+        return settings;
+    }
+
+    public override ReGoapState GetEffects(ReGoapState goalState, IReGoapAction next = null)
+    {
+        effects.Clear();
+        effects.Set("isAtPosition", Vector3.zero);
+
+        foreach (var pair in goalState.GetValues())
+        {
+            if (pair.Key.StartsWith("collectedResource"))
+            {
+                var resourceName = pair.Key.Substring(17);
+                effects.Set("collectedResource" + resourceName, true);
+                break;
+            }
+        }
+
+        return effects;
+    }
+
+    public override ReGoapState GetPreconditions(ReGoapState goalState, IReGoapAction next = null)
+    {
+        var bankPosition = agent.GetMemory().GetWorldState().Get<Vector3>("nearestBankPosition");
+
+        preconditions.Clear();
+        preconditions.Set("isAtPosition", bankPosition);
+
+        foreach (var pair in goalState.GetValues())
+        {
+            if (pair.Key.StartsWith("collectedResource"))
+            {
+                var resourceName = pair.Key.Substring(17);
+                preconditions.Set("hasResource" + resourceName, true);
+                break;
+            }
+        }
+
+        return preconditions;
     }
 
 

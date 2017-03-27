@@ -15,8 +15,6 @@ public class GenericGoToAction : GoapAction
 {
     // sometimes a Transform is better (moving target), sometimes you do not have one (last target position)
     //  but if you're using multi-thread approach you can't use a transform or any unity's API
-    protected Vector3 objectivePosition;
-
     protected SmsGoTo smsGoto;
 
     protected override void Awake()
@@ -29,11 +27,6 @@ public class GenericGoToAction : GoapAction
 
     public override void Precalculations(IReGoapAgent goapAgent, ReGoapState goalState)
     {
-        objectivePosition = goalState.Get<Vector3>("isAtPosition");
-        settings = new GenericGoToSettings
-        {
-            ObjectivePosition = objectivePosition
-        };
         base.Precalculations(goapAgent, goalState);
     }
 
@@ -53,30 +46,45 @@ public class GenericGoToAction : GoapAction
     {
         base.Run(previous, next, settings, goalState, done, fail);
 
-        SetObjective(settings);
-        if (objectivePosition != default(Vector3))
-            smsGoto.GoTo(objectivePosition, OnDoneMovement, OnFailureMovement);
+        var localSettings = (GenericGoToSettings) settings;
+
+        if (localSettings.ObjectivePosition != default(Vector3))
+            smsGoto.GoTo(localSettings.ObjectivePosition, OnDoneMovement, OnFailureMovement);
         else
             failCallback(this);
     }
 
-    private void SetObjective(IReGoapActionSettings settings)
-    {
-        var thisSettings = (GenericGoToSettings) settings;
-        objectivePosition = thisSettings.ObjectivePosition;
-    }
-
     public override ReGoapState GetEffects(ReGoapState goalState, IReGoapAction next = null)
     {
-        if (objectivePosition != default(Vector3))
+        var goalWantedPosition = GetWantedPositionFromState(goalState);
+        if (goalWantedPosition != default(Vector3))
         {
-            effects.Set("isAtPosition", objectivePosition);
+            effects.Set("isAtPosition", goalWantedPosition);
         }
         else
         {
             SetDefaultEffects();
         }
         return base.GetEffects(goalState, next);
+    }
+
+    Vector3 GetWantedPositionFromState(ReGoapState state)
+    {
+        Vector3 result = default(Vector3);
+        if (state != null)
+        {
+            result = state.Get<Vector3>("isAtPosition");
+        }
+        return result;
+    }
+
+    public override IReGoapActionSettings GetSettings(IReGoapAgent goapAgent, ReGoapState goalState)
+    {
+        settings = new GenericGoToSettings
+        {
+            ObjectivePosition = GetWantedPositionFromState(goalState)
+        };
+        return base.GetSettings(goapAgent, goalState);
     }
 
     public override float GetCost(ReGoapState goalState, IReGoapAction next = null)
@@ -104,7 +112,7 @@ public class GenericGoToAction : GoapAction
     }
 }
 
-internal class GenericGoToSettings : IReGoapActionSettings
+public struct GenericGoToSettings : IReGoapActionSettings
 {
     public Vector3 ObjectivePosition;
 }

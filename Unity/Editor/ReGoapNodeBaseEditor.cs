@@ -197,7 +197,6 @@ public class ReGoapNodeBaseEditor : EditorWindow
                 text += string.Format("<color={2}>'<b>{0}</b>' = '<i>{1}</i>'</color>\n", preconditionPair.Key, preconditionPair.Value, color);
             }
             preconditionsDifferences.Recycle();
-            preconditionsDifferences = null;
 
             text += "-<b>effects</b>-\n";
             foreach (var effectPair in action.GetEffects(null).GetValues())

@@ -63,6 +63,7 @@ public class ReGoapPlanner : IGoapPlanner
                 }
             }
 
+            goalState = (ReGoapState) goalState.Clone();
             var leaf = (ReGoapNode)astar.Run(
                 ReGoapNode.Instantiate(this, goalState, null, null), goalState, settings.MaxIterations, settings.PlanningEarlyExit);
             if (leaf == null)
