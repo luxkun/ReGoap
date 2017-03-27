@@ -4,20 +4,24 @@ using System.Linq;
 
 public class ReGoapNode : INode<ReGoapState>
 {
-    private readonly float cost;
-    private readonly IGoapPlanner planner;
-    private readonly ReGoapNode parent;
-    private readonly IReGoapAction action;
-    private readonly IReGoapActionSettings actionSettings;
-    private readonly ReGoapState state;
-    private readonly ReGoapState goal;
-    private readonly float g;
-    private readonly float h;
+    private float cost;
+    private IGoapPlanner planner;
+    private ReGoapNode parent;
+    private IReGoapAction action;
+    private IReGoapActionSettings actionSettings;
+    private ReGoapState state;
+    private ReGoapState goal;
+    private float g;
+    private float h;
 
-    private readonly float heuristicMultiplier = 1;
+    private float heuristicMultiplier = 1;
 
-    public ReGoapNode(IGoapPlanner planner, ReGoapState newGoal, ReGoapNode parent, IReGoapAction action)
+    private List<INode<ReGoapState>> expandList;
+
+    private void Init(IGoapPlanner planner, ReGoapState newGoal, ReGoapNode parent, IReGoapAction action)
     {
+        expandList = new List<INode<ReGoapState>>();
+
         this.planner = planner;
         this.parent = parent;
         this.action = action;
@@ -49,19 +53,21 @@ public class ReGoapNode : INode<ReGoapState>
 
             // removing current action effects from goal, no need to do with to the whole state
             //  since the state is the sum of all the previous actions's effects.
-            var missingState = new ReGoapState();
+            var missingState = ReGoapState.Instantiate();
             goal.MissingDifference(effects, ref missingState);
+            goal.Recycle();
             goal = missingState;
 
             // this is needed every step to make sure that any precondition is not already satisfied
             //  by the world state
-            var worldMissingState = new ReGoapState();
+            var worldMissingState = ReGoapState.Instantiate();
             goal.MissingDifference(planner.GetCurrentAgent().GetMemory().GetWorldState(), ref worldMissingState);
+            goal.Recycle();
             goal = worldMissingState;
         }
         else
         {
-            var diff = new ReGoapState();
+            var diff = ReGoapState.Instantiate();
             newGoal.MissingDifference(state, ref diff);
             goal = diff;
         }
@@ -69,6 +75,37 @@ public class ReGoapNode : INode<ReGoapState>
         // f(node) = g(node) + h(node)
         cost = g + h * heuristicMultiplier;
     }
+
+    #region NodeFactory
+    private static Stack<ReGoapNode> cachedNodes;
+
+    public static void Warmup(int count)
+    {
+        cachedNodes = new Stack<ReGoapNode>(count);
+        for (int i = 0; i < count; i++)
+        {
+            cachedNodes.Push(new ReGoapNode());
+        }
+    }
+
+    public void Recycle()
+    {
+        state.Recycle();
+        goal.Recycle();
+        cachedNodes.Push(this);
+    }
+
+    public static ReGoapNode Instantiate(IGoapPlanner planner, ReGoapState newGoal, ReGoapNode parent, IReGoapAction action)
+    {
+        if (cachedNodes == null)
+        {
+            cachedNodes = new Stack<ReGoapNode>();
+        }
+        ReGoapNode node = cachedNodes.Count > 0 ? cachedNodes.Pop() : new ReGoapNode();
+        node.Init(planner, newGoal, parent, action);
+        return node;
+    }
+    #endregion
 
     public float GetPathCost()
     {
@@ -107,19 +144,19 @@ public class ReGoapNode : INode<ReGoapState>
 
     public List<INode<ReGoapState>> Expand()
     {
-        var result = new List<INode<ReGoapState>>();
+        expandList.Clear();
         var possibleActions = GetPossibleActionsEnumerator();
         while (possibleActions.MoveNext())
         {
             var newGoal = goal;
-            result.Add(
-                new ReGoapNode(
+            expandList.Add(
+                ReGoapNode.Instantiate(
                     planner,
                     newGoal,
                     this,
                     possibleActions.Current));
         }
-        return result;
+        return expandList;
     }
 
     private IReGoapAction GetAction()
@@ -129,19 +166,19 @@ public class ReGoapNode : INode<ReGoapState>
 
     public Queue<ReGoapActionState> CalculatePath()
     {
-        var listResult = new List<ReGoapActionState>();
+        var result = new Queue<ReGoapActionState>();
+        CalculatePath(ref result);
+        return result;
+    }
+
+    public void CalculatePath(ref Queue<ReGoapActionState> result)
+    {
         var node = this;
         while (node.GetParent() != null)
         {
-            listResult.Add(new ReGoapActionState(node.action, node.actionSettings));
+            result.Enqueue(new ReGoapActionState(node.action, node.actionSettings));
             node = (ReGoapNode)node.GetParent();
         }
-        var result = new Queue<ReGoapActionState>(listResult.Count);
-        foreach (var thisActionState in listResult)
-        {
-            result.Enqueue(thisActionState);
-        }
-        return result;
     }
 
     public int CompareTo(INode<ReGoapState> other)

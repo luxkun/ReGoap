@@ -8,19 +8,35 @@ public class AStar<T>
     private readonly FastPriorityQueue<INode<T>, T> frontier;
     private readonly Dictionary<T, INode<T>> stateToNode;
     private readonly Dictionary<T, INode<T>> explored;
+    private readonly List<INode<T>> createdNodes;
 
     public AStar(int maxNodesToExpand = 1000)
     {
         frontier = new FastPriorityQueue<INode<T>, T>(maxNodesToExpand);
         stateToNode = new Dictionary<T, INode<T>>();
         explored = new Dictionary<T, INode<T>>(); // State -> node
+        createdNodes = new List<INode<T>>(maxNodesToExpand);
     }
 
-    public INode<T> Run(INode<T> start, T goal, int maxIterations = 100, bool earlyExit = true)
+    void ClearNodes()
+    {
+        foreach (var node in createdNodes)
+        {
+            node.Recycle();
+        }
+        createdNodes.Clear();
+    }
+
+    public INode<T> Run(INode<T> start, T goal, int maxIterations = 100, bool earlyExit = true, bool clearNodes = true)
     {
         frontier.Clear();
         stateToNode.Clear();
         explored.Clear();
+        if (clearNodes)
+        {
+            createdNodes.Clear();
+            createdNodes.Add(start);
+        }
 
         frontier.Enqueue(start, start.GetCost());
         var iterations = 0;
@@ -36,6 +52,7 @@ public class AStar<T>
             explored[node.GetState()] = node;
             foreach (var child in node.Expand())
             {
+                createdNodes.Add(child);
                 if (earlyExit && child.IsGoal(goal))
                 {
                     ReGoapLogger.Log("[Astar] (early exit) Success iterations: " + iterations);
@@ -76,6 +93,7 @@ public interface INode<T>
 
     int QueueIndex { get; set; }
     float Priority { get; set; }
+    void Recycle();
 }
 
 public class NodeComparer<T> : IComparer<INode<T>>

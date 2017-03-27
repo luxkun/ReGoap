@@ -181,7 +181,7 @@ public class ReGoapNodeBaseEditor : EditorWindow
             var curHeight = height;
             var text = string.Format("<b>POSS.ACTION</b> <i>{0}</i>\n", action.GetName());
             text += "-<b>preconditions</b>-\n";
-            ReGoapState preconditionsDifferences = new ReGoapState();
+            ReGoapState preconditionsDifferences = ReGoapState.Instantiate();
             var preconditions = action.GetPreconditions(null);
             if (preconditions == null)
                 continue;
@@ -196,6 +196,9 @@ public class ReGoapNodeBaseEditor : EditorWindow
                 }
                 text += string.Format("<color={2}>'<b>{0}</b>' = '<i>{1}</i>'</color>\n", preconditionPair.Key, preconditionPair.Value, color);
             }
+            preconditionsDifferences.Recycle();
+            preconditionsDifferences = null;
+
             text += "-<b>effects</b>-\n";
             foreach (var effectPair in action.GetEffects(null).GetValues())
             {

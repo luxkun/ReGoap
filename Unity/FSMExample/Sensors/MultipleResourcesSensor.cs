@@ -14,8 +14,10 @@ public class MultipleResourcesSensor : ResourceSensor
     {
         var worldState = memory.GetWorldState();
 
-        foreach (var resourceManager in MultipleResourcesManager.Instance.Resources.Values)
+        foreach (var pair in MultipleResourcesManager.Instance.Resources)
         {
+            var resourceManager = pair.Value;
+
             worldState.Set("see" + resourceManager.GetResourceName(), resourceManager.GetResourcesCount() >= MinResourceValue);
 
             UpdateResources(resourceManager);

@@ -75,9 +75,15 @@ public class GoapPlannerManager : MonoBehaviour
 
     public ReGoapLogger.DebugLevel LogLevel = ReGoapLogger.DebugLevel.Full;
 
+    public int NodeWarmupCount = 1000;
+    public int StatesWarmupCount = 10000;
+
     #region UnityFunctions
     protected virtual void Awake()
     {
+        ReGoapNode.Warmup(NodeWarmupCount);
+        ReGoapState.Warmup(StatesWarmupCount);
+
         ReGoapLogger.Instance.Level = LogLevel;
         if (Instance != null)
         {
@@ -150,12 +156,11 @@ public class GoapPlannerManager : MonoBehaviour
         {
             lock (doneWorks)
             {
-                var doneWorksCopy = doneWorks.ToArray();
-                doneWorks.Clear();
-                foreach (var work in doneWorksCopy)
+                foreach (var work in doneWorks)
                 {
                     work.Callback(work.NewGoal);
                 }
+                doneWorks.Clear();
             }
         }
         if (ThreadsCount <= 1)
@@ -172,8 +177,7 @@ public class GoapPlannerManager : MonoBehaviour
         lock (doneWorks)
         {
             doneWorks.Add(work);
-#if DEBUG
-            if (work.NewGoal != null)
+            if (work.NewGoal != null && ReGoapLogger.Instance.Level == ReGoapLogger.DebugLevel.Full)
             {
                 ReGoapLogger.Log("[GoapPlannerManager] Done calculating plan, actions list:");
                 var i = 0;
@@ -182,7 +186,6 @@ public class GoapPlannerManager : MonoBehaviour
                     ReGoapLogger.Log(string.Format("{0}: {1}", i++, action.Action));
                 }
             }
-#endif
         }
     }
 

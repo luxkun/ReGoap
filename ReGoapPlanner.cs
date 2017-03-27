@@ -47,10 +47,12 @@ public class ReGoapPlanner : IGoapPlanner
                 {
                     action.Precalculations(goapAgent, goalState);
                     if (!action.CheckProceduralCondition(goapAgent, wantedGoalCheck))
+                    {
                         continue;
+                    }
                     // check if the effects of all actions can archieve currentGoal
                     var previous = wantedGoalCheck;
-                    wantedGoalCheck = new ReGoapState();
+                    wantedGoalCheck = ReGoapState.Instantiate();
                     previous.MissingDifference(action.GetEffects(wantedGoalCheck), ref wantedGoalCheck);
                 }
                 // can't validate goal 
@@ -62,7 +64,7 @@ public class ReGoapPlanner : IGoapPlanner
             }
 
             var leaf = (ReGoapNode)astar.Run(
-                new ReGoapNode(this, goalState, null, null), goalState, settings.MaxIterations, settings.PlanningEarlyExit);
+                ReGoapNode.Instantiate(this, goalState, null, null), goalState, settings.MaxIterations, settings.PlanningEarlyExit);
             if (leaf == null)
             {
                 currentGoal = null;

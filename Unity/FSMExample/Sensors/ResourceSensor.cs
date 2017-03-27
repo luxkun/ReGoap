@@ -9,10 +9,15 @@ public class ResourceSensor : GoapSensor
 {
     protected Dictionary<IResource, Vector3> resourcesPosition;
 
+    protected virtual void Awake()
+    {
+        resourcesPosition = new Dictionary<IResource, Vector3>();
+    }
+
     protected virtual void UpdateResources(IResourceManager manager)
     {
+        resourcesPosition.Clear();
         var resources = manager.GetResources();
-        resourcesPosition = new Dictionary<IResource, Vector3>(resources.Count);
         for (int index = 0; index < resources.Count; index++)
         {
             var resource = resources[index];

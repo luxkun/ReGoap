@@ -29,8 +29,8 @@ public class GoapAction : MonoBehaviour, IReGoapAction
     {
         enabled = false;
 
-        effects = new ReGoapState();
-        preconditions = new ReGoapState();
+        effects = ReGoapState.Instantiate();
+        preconditions = ReGoapState.Instantiate();
 
         genericValues = new Dictionary<string, object>();
     }

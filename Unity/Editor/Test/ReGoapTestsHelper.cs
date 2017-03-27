@@ -10,8 +10,8 @@ public class ReGoapTestsHelper
     public static ReGoapTestAction GetCustomAction(GameObject gameObject, string name, Dictionary<string, bool> preconditionsBools,
         Dictionary<string, bool> effectsBools, int cost = 1)
     {
-        var effects = new ReGoapState();
-        var preconditions = new ReGoapState();
+        var effects = ReGoapState.Instantiate();
+        var preconditions = ReGoapState.Instantiate();
         var customAction = gameObject.AddComponent<ReGoapTestAction>();
         customAction.Name = name;
         customAction.Init();
@@ -31,7 +31,7 @@ public class ReGoapTestsHelper
         customGoal.Name = name;
         customGoal.SetPriority(priority);
         customGoal.Init();
-        var goal = new ReGoapState();
+        var goal = ReGoapState.Instantiate();
         foreach (var pair in goalState)
         {
             goal.Set(pair.Key, pair.Value);

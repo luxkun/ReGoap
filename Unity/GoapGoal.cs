@@ -21,7 +21,12 @@ public class GoapGoal : MonoBehaviour, IReGoapGoal
     #region UnityFunctions
     protected virtual void Awake()
     {
-        goal = new ReGoapState();
+        goal = ReGoapState.Instantiate();
+    }
+
+    void OnDestroy()
+    {
+        goal.Recycle();
     }
 
     protected virtual void Start()

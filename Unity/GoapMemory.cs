@@ -12,12 +12,17 @@ public class GoapMemory : MonoBehaviour, IReGoapMemory
     #region UnityFunctions
     protected virtual void Awake()
     {
-        state = new ReGoapState();
+        state = ReGoapState.Instantiate();
         sensors = GetComponents<IReGoapSensor>();
         foreach (var sensor in sensors)
         {
             sensor.Init(this);
         }
+    }
+
+    void OnDestroy()
+    {
+        state.Recycle();
     }
 
     protected virtual void Start()

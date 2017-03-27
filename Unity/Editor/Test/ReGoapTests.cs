@@ -37,14 +37,14 @@ public class ReGoapTests
     [Test]
     public void TestReGoapStateMissingDifference()
     {
-        var state = new ReGoapState();
+        var state = ReGoapState.Instantiate();
         state.Set("var0", true);
         state.Set("var1", "string");
         state.Set("var2", 1);
-        var otherState = new ReGoapState();
+        var otherState = ReGoapState.Instantiate();
         otherState.Set("var1", "stringDifferent");
         otherState.Set("var2", 1);
-        var differences = new ReGoapState();
+        var differences = ReGoapState.Instantiate();
         var count = state.MissingDifference(otherState, ref differences);
         Assert.That(count, Is.EqualTo(2));
         Assert.That(differences.Get<bool>("var0"), Is.EqualTo(true));
@@ -55,11 +55,11 @@ public class ReGoapTests
     [Test]
     public void TestReGoapStateAddOperator()
     {
-        var state = new ReGoapState();
+        var state = ReGoapState.Instantiate();
         state.Set("var0", true);
         state.Set("var1", "string");
         state.Set("var2", 1);
-        var otherState = new ReGoapState();
+        var otherState = ReGoapState.Instantiate();
         otherState.Set("var2", "new2"); // 2nd one replaces the first
         otherState.Set("var3", true);
         otherState.Set("var4", 10.1f);

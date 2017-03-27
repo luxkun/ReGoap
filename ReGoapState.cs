@@ -7,15 +7,26 @@ public class ReGoapState : ICloneable
     // can change to object
     private volatile Dictionary<string, object> values;
 
-    public ReGoapState(ReGoapState old)
+    public static int DefaultSize = 20;
+
+    private ReGoapState()
     {
-        lock (old.values)
-            values = new Dictionary<string, object>(old.values);
+        values = new Dictionary<string, object>(DefaultSize);
     }
 
-    public ReGoapState()
+    private void Init(ReGoapState old)
     {
-        values = new Dictionary<string, object>();
+        values.Clear();
+        if (old != null)
+        {
+            lock (old.values)
+            {
+                foreach (var pair in old.values)
+                {
+                    values[pair.Key] = pair.Value;
+                }
+            }
+        }
     }
 
     public static ReGoapState operator +(ReGoapState a, ReGoapState b)
@@ -23,7 +34,7 @@ public class ReGoapState : ICloneable
         ReGoapState result;
         lock (a.values)
         {
-            result = new ReGoapState(a);
+            result = Instantiate(a);
         }
         lock (b.values)
         {
@@ -121,9 +132,39 @@ public class ReGoapState : ICloneable
     }
     public object Clone()
     {
-        var clone = new ReGoapState(this);
+        var clone = Instantiate(this);
         return clone;
     }
+
+
+    #region StateFactory
+    private static Stack<ReGoapState> cachedStates;
+
+    public static void Warmup(int count)
+    {
+        cachedStates = new Stack<ReGoapState>(count);
+        for (int i = 0; i < count; i++)
+        {
+            cachedStates.Push(new ReGoapState());
+        }
+    }
+
+    public void Recycle()
+    {
+        cachedStates.Push(this);
+    }
+
+    public static ReGoapState Instantiate(ReGoapState old = null)
+    {
+        if (cachedStates == null)
+        {
+            cachedStates = new Stack<ReGoapState>();
+        }
+        ReGoapState state = cachedStates.Count > 0 ? cachedStates.Pop() : new ReGoapState();
+        state.Init(old);
+        return state;
+    }
+    #endregion
 
     public override string ToString()
     {
@@ -176,6 +217,7 @@ public class ReGoapState : ICloneable
 
     public void Clear()
     {
-        values.Clear();
+        lock (values)
+            values.Clear();
     }
 }
