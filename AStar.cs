@@ -27,7 +27,7 @@ public class AStar<T>
         createdNodes.Clear();
     }
 
-    public INode<T> Run(INode<T> start, T goal, int maxIterations = 100, bool earlyExit = true, bool clearNodes = false)
+    public INode<T> Run(INode<T> start, T goal, int maxIterations = 100, bool earlyExit = true, bool clearNodes = true)
     {
         frontier.Clear();
         stateToNode.Clear();
