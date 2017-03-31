@@ -16,7 +16,7 @@ This library is very generic, if you don't include the Unity folder you can use 
 ---
 
 ## Get Started, fast version
-Start by checking out the [Unity FSM example here](https://github.com/luxkun/ReGoap/tree/master/Unity/FSMExample).
+Start by checking out the [Unity FSM example here](https://github.com/luxkun/ReGoap/tree/master/ReGoap/Unity/FSMExample).
 
 This example uses the ReGoap library in Unity with a simple FSM (Finite State Machine) to handle the macro behaviours (in most games three FSM states should suffice: idle, goto, animate).
 
@@ -31,7 +31,7 @@ Also you can just download the last release's unity package, which probably won'
 ---
 
 ## Get Started, long version
-###Explaining GOAP
+### Explaining GOAP
 (if you just want to use the library and want an explained example skip to **[How to use ReGoap](#how-to-use-regoap-in-unity3d)**)
 
 Before explaining how to use this library in your game let me explain how does a Goap system work, starting with a quote of [Jeff Orkin](http://alumni.media.mit.edu/~jorkin/goap.html)
@@ -42,15 +42,15 @@ Basically all it does is find a plan (a list of actions) that will fulfill the c
 
 The main concept you need to understand are: [States](#state), [Action](#action), [Goal](#goal), [Memory](#memory) and [Sensors](#sensor)
 
-####State
+#### State
 is a definition of the world, in this library they are handled as a Dictionary of string to object (Dictionary<string, object>).
 
-Check out ReGoapState class in this file: https://github.com/luxkun/ReGoap/blob/master/ReGoapPlanner.cs
+Check out ReGoapState class in this file: https://github.com/luxkun/ReGoap/blob/master/ReGoap/Core/ReGoapState.cs
 
 Example: *'isAt': 'enemy', 'isWarned': true, 'hasWeapon': true*
 
 
-####Action
+#### Action
 can be defined as a list of preconditions and effects, these are the actions that the Agent (AI pawn, will be called Agent from now on) can do.
 
 The preconditions are the requirement that the Action requires to be ran, described as a State, the effects, as the name implies, are the effects of the Action, as well described as a State.
@@ -68,7 +68,7 @@ Examples:
 If you want you can override Exit in your GoapAction and set the effects to the memory, example following.
 
 
-####Goal
+#### Goal
 can be defined as a list of requisites, described as a State, this is basically what the Agent should do.
 
 Examples:
@@ -77,10 +77,10 @@ Examples:
 * *'Patrol': {'isPatrolling': true}*
 
 
-####Memory
+#### Memory
 is the memory of the Agent, everything the Agent knows and feel should be inserted here. A memory also can have many sensors, in this library, which are a memory helper. Basically the job of the Memory is to create and keep updated a 'World' State.
 
-####Sensor
+#### Sensor
 is a memory helper, it should handle a specific scope.
 
 Example: 
@@ -90,7 +90,7 @@ Example:
 
 Now you should understand what is a GOAP library for and what you should use it for, if still having questions or want to know more about this field I advise you to read Jeff Orkin's papers here: http://alumni.media.mit.edu/~jorkin/
 
-###How to use ReGoap in Unity3D
+### How to use ReGoap in Unity3D
 1. Clone this repository in your Unity project.
 Command line:
 ```bash
@@ -109,10 +109,10 @@ What's more? nothing really, the library will handle all the planning, choose th
 
 In the next paragraphs I'll explain how to create your own classes (but for most of behaviours all you need to implement is GoapAction and GoapGoal).
 
-####How to implement your own GoapAction
-Check out the actions in this example: https://github.com/luxkun/ReGoap/tree/master/Unity/FSMExample/Actions
+#### How to implement your own GoapAction
+Check out the actions in this example: https://github.com/luxkun/ReGoap/tree/master/ReGoap/Unity/FSMExample/Actions
 
-Check out GoapAction implementation, to see what functions you can override: https://github.com/luxkun/ReGoap/blob/master/Unity/GoapAction.cs
+Check out GoapAction implementation, to see what functions you can override: https://github.com/luxkun/ReGoap/blob/master/ReGoap/Unity/GoapAction.cs
 
 You can also implement your own GoapAction by implementing IReGoapAction interface, not advised except you know what you are doing!
 
@@ -153,14 +153,14 @@ As written before the GoapAction does not, by default, write the effects on the 
 You can also have preconditions and effects that are dynamically changed based on the next action's preconditions/effects, for example this how you can handle a GoTo action in your agent.
 
 Check out FSMExample to see how to do this:
-https://github.com/luxkun/ReGoap/blob/master/Unity/FSMExample/Actions/GenericGoToAction.cs
+https://github.com/luxkun/ReGoap/blob/master/ReGoap/Unity/FSMExample/Actions/GenericGoToAction.cs
 
-####How to implement your own GoapGoal
+#### How to implement your own GoapGoal
 This is less tricky, most of the goal will only override the Awake function to add your own goal state (objectives).
 
-Anyway check out GoapGoal, like everything you can implement your own class from scratch by implementing IReGoapGoal interface: https://github.com/luxkun/ReGoap/blob/master/Unity/GoapGoal.cs
+Anyway check out GoapGoal, like everything you can implement your own class from scratch by implementing IReGoapGoal interface: https://github.com/luxkun/ReGoap/blob/master/ReGoap/Unity/GoapGoal.cs
 
-Also check out the goals in this example: https://github.com/luxkun/ReGoap/tree/master/Unity/FSMExample/Goals
+Also check out the goals in this example: https://github.com/luxkun/ReGoap/tree/master/ReGoap/Unity/FSMExample/Goals
 
 ```C#
 public class MyGoapGoal : GoapGoal
@@ -173,10 +173,10 @@ public class MyGoapGoal : GoapGoal
 }
 ```
 
-####How to implement your own GoapSensor
-Check out GoapSensor basic class here: https://github.com/luxkun/ReGoap/blob/master/Unity/GoapSensor.cs
+#### How to implement your own GoapSensor
+Check out GoapSensor basic class here: https://github.com/luxkun/ReGoap/blob/master/ReGoap/Unity/GoapSensor.cs
 
-Check out examples here: https://github.com/luxkun/ReGoap/tree/master/Unity/FSMExample/Sensors
+Check out examples here: https://github.com/luxkun/ReGoap/tree/master/ReGoap/Unity/FSMExample/Sensors
 
 As always you can implement your own class by implementing IReGoapSensor interface.
 
@@ -193,10 +193,10 @@ public class MySensor : GoapSensor
 
 ---
 
-##Debugging
+## Debugging
 To debug your own agent you can, of course, debug on your own, with your favourite editor.
 
-But ReGoap has a very userful debugger for agents in Unity (https://github.com/luxkun/ReGoap/blob/master/Unity/Editor/ReGoapNodeEditor.cs and https://github.com/luxkun/ReGoap/blob/master/Unity/Editor/ReGoapNodeBaseEditor.cs).
+But ReGoap has a very userful debugger for agents in Unity (https://github.com/luxkun/ReGoap/blob/master/ReGoap/Unity/Editor/ReGoapNodeEditor.cs and https://github.com/luxkun/ReGoap/blob/master/ReGoap/Unity/Editor/ReGoapNodeBaseEditor.cs).
 
 To use it just click on the Unity's menu **Window** and then **ReGoap Debugger**, an Unity Window will open, this is the agent debugger.
 
@@ -204,5 +204,5 @@ Now if you click on any agent in your scene (while playing, works only on runnin
 
 ---
 
-##Pull Requests
+## Pull Requests
 Any pull request is appreciated, just make sure to check Unity Tests (menu **Window** -> **Editor Tests Runner** -> **Run All**) before committing and to keep the same style of code.
