@@ -7,7 +7,7 @@ using UnityEngine;
 // using a sensor for this makes everything more dynamic, if the agent is pushed/moved/teleported he
 //  will be able to understand dyamically if he's near the wanted objective
 //  otherwise you can set such variables directly in the relative GoapAction (faster/simplier but less flexible)
-public class WorkstationSensor : GoapSensor
+public class WorkstationSensor : ReGoapSensor<string, object>
 {
     private Dictionary<Workstation, Vector3> workstations;
 
@@ -29,6 +29,6 @@ public class WorkstationSensor : GoapSensor
 
         var nearestStation = Utilities.GetNearest(transform.position, workstations);
         worldState.Set("nearestWorkstation", nearestStation);
-        worldState.Set("nearestWorkstationPosition", nearestStation != null ? nearestStation.transform.position : Vector3.zero);
+        worldState.Set("nearestWorkstationPosition", (Vector3?) (nearestStation != null ? nearestStation.transform.position : Vector3.zero));
     }
 }

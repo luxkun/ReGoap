@@ -4,15 +4,15 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class GoapSensor : MonoBehaviour, IReGoapSensor
+public class ReGoapSensor<T, W> : MonoBehaviour, IReGoapSensor<T, W>
 {
-    protected IReGoapMemory memory;
-    public virtual void Init(IReGoapMemory memory)
+    protected IReGoapMemory<T, W> memory;
+    public virtual void Init(IReGoapMemory<T, W> memory)
     {
         this.memory = memory;
     }
 
-    public virtual IReGoapMemory GetMemory()
+    public virtual IReGoapMemory<T, W> GetMemory()
     {
         return memory;
     }

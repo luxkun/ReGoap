@@ -4,16 +4,16 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class GoapMemory : MonoBehaviour, IReGoapMemory
+public class ReGoapMemory<T, W> : MonoBehaviour, IReGoapMemory<T, W>
 {
-    protected ReGoapState state;
-    private IReGoapSensor[] sensors;
+    protected ReGoapState<T, W> state;
+    private IReGoapSensor<T, W>[] sensors;
 
     #region UnityFunctions
     protected virtual void Awake()
     {
-        state = ReGoapState.Instantiate();
-        sensors = GetComponents<IReGoapSensor>();
+        state = ReGoapState<T, W>.Instantiate();
+        sensors = GetComponents<IReGoapSensor<T, W>>();
         foreach (var sensor in sensors)
         {
             sensor.Init(this);
@@ -42,7 +42,7 @@ public class GoapMemory : MonoBehaviour, IReGoapMemory
     }
     #endregion
 
-    public virtual ReGoapState GetWorldState()
+    public virtual ReGoapState<T, W> GetWorldState()
     {
         return state;
     }

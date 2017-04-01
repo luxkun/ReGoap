@@ -7,11 +7,11 @@ using UnityEngine;
 
 public class ReGoapTestsHelper
 {
-    public static ReGoapTestAction GetCustomAction(GameObject gameObject, string name, Dictionary<string, bool> preconditionsBools,
-        Dictionary<string, bool> effectsBools, int cost = 1)
+    public static ReGoapTestAction GetCustomAction(GameObject gameObject, string name, Dictionary<string, object> preconditionsBools,
+        Dictionary<string, object> effectsBools, int cost = 1)
     {
-        var effects = ReGoapState.Instantiate();
-        var preconditions = ReGoapState.Instantiate();
+        var effects = ReGoapState<string, object>.Instantiate();
+        var preconditions = ReGoapState<string, object>.Instantiate();
         var customAction = gameObject.AddComponent<ReGoapTestAction>();
         customAction.Name = name;
         customAction.Init();
@@ -25,13 +25,13 @@ public class ReGoapTestsHelper
         return customAction;
     }
 
-    public static ReGoapTestGoal GetCustomGoal(GameObject gameObject, string name, Dictionary<string, bool> goalState, int priority = 1)
+    public static ReGoapTestGoal GetCustomGoal(GameObject gameObject, string name, Dictionary<string, object> goalState, int priority = 1)
     {
         var customGoal = gameObject.AddComponent<ReGoapTestGoal>();
         customGoal.Name = name;
         customGoal.SetPriority(priority);
         customGoal.Init();
-        var goal = ReGoapState.Instantiate();
+        var goal = ReGoapState<string, object>.Instantiate();
         foreach (var pair in goalState)
         {
             goal.Set(pair.Key, pair.Value);
@@ -40,7 +40,7 @@ public class ReGoapTestsHelper
         return customGoal;
     }
 
-    public static void ApplyAndValidatePlan(IReGoapGoal plan, ReGoapTestMemory memory)
+    public static void ApplyAndValidatePlan(IReGoapGoal<string, object> plan, ReGoapTestMemory memory)
     {
         foreach (var action in plan.GetPlan())
         {

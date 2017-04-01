@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class CollectResourceGoal : GoapGoal
+public class CollectResourceGoal : ReGoapGoal<string, object>
 {
     public string ResourceName;
 

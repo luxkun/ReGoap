@@ -7,9 +7,9 @@ This library is very generic, if you don't include the Unity folder you can use 
 2. [Get Started, long version](#get-started-long-version)
     1. [Explaining GOAP](#explaining-goap)
     2. [How to use ReGoap in Unity3D](#how-to-use-regoap-in-unity3d)
-        1. [How to implement your own GoapAction](#how-to-implement-your-own-goapaction)
-        2. [How to implement your own GoapGoal](#how-to-implement-your-own-goapgoal)
-        3. [How to implement your own GoapSensor](#how-to-implement-your-own-goapsensor)
+        1. [How to implement your own ReGoapAction](#how-to-implement-your-own-regoapaction)
+        2. [How to implement your own ReGoapGoal](#how-to-implement-your-own-regoapgoal)
+        3. [How to implement your own ReGoapSensor](#how-to-implement-your-own-regoapsensor)
 3. [Debugging](#debugging)
 4. [Pull Requests](#pull-requests)
 
@@ -65,7 +65,7 @@ Examples:
 
 *IMPORTANT*: false preconditions are NOT supported
 *IMPORTANT*: the action effects aren't written in the memory when the action is done, this is a wanted behaviour because in most of the games you will want to set these variables from the memory or from the sensors.
-If you want you can override Exit in your GoapAction and set the effects to the memory, example following.
+If you want you can override Exit in your ReGoapAction and set the effects to the memory, example following.
 
 
 #### Goal
@@ -97,49 +97,51 @@ Command line:
 git clone https://github.com/luxkun/ReGoap.git
 ```
 2. Create a GameObject for your Agent
-3. Add a GoapAgent component, choose a name (it is advised to create your own class that inherit GoapAgent, or implements IReGoapAgent)
-4. Add a GoapMemory component, choose a name (it is advised to create your own class that inherit GoapMemory, or implements IReGoapMemory)
-5. [optional | repeat as needed] Add your own sensor class that inherit GoapSensor or implements IReGoapSensor
-6. [repeat as needed] Add your own class that inherit GoapAction or implements IReGoapAction (choose wisely what preconditions and effects should this action have) and implement the action logic by overriding the Run function, this function will be called by the GoapAgent.
-7. [repeat as needed] Add your own class that inherit GoapGoal or implements IReGoapGoal (choose wisely what goal state the goal has)
-8. Add ONE GoapPlannerManager to any GameObject (not the agent!), this will handle all the planning in multiple-threads.
+3. Add a ReGoapAgent component, choose a name (you must create your own class that inherit ReGoapAgent, or implements IReGoapAgent)
+4. Add a ReGoapMemory component, choose a name (you must create your own class that inherit ReGoapMemory, or implements IReGoapMemory)
+5. [optional | repeat as needed] Add your own sensor class that inherit ReGoapSensor or implements IReGoapSensor
+6. [repeat as needed] Add your own class that inherit ReGoapAction or implements IReGoapAction (choose wisely what preconditions and effects should this action have) and implement the action logic by overriding the Run function, this function will be called by the ReGoapAgent.
+7. [repeat as needed] Add your own class that inherit ReGoapGoal or implements IReGoapGoal (choose wisely what goal state the goal has)
+8. Add ONE ReGoapPlannerManager (you must create your own class that inherit ReGoapPlannerManager) to any GameObject (not the agent!), this will handle all the planning.
 9. Play the game :-)
 
 What's more? nothing really, the library will handle all the planning, choose the actions to complete a goal and run the first one until it's done, then the second one and so on, all you need to do is implement your own actions and goals.
 
 In the next paragraphs I'll explain how to create your own classes (but for most of behaviours all you need to implement is GoapAction and GoapGoal).
 
-#### How to implement your own GoapAction
+#### How to implement your own ReGoapAction
 Check out the actions in this example: https://github.com/luxkun/ReGoap/tree/master/ReGoap/Unity/FSMExample/Actions
 
-Check out GoapAction implementation, to see what functions you can override: https://github.com/luxkun/ReGoap/blob/master/ReGoap/Unity/GoapAction.cs
+Check out ReGoapAction implementation, to see what functions you can override: https://github.com/luxkun/ReGoap/blob/master/ReGoap/Unity/ReGoapAction.cs
 
-You can also implement your own GoapAction by implementing IReGoapAction interface, not advised except you know what you are doing!
+You must implement your own ReGoapAction by implementing IReGoapAction interface or inheriting ReGoapAction.
+Choose wisely the generic types, they must be the same across all the classes of the agent. 
+Usually string, object is the most generic, also int/enum, object is as well generic but lighter.
 
 For a simple implementation all you have to do is this:
 ```C#
-public class MyGoapAction : GoapAction
+public class MyGoapAction : ReGoapAction<string, object>
 {
     protected override void Awake()
     {
         base.Awake();
-        preconditions.Set("myPrecondition", myValue); // myValue can be anything, it's an object internally
+        preconditions.Set("myPrecondition", myValue);
         effects.Set("myEffects", myValue);
     }
-    public override void Run(IReGoapAction previous, IReGoapAction next, IReGoapActionSettings settings, ReGoapState goalState, Action<IReGoapAction> done, Action<IReGoapAction> fail)
+    public override void Run(IReGoapAction<string, object> previous, IReGoapAction<string, object> next, IReGoapActionSettings<string, object> settings, ReGoapState<string, object> goalState, Action<IReGoapAction<string, object>> done, Action<IReGoapAction<string, object>> fail)
     {
         base.Run(previous, next, goalState, done, fail);
         // do your own game logic here
-        // when done, in this function or outside this function, call the done or fail callback, automatically saved to doneCallback and failCallback by GoapAction
-        doneCallback(this); // this will tell the GoapAgent that the action is succerfully done and go ahead in the action plan
-        // if the action has failed then run failCallback(this), the GoapAgent will automatically invalidate the whole plan and ask the GoapPlannerManager to create a new plan
+        // when done, in this function or outside this function, call the done or fail callback, automatically saved to doneCallback and failCallback by ReGoapAction
+        doneCallback(this); // this will tell the ReGoapAgent that the action is succerfully done and go ahead in the action plan
+        // if the action has failed then run failCallback(this), the ReGoapAgent will automatically invalidate the whole plan and ask the ReGoapPlannerManager to create a new plan
     }
 }
 ```
 
-As written before the GoapAction does not, by default, write the effects on the memory, but the memory should check out if the effects are effectively done, if for any reason you want to set the effects at the end of the action you can add this code to your GoapAction implementation:
+As written before the ReGoapAction does not, by default, write the effects on the memory, but the memory should check out if the effects are effectively done, if for any reason you want to set the effects at the end of the action you can add this code to your ReGoapAction implementation:
 ```C#
-    public override void Exit(IReGoapAction next)
+    public override void Exit(IReGoapAction<string, object> next)
     {
         base.Exit(next);
 
@@ -155,20 +157,20 @@ You can also have preconditions and effects that are dynamically changed based o
 Check out FSMExample to see how to do this:
 https://github.com/luxkun/ReGoap/blob/master/ReGoap/Unity/FSMExample/Actions/GenericGoToAction.cs
 
-#### How to implement your own GoapGoal
+#### How to implement your own ReGoapGoal
 This is less tricky, most of the goal will only override the Awake function to add your own goal state (objectives).
 
-Anyway check out GoapGoal, like everything you can implement your own class from scratch by implementing IReGoapGoal interface: https://github.com/luxkun/ReGoap/blob/master/ReGoap/Unity/GoapGoal.cs
+Anyway check out ReGoapGoal, like everything you have to implement your own class from scratch by implementing IReGoapGoal interface or inheriting ReGoapGoal: https://github.com/luxkun/ReGoap/blob/master/ReGoap/Unity/ReGoapGoal.cs
 
 Also check out the goals in this example: https://github.com/luxkun/ReGoap/tree/master/ReGoap/Unity/FSMExample/Goals
 
 ```C#
-public class MyGoapGoal : GoapGoal
+public class MyGoapGoal : ReGoapGoal<string, object>
 {
     protected override void Awake()
     {
         base.Awake();
-        goal.Set("myRequirement", myValue); // like any State myValue is an object, so can be anything
+        goal.Set("myRequirement", myValue);
     }
 }
 ```
@@ -178,10 +180,10 @@ Check out GoapSensor basic class here: https://github.com/luxkun/ReGoap/blob/mas
 
 Check out examples here: https://github.com/luxkun/ReGoap/tree/master/ReGoap/Unity/FSMExample/Sensors
 
-As always you can implement your own class by implementing IReGoapSensor interface.
+As always you have to implement your own class by inheriting ReGoapSensor or implementing IReGoapSensor interface.
 
 ```C#
-public class MySensor : GoapSensor
+public class MySensor : ReGoapSensor<string, object>
 {
     void FixedUpdate()
     {

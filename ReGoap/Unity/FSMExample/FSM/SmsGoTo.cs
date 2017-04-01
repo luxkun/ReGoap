@@ -9,7 +9,7 @@ using System.Collections;
 [RequireComponent(typeof(SmsIdle))]
 public class SmsGoTo : SmState
 {
-    private Vector3 objective;
+    private Vector3? objective;
     private Transform objectiveTransform;
     private Action onDoneMovementCallback;
     private Action onFailureMovementCallback;
@@ -65,7 +65,7 @@ public class SmsGoTo : SmState
     //  set the animator variables (if you want to use root motion then also override MoveTo)
     protected virtual void Tick()
     {
-        var objectivePosition = objectiveTransform != null ? objectiveTransform.position : objective;
+        var objectivePosition = objectiveTransform != null ? objectiveTransform.position : objective.GetValueOrDefault();
         MoveTo(objectivePosition);
     }
 
@@ -139,7 +139,7 @@ public class SmsGoTo : SmState
         return null;
     }
 
-    public void GoTo(Vector3 position, Action onDoneMovement, Action onFailureMovement)
+    public void GoTo(Vector3? position, Action onDoneMovement, Action onFailureMovement)
     {
         objective = position;
         GoTo(onDoneMovement, onFailureMovement);

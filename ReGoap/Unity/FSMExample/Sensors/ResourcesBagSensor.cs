@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class ResourcesBagSensor : GoapSensor {
+public class ResourcesBagSensor : ReGoapSensor<string, object>
+{
     private ResourcesBag resourcesBag;
 
     void Awake()

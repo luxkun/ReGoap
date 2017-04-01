@@ -2,6 +2,8 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using UnityEngine.VR;
 
 public class ReGoapNodeBaseEditor : EditorWindow
@@ -18,11 +20,13 @@ public class ReGoapNodeBaseEditor : EditorWindow
     private GUIStyle activeActionNodeStyle;
     private GUIStyle worldStateStyle;
     private Vector2 totalDrag;
-    private IReGoapAgent agent;
+    private IReGoapAgentHelper agentHelper;
     private GUIStyle possibleActionStyle;
     private GUIStyle menuNodeStyle;
     private GUIStyle selectedMenuNodeStyle;
     private bool agentLocked;
+
+    private MethodInfo updateGoapNodesMethodInfo;
 
     [MenuItem("Window/ReGoap Debugger")]
     private static void OpenWindow()
@@ -33,6 +37,15 @@ public class ReGoapNodeBaseEditor : EditorWindow
 
     private void OnEnable()
     {
+        foreach (var m in GetType().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic))
+        {
+            if (m.Name.StartsWith("UpdateGoapNodes"))
+            {
+                updateGoapNodesMethodInfo = m;
+                break;
+            }
+        }
+
         agentLocked = false;
 
         var textOffset = new RectOffset(12, 0, 10, 0);//new Vector2(9f, 7f);
@@ -99,10 +112,10 @@ public class ReGoapNodeBaseEditor : EditorWindow
     {
         if (Selection.activeGameObject != null)
         {
-            if (agent == null || !agentLocked)
+            if (agentHelper == null || !agentLocked)
             {
-                agent = Selection.activeGameObject.GetComponent<IReGoapAgent>();
-                if (agent == null)
+                agentHelper = Selection.activeGameObject.GetComponent<IReGoapAgentHelper>();
+                if (agentHelper == null)
                     return;
             }
         }
@@ -112,7 +125,10 @@ public class ReGoapNodeBaseEditor : EditorWindow
         DrawGrid(20, 0.2f, Color.gray);
         DrawGrid(100, 0.4f, Color.gray);
 
-        UpdateGoapNodes(Selection.activeGameObject);
+        // create generic method for the current agent
+        MethodInfo generic = updateGoapNodesMethodInfo.MakeGenericMethod(agentHelper.GetGenericArguments());
+        generic.Invoke(this, new object[] { agentHelper });
+
         UpdateMenuNodes();
         DrawNodes();
 
@@ -131,9 +147,9 @@ public class ReGoapNodeBaseEditor : EditorWindow
         return node;
     }
 
-    private void UpdateGoapNodes(GameObject gameObj)
+    private void UpdateGoapNodes<T, W>(IReGoapAgent<T, W> agent)
     {
-        if (gameObj == null || agent == null || !agent.IsActive() || agent.GetMemory() == null)
+        if (agentHelper == null || agent == null || !agent.IsActive() || agent.GetMemory() == null)
             return;
 
         if (nodes == null)
@@ -147,7 +163,7 @@ public class ReGoapNodeBaseEditor : EditorWindow
         var nodeMiddleY = new Vector2(0f, height * 0.5f);
 
         ReGoapNodeEditor? previousNode = null;
-        foreach (var goal in gameObj.GetComponents<IReGoapGoal>())
+        foreach (var goal in agent.GetGoalsSet())
         {
             if (goal.GetGoalState() == null)
                 continue;
@@ -176,13 +192,15 @@ public class ReGoapNodeBaseEditor : EditorWindow
         height = 66;
         var maxHeight = height;
         var worldState = agent.GetMemory().GetWorldState();
+
+        var emptyGoal = agent.InstantiateNewState();
         foreach (var action in agent.GetActionsSet())
         {
             var curHeight = height;
             var text = string.Format("<b>POSS.ACTION</b> <i>{0}</i>\n", action.GetName());
             text += "-<b>preconditions</b>-\n";
-            ReGoapState preconditionsDifferences = ReGoapState.Instantiate();
-            var preconditions = action.GetPreconditions(null);
+            var preconditionsDifferences = agent.InstantiateNewState();
+            var preconditions = action.GetPreconditions(emptyGoal);
             if (preconditions == null)
                 continue;
             preconditions.MissingDifference(worldState, ref preconditionsDifferences);
@@ -199,7 +217,7 @@ public class ReGoapNodeBaseEditor : EditorWindow
             preconditionsDifferences.Recycle();
 
             text += "-<b>effects</b>-\n";
-            foreach (var effectPair in action.GetEffects(null).GetValues())
+            foreach (var effectPair in action.GetEffects(emptyGoal).GetValues())
             {
                 curHeight += 13;
                 text += string.Format("'<b>{0}</b>' = '<i>{1}</i>'\n", effectPair.Key, effectPair.Value);
@@ -265,14 +283,14 @@ public class ReGoapNodeBaseEditor : EditorWindow
     }
     private void UpdateMenuNodes()
     {
-        if (agent == null || !agent.IsActive() || agent.GetMemory() == null)
+        if (agentHelper == null)
             return;
 
         var lockNodePosition = new Vector2(0f, 0f);
 
         var lockNode = DrawGenericNode("<b>LOCK AGENT</b>", 110f, 40f, agentLocked ? selectedMenuNodeStyle : menuNodeStyle, ref lockNodePosition, false, OnLockEvent);
 
-        var agentInfoTitle = string.Format("<b>Selected agent:</b> {0}: {1}", agent, ((MonoBehaviour)agent).name);
+        var agentInfoTitle = string.Format("<b>Selected agent:</b> {0}: {1}", agentHelper, ((MonoBehaviour)agentHelper).name);
         var agentInfoNode = DrawGenericNode(agentInfoTitle, agentInfoTitle.Length * 6f, 40f, menuNodeStyle, ref lockNodePosition);
     }
 

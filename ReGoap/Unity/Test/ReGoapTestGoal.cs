@@ -1,12 +1,12 @@
 ﻿
-public class ReGoapTestGoal : GoapGoal
+public class ReGoapTestGoal : ReGoapGoal<string, object>
 {
     public void Init()
     {
         Awake();
     }
 
-    public void SetGoalState(ReGoapState goalState)
+    public void SetGoalState(ReGoapState<string, object> goalState)
     {
         goal = goalState;
     }

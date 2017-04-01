@@ -1,16 +1,18 @@
 ﻿using System.Collections.Generic;
 
-public interface IReGoapAgent
+public interface IReGoapAgent<T, W>
 {
-    IReGoapMemory GetMemory();
-    IReGoapGoal GetCurrentGoal();
-    void WarnPossibleGoal(IReGoapGoal goal);
+    IReGoapMemory<T, W> GetMemory();
+    IReGoapGoal<T, W> GetCurrentGoal();
+    // called from a goal when the goal is available
+    void WarnPossibleGoal(IReGoapGoal<T, W> goal);
     bool IsActive();
-    List<ReGoapActionState> GetStartingPlan();
-    T GetPlanValue<T>(string key);
-    void SetPlanValue<T>(string key, T value);
-    bool HasPlanValue(string target);
+    List<ReGoapActionState<T, W>> GetStartingPlan();
+    W GetPlanValue(T key);
+    void SetPlanValue(T key, W value);
+    bool HasPlanValue(T target);
     // THREAD SAFE
-    List<IReGoapGoal> GetGoalsSet();
-    List<IReGoapAction> GetActionsSet();
+    List<IReGoapGoal<T, W>> GetGoalsSet();
+    List<IReGoapAction<T, W>> GetActionsSet();
+    ReGoapState<T, W> InstantiateNewState();
 }

@@ -1,16 +1,16 @@
-﻿public class ReGoapTestAction : GoapAction
+﻿public class ReGoapTestAction : ReGoapAction<string, object>
 {
     public void Init()
     {
         Awake();
     }
 
-    public void SetEffects(ReGoapState effects)
+    public void SetEffects(ReGoapState<string, object> effects)
     {
         this.effects = effects;
     }
 
-    public void SetPreconditions(ReGoapState preconditions)
+    public void SetPreconditions(ReGoapState<string, object> preconditions)
     {
         this.preconditions = preconditions;
     }

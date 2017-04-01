@@ -1,33 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
 
-public class ReGoapPlanner : IGoapPlanner
+public class ReGoapPlanner<T, W> : IGoapPlanner<T, W>
 {
-    private IReGoapAgent goapAgent;
-    private IReGoapGoal currentGoal;
+    private IReGoapAgent<T, W> goapAgent;
+    private IReGoapGoal<T, W> currentGoal;
     public bool Calculated;
-    private readonly AStar<ReGoapState> astar;
+    private readonly AStar<ReGoapState<T, W>> astar;
     private readonly ReGoapPlannerSettings settings;
 
     public ReGoapPlanner(ReGoapPlannerSettings settings = null)
     {
         this.settings = settings ?? new ReGoapPlannerSettings();
-        astar = new AStar<ReGoapState>(this.settings.MaxNodesToExpand);
+        astar = new AStar<ReGoapState<T, W>>(this.settings.MaxNodesToExpand);
     }
 
-    public IReGoapGoal Plan(IReGoapAgent agent, IReGoapGoal blacklistGoal = null, Queue<ReGoapActionState> currentPlan = null, Action<IReGoapGoal> callback = null)
+    public IReGoapGoal<T, W> Plan(IReGoapAgent<T, W> agent, IReGoapGoal<T, W> blacklistGoal = null, Queue<ReGoapActionState<T, W>> currentPlan = null, Action<IReGoapGoal<T, W>> callback = null)
     {
         ReGoapLogger.Log("[ReGoalPlanner] Starting planning calculation for agent: " + agent);
         goapAgent = agent;
         Calculated = false;
         currentGoal = null;
-        var possibleGoals = new List<IReGoapGoal>();
+        var possibleGoals = new List<IReGoapGoal<T, W>>();
         foreach (var goal in goapAgent.GetGoalsSet())
         {
             if (goal == blacklistGoal)
                 continue;
             goal.Precalculations(this);
-            if (goal.IsGoalPossible()) //goal.GetPriority() > bestPriority && 
+            if (goal.IsGoalPossible())
                 possibleGoals.Add(goal);
         }
         possibleGoals.Sort((x, y) => x.GetPriority().CompareTo(y.GetPriority()));
@@ -52,7 +52,7 @@ public class ReGoapPlanner : IGoapPlanner
                     }
                     // check if the effects of all actions can archieve currentGoal
                     var previous = wantedGoalCheck;
-                    wantedGoalCheck = ReGoapState.Instantiate();
+                    wantedGoalCheck = ReGoapState<T, W>.Instantiate();
                     previous.MissingDifference(action.GetEffects(wantedGoalCheck), ref wantedGoalCheck);
                 }
                 // can't validate goal 
@@ -63,9 +63,9 @@ public class ReGoapPlanner : IGoapPlanner
                 }
             }
 
-            goalState = (ReGoapState) goalState.Clone();
-            var leaf = (ReGoapNode)astar.Run(
-                ReGoapNode.Instantiate(this, goalState, null, null), goalState, settings.MaxIterations, settings.PlanningEarlyExit);
+            goalState = (ReGoapState<T, W>) goalState.Clone();
+            var leaf = (ReGoapNode<T, W>)astar.Run(
+                ReGoapNode<T, W>.Instantiate(this, goalState, null, null), goalState, settings.MaxIterations, settings.PlanningEarlyExit);
             if (leaf == null)
             {
                 currentGoal = null;
@@ -91,12 +91,12 @@ public class ReGoapPlanner : IGoapPlanner
         return currentGoal;
     }
 
-    public IReGoapGoal GetCurrentGoal()
+    public IReGoapGoal<T, W> GetCurrentGoal()
     {
         return currentGoal;
     }
 
-    public IReGoapAgent GetCurrentAgent()
+    public IReGoapAgent<T, W> GetCurrentAgent()
     {
         return goapAgent;
     }

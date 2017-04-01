@@ -1,4 +1,4 @@
-﻿public interface IReGoapMemory
+﻿public interface IReGoapMemory<T, W>
 {
-    ReGoapState GetWorldState();
+    ReGoapState<T, W> GetWorldState();
 }

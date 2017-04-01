@@ -11,7 +11,7 @@ using UnityEngine.VR;
 // you can use this without any helper class by having the actions that need to move to a position
 //  or transform to have a precondition isAtPosition
 [RequireComponent(typeof(SmsGoTo))]
-public class GenericGoToAction : GoapAction
+public class GenericGoToAction : ReGoapAction<string, object>
 {
     // sometimes a Transform is better (moving target), sometimes you do not have one (last target position)
     //  but if you're using multi-thread approach you can't use a transform or any unity's API
@@ -25,11 +25,6 @@ public class GenericGoToAction : GoapAction
         smsGoto = GetComponent<SmsGoTo>();
     }
 
-    public override void Precalculations(IReGoapAgent goapAgent, ReGoapState goalState)
-    {
-        base.Precalculations(goapAgent, goalState);
-    }
-
     protected virtual void SetDefaultEffects()
     {
         effects.Set("isAtPosition", default(Vector3));
@@ -37,27 +32,27 @@ public class GenericGoToAction : GoapAction
 
     // generic behaviour, get from the goal values: 'isAtPosition'
 
-    protected virtual Vector3 GetCurrentPositionFromMemory()
+    protected virtual Vector3? GetCurrentPositionFromMemory()
     {
-        return agent.GetMemory().GetWorldState().Get<Vector3>("isAtPosition");
+        return agent.GetMemory().GetWorldState().Get("isAtPosition") as Vector3?;
     }
 
-    public override void Run(IReGoapAction previous, IReGoapAction next, IReGoapActionSettings settings, ReGoapState goalState, Action<IReGoapAction> done, Action<IReGoapAction> fail)
+    public override void Run(IReGoapAction<string, object> previous, IReGoapAction<string, object> next, IReGoapActionSettings<string, object> settings, ReGoapState<string, object> goalState, Action<IReGoapAction<string, object>> done, Action<IReGoapAction<string, object>> fail)
     {
         base.Run(previous, next, settings, goalState, done, fail);
 
         var localSettings = (GenericGoToSettings) settings;
 
-        if (localSettings.ObjectivePosition != default(Vector3))
+        if (localSettings.ObjectivePosition.HasValue)
             smsGoto.GoTo(localSettings.ObjectivePosition, OnDoneMovement, OnFailureMovement);
         else
             failCallback(this);
     }
 
-    public override ReGoapState GetEffects(ReGoapState goalState, IReGoapAction next = null)
+    public override ReGoapState<string, object> GetEffects(ReGoapState<string, object> goalState, IReGoapAction<string, object> next = null)
     {
         var goalWantedPosition = GetWantedPositionFromState(goalState);
-        if (goalWantedPosition != default(Vector3))
+        if (goalWantedPosition.HasValue)
         {
             effects.Set("isAtPosition", goalWantedPosition);
         }
@@ -68,17 +63,17 @@ public class GenericGoToAction : GoapAction
         return base.GetEffects(goalState, next);
     }
 
-    Vector3 GetWantedPositionFromState(ReGoapState state)
+    Vector3? GetWantedPositionFromState(ReGoapState<string, object> state)
     {
-        Vector3 result = default(Vector3);
+        Vector3? result = null;
         if (state != null)
         {
-            result = state.Get<Vector3>("isAtPosition");
+            result = state.Get("isAtPosition") as Vector3?;
         }
         return result;
     }
 
-    public override IReGoapActionSettings GetSettings(IReGoapAgent goapAgent, ReGoapState goalState)
+    public override IReGoapActionSettings<string, object> GetSettings(IReGoapAgent<string, object> goapAgent, ReGoapState<string, object> goalState)
     {
         settings = new GenericGoToSettings
         {
@@ -87,18 +82,10 @@ public class GenericGoToAction : GoapAction
         return base.GetSettings(goapAgent, goalState);
     }
 
-    public override float GetCost(ReGoapState goalState, IReGoapAction next = null)
+    // if you want to calculate costs use a non-dynamic/generic goto action
+    public override float GetCost(ReGoapState<string, object> goalState, IReGoapAction<string, object> next = null)
     {
-        var distance = 0f;
-        //if (next != null)
-        //{
-        //    var currentPosition = GetCurrentPositionFromMemory();
-        //    if (objectivePosition != default(Vector3))
-        //    {
-        //        distance += Cost * (currentPosition - objectivePosition).sqrMagnitude;
-        //    }
-        //}
-        return base.GetCost(goalState, next) + Cost + distance;
+        return base.GetCost(goalState, next) + Cost;
     }
 
     protected virtual void OnFailureMovement()
@@ -112,7 +99,7 @@ public class GenericGoToAction : GoapAction
     }
 }
 
-public struct GenericGoToSettings : IReGoapActionSettings
+public struct GenericGoToSettings : IReGoapActionSettings<string, object>
 {
-    public Vector3 ObjectivePosition;
+    public Vector3? ObjectivePosition;
 }

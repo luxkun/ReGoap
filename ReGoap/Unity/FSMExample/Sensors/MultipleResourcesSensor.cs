@@ -25,7 +25,7 @@ public class MultipleResourcesSensor : ResourceSensor
             var nearestResource = Utilities.GetNearest(transform.position, resourcesPosition);
             worldState.Set("nearest" + resourceManager.GetResourceName(), nearestResource);
             worldState.Set("nearest" + resourceManager.GetResourceName() + "Position",
-                nearestResource != null ? nearestResource.GetTransform().position : Vector3.zero);
+                (Vector3?) (nearestResource != null ? nearestResource.GetTransform().position : Vector3.zero));
         }
     }
 }

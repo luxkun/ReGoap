@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections;
 
 [RequireComponent(typeof(ResourcesBag))]
-public class CraftRecipeAction : GoapAction
+public class CraftRecipeAction : ReGoapAction<string, object>
 {
     public ScriptableObject RawRecipe;
     private IRecipe recipe;
@@ -27,22 +27,17 @@ public class CraftRecipeAction : GoapAction
         effects.Set("hasResource" + recipe.GetCraftedResource(), true);
     }
 
-    public override void Precalculations(IReGoapAgent goapAgent, ReGoapState goalState)
+    public override ReGoapState<string, object> GetPreconditions(ReGoapState<string, object> goalState, IReGoapAction<string, object> next = null)
     {
-        base.Precalculations(goapAgent, goalState);
-    }
-
-    public override ReGoapState GetPreconditions(ReGoapState goalState, IReGoapAction next = null)
-    {
-        preconditions.Set("isAtPosition", agent.GetMemory().GetWorldState().Get<Vector3>("nearestWorkstationPosition"));
+        preconditions.Set("isAtPosition", agent.GetMemory().GetWorldState().Get("nearestWorkstationPosition") as Vector3?);
         return preconditions;
     }
 
-    public override void Run(IReGoapAction previous, IReGoapAction next, IReGoapActionSettings settings, ReGoapState goalState, Action<IReGoapAction> done, Action<IReGoapAction> fail)
+    public override void Run(IReGoapAction<string, object> previous, IReGoapAction<string, object> next, IReGoapActionSettings<string, object> settings, ReGoapState<string, object> goalState, Action<IReGoapAction<string, object>> done, Action<IReGoapAction<string, object>> fail)
     {
         base.Run(previous, next, settings, goalState, done, fail);
-        var workstation = agent.GetMemory().GetWorldState().Get<Workstation>("nearestWorkstation");
-        if (workstation.CraftResource(resourcesBag, recipe))
+        var workstation = agent.GetMemory().GetWorldState().Get("nearestWorkstation") as Workstation;
+        if (workstation != null && workstation.CraftResource(resourcesBag, recipe))
         {
             ReGoapLogger.Log("[CraftRecipeAction] crafted recipe " + recipe.GetCraftedResource());
             done(this);

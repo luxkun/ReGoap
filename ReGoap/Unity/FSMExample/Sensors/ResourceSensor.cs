@@ -5,7 +5,7 @@ using System.Text;
 using UnityEngine;
 
 // the agent in this example is a villager which knows the location of trees, so seeTree is always true if there is an available  tree
-public class ResourceSensor : GoapSensor
+public class ResourceSensor : ReGoapSensor<string, object>
 {
     protected Dictionary<IResource, Vector3> resourcesPosition;
 

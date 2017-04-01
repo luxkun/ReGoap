@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class BankSensor : GoapSensor
+public class BankSensor : ReGoapSensor<string, object>
 {
     private Dictionary<Bank, Vector3> banks;
 
@@ -26,6 +26,6 @@ public class BankSensor : GoapSensor
 
         var nearestBank = Utilities.GetNearest(transform.position, banks);
         worldState.Set("nearestBank", nearestBank);
-        worldState.Set("nearestBankPosition", nearestBank != null ? nearestBank.transform.position : Vector3.zero);
+        worldState.Set("nearestBankPosition", (Vector3?) (nearestBank != null ? nearestBank.transform.position : Vector3.zero));
     }
 }

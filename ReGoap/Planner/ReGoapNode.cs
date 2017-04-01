@@ -2,28 +2,28 @@
 using System.Collections.Generic;
 using System.Linq;
 
-public class ReGoapNode : INode<ReGoapState>
+public class ReGoapNode<T, W> : INode<ReGoapState<T, W>>
 {
     private float cost;
-    private IGoapPlanner planner;
-    private ReGoapNode parent;
-    private IReGoapAction action;
-    private IReGoapActionSettings actionSettings;
-    private ReGoapState state;
-    private ReGoapState goal;
+    private IGoapPlanner<T, W> planner;
+    private ReGoapNode<T, W> parent;
+    private IReGoapAction<T, W> action;
+    private IReGoapActionSettings<T, W> actionSettings;
+    private ReGoapState<T, W> state;
+    private ReGoapState<T, W> goal;
     private float g;
     private float h;
 
     private float heuristicMultiplier = 1;
 
-    private readonly List<INode<ReGoapState>> expandList;
+    private readonly List<INode<ReGoapState<T, W>>> expandList;
 
     private ReGoapNode()
     {
-        expandList = new List<INode<ReGoapState>>();
+        expandList = new List<INode<ReGoapState<T, W>>>();
     }
 
-    private void Init(IGoapPlanner planner, ReGoapState newGoal, ReGoapNode parent, IReGoapAction action)
+    private void Init(IGoapPlanner<T, W> planner, ReGoapState<T, W> newGoal, ReGoapNode<T, W> parent, IReGoapAction<T, W> action)
     {
         expandList.Clear();
 
@@ -41,13 +41,12 @@ public class ReGoapNode : INode<ReGoapState>
         }
         else
         {
-            state = (ReGoapState) planner.GetCurrentAgent().GetMemory().GetWorldState().Clone();
+            state = (ReGoapState<T, W>)planner.GetCurrentAgent().GetMemory().GetWorldState().Clone();
         }
 
         var nextAction = parent == null ? null : parent.action;
         if (action != null)
         {
-            // backward search does NOT support negative preconditions
             // since in backward search we relax the problem all preconditions are valid but are added to the current goal
             var preconditions = action.GetPreconditions(newGoal, nextAction);
             goal = newGoal + preconditions;
@@ -58,21 +57,21 @@ public class ReGoapNode : INode<ReGoapState>
 
             // removing current action effects from goal, no need to do with to the whole state
             //  since the state is the sum of all the previous actions's effects.
-            var missingState = ReGoapState.Instantiate();
+            var missingState = ReGoapState<T, W>.Instantiate();
             goal.MissingDifference(effects, ref missingState);
             goal.Recycle();
             goal = missingState;
 
             // this is needed every step to make sure that any precondition is not already satisfied
             //  by the world state
-            var worldMissingState = ReGoapState.Instantiate();
+            var worldMissingState = ReGoapState<T, W>.Instantiate();
             goal.MissingDifference(planner.GetCurrentAgent().GetMemory().GetWorldState(), ref worldMissingState);
             goal.Recycle();
             goal = worldMissingState;
         }
         else
         {
-            var diff = ReGoapState.Instantiate();
+            var diff = ReGoapState<T, W>.Instantiate();
             newGoal.MissingDifference(state, ref diff);
             goal = diff;
         }
@@ -82,14 +81,14 @@ public class ReGoapNode : INode<ReGoapState>
     }
 
     #region NodeFactory
-    private static Stack<ReGoapNode> cachedNodes;
+    private static Stack<ReGoapNode<T, W>> cachedNodes;
 
     public static void Warmup(int count)
     {
-        cachedNodes = new Stack<ReGoapNode>(count);
+        cachedNodes = new Stack<ReGoapNode<T, W>>(count);
         for (int i = 0; i < count; i++)
         {
-            cachedNodes.Push(new ReGoapNode());
+            cachedNodes.Push(new ReGoapNode<T, W>());
         }
     }
 
@@ -102,13 +101,13 @@ public class ReGoapNode : INode<ReGoapState>
         cachedNodes.Push(this);
     }
 
-    public static ReGoapNode Instantiate(IGoapPlanner planner, ReGoapState newGoal, ReGoapNode parent, IReGoapAction action)
+    public static ReGoapNode<T, W> Instantiate(IGoapPlanner<T, W> planner, ReGoapState<T, W> newGoal, ReGoapNode<T, W> parent, IReGoapAction<T, W> action)
     {
         if (cachedNodes == null)
         {
-            cachedNodes = new Stack<ReGoapNode>();
+            cachedNodes = new Stack<ReGoapNode<T, W>>();
         }
-        ReGoapNode node = cachedNodes.Count > 0 ? cachedNodes.Pop() : new ReGoapNode();
+        ReGoapNode<T, W> node = cachedNodes.Count > 0 ? cachedNodes.Pop() : new ReGoapNode<T, W>();
         node.Init(planner, newGoal, parent, action);
         return node;
     }
@@ -124,16 +123,16 @@ public class ReGoapNode : INode<ReGoapState>
         return h;
     }
 
-    public ReGoapState GetState()
+    public ReGoapState<T, W> GetState()
     {
         return state;
     }
 
-    public IEnumerator<IReGoapAction> GetPossibleActionsEnumerator()
+    public IEnumerator<IReGoapAction<T, W>> GetPossibleActionsEnumerator()
     {
         var agent = planner.GetCurrentAgent();
         var actions = agent.GetActionsSet();
-        for (var index = 0; index < actions.Count; index++)
+        for (var index = actions.Count - 1; index >= 0; index--)
         {
             var possibleAction = actions[index];
             possibleAction.Precalculations(agent, goal);
@@ -149,46 +148,41 @@ public class ReGoapNode : INode<ReGoapState>
         }
     }
 
-    public List<INode<ReGoapState>> Expand()
+    public List<INode<ReGoapState<T, W>>> Expand()
     {
         expandList.Clear();
         var possibleActions = GetPossibleActionsEnumerator();
         while (possibleActions.MoveNext())
         {
             var newGoal = goal;
-            expandList.Add(
-                ReGoapNode.Instantiate(
-                    planner,
-                    newGoal,
-                    this,
-                    possibleActions.Current));
+            expandList.Add(Instantiate(planner, newGoal, this, possibleActions.Current));
         }
         return expandList;
     }
 
-    private IReGoapAction GetAction()
+    private IReGoapAction<T, W> GetAction()
     {
         return action;
     }
 
-    public Queue<ReGoapActionState> CalculatePath()
+    public Queue<ReGoapActionState<T, W>> CalculatePath()
     {
-        var result = new Queue<ReGoapActionState>();
+        var result = new Queue<ReGoapActionState<T, W>>();
         CalculatePath(ref result);
         return result;
     }
 
-    public void CalculatePath(ref Queue<ReGoapActionState> result)
+    public void CalculatePath(ref Queue<ReGoapActionState<T, W>> result)
     {
         var node = this;
         while (node.GetParent() != null)
         {
-            result.Enqueue(new ReGoapActionState(node.action, node.actionSettings));
-            node = (ReGoapNode)node.GetParent();
+            result.Enqueue(new ReGoapActionState<T, W>(node.action, node.actionSettings));
+            node = (ReGoapNode<T, W>)node.GetParent();
         }
     }
 
-    public int CompareTo(INode<ReGoapState> other)
+    public int CompareTo(INode<ReGoapState<T, W>> other)
     {
         return cost.CompareTo(other.GetCost());
     }
@@ -198,12 +192,12 @@ public class ReGoapNode : INode<ReGoapState>
         return cost;
     }
 
-    public INode<ReGoapState> GetParent()
+    public INode<ReGoapState<T, W>> GetParent()
     {
         return parent;
     }
 
-    public bool IsGoal(ReGoapState goal)
+    public bool IsGoal(ReGoapState<T, W> goal)
     {
         return h == 0;
     }

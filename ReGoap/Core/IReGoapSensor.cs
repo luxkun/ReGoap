@@ -7,9 +7,9 @@ using System.Text;
 //  you want to re-use different sensors in different agents
 // the interface does not dictate how you should update the memory from the sensor
 // - in a unity game probably you will want to update the memory in the sensor's Update/FixedUpdate
-public interface IReGoapSensor
+public interface IReGoapSensor<T, W>
 {
-    void Init(IReGoapMemory memory);
-    IReGoapMemory GetMemory();
+    void Init(IReGoapMemory<T, W> memory);
+    IReGoapMemory<T, W> GetMemory();
     void UpdateSensor();
 }

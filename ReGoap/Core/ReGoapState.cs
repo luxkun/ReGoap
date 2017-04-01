@@ -2,19 +2,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ReGoapState : ICloneable
+public class ReGoapState<T, W> : ICloneable
 {
     // can change to object
-    private volatile Dictionary<string, object> values;
+    private volatile Dictionary<T, W> values;
 
     public static int DefaultSize = 20;
 
     private ReGoapState()
     {
-        values = new Dictionary<string, object>(DefaultSize);
+        values = new Dictionary<T, W>(DefaultSize);
     }
 
-    private void Init(ReGoapState old)
+    private void Init(ReGoapState<T, W> old)
     {
         values.Clear();
         if (old != null)
@@ -29,9 +29,9 @@ public class ReGoapState : ICloneable
         }
     }
 
-    public static ReGoapState operator +(ReGoapState a, ReGoapState b)
+    public static ReGoapState<T, W> operator +(ReGoapState<T, W> a, ReGoapState<T, W> b)
     {
-        ReGoapState result;
+        ReGoapState<T, W> result;
         lock (a.values)
         {
             result = Instantiate(a);
@@ -48,77 +48,55 @@ public class ReGoapState : ICloneable
     {
         get { return values.Count; }
     }
-    public bool HasAny(ReGoapState other)
+    public bool HasAny(ReGoapState<T, W> other)
     {
         lock (values) lock (other.values)
-        {
-            foreach (var pair in other.values)
             {
-                object thisValue;
-                values.TryGetValue(pair.Key, out thisValue);
-                var otherValue = pair.Value;
-                if (thisValue == otherValue || (thisValue != null && thisValue.Equals(pair.Value)))
-                    return true;
+                foreach (var pair in other.values)
+                {
+                    W thisValue;
+                    values.TryGetValue(pair.Key, out thisValue);
+                    if (Equals(thisValue, pair.Value))
+                        return true;
+                }
+                return false;
             }
-            return false;
-        }
     }
-    public bool HasAnyConflict(ReGoapState other) // used only in backward for now
+    public bool HasAnyConflict(ReGoapState<T, W> other) // used only in backward for now
     {
         lock (values) lock (other.values)
-        {
-            foreach (var pair in other.values)
             {
-                object thisValue;
-                values.TryGetValue(pair.Key, out thisValue);
-                var otherValue = pair.Value;
-                if (otherValue == null || otherValue.Equals(false)) // backward search does NOT support false preconditions
-                    continue;
-                if (thisValue != null && !otherValue.Equals(thisValue))
-                    return true;
+                foreach (var pair in other.values)
+                {
+                    W thisValue;
+                    values.TryGetValue(pair.Key, out thisValue);
+                    var otherValue = pair.Value;
+                    if (otherValue == null || Equals(otherValue, false))
+                        continue;
+                    if (thisValue != null && !Equals(otherValue, thisValue))
+                        return true;
+                }
+                return false;
             }
-            return false;
-        }
     }
 
-    public int MissingDifference(ReGoapState other, int stopAt = int.MaxValue)
+    public int MissingDifference(ReGoapState<T, W> other, int stopAt = int.MaxValue)
     {
-        ReGoapState nullGoap = null;
+        ReGoapState<T, W> nullGoap = null;
         return MissingDifference(other, ref nullGoap, stopAt);
     }
 
     // write differences in "difference"
-    public int MissingDifference(ReGoapState other, ref ReGoapState difference, int stopAt = int.MaxValue, Func<KeyValuePair<string, object>, object, bool> predicate = null, bool test = false)
+    public int MissingDifference(ReGoapState<T, W> other, ref ReGoapState<T, W> difference, int stopAt = int.MaxValue, Func<KeyValuePair<T, W>, W, bool> predicate = null, bool test = false)
     {
         lock (values)
         {
             var count = 0;
             foreach (var pair in values)
             {
-                var add = false;
-                var valueBool = pair.Value as bool?;
-                object otherValue;
+                W otherValue;
                 other.values.TryGetValue(pair.Key, out otherValue);
-                if (valueBool.HasValue)
-                {
-                    // we don't need to check otherValue type since every key is supposed to always have same value type
-                    var otherValueBool = otherValue == null ? false : (bool)otherValue;
-                    if (valueBool.Value != otherValueBool)
-                        add = true;
-                }
-                else // generic version
-                {
-                    var valueVector3 = pair.Value as Vector3?;
-                    if (valueVector3 != null && test)
-                    {
-                        add = true;
-                    }
-                    else if ((pair.Value == null && otherValue != null) || (!pair.Value.Equals(otherValue)))
-                    {
-                        add = true;
-                    }
-                }
-                if (add && (predicate == null || predicate(pair, otherValue)))
+                if (!Equals(pair.Value, otherValue) && (predicate == null || predicate(pair, otherValue)))
                 {
                     count++;
                     if (difference != null)
@@ -138,14 +116,14 @@ public class ReGoapState : ICloneable
 
 
     #region StateFactory
-    private static Stack<ReGoapState> cachedStates;
+    private static Stack<ReGoapState<T, W>> cachedStates;
 
     public static void Warmup(int count)
     {
-        cachedStates = new Stack<ReGoapState>(count);
+        cachedStates = new Stack<ReGoapState<T, W>>(count);
         for (int i = 0; i < count; i++)
         {
-            cachedStates.Push(new ReGoapState());
+            cachedStates.Push(new ReGoapState<T, W>());
         }
     }
 
@@ -154,13 +132,13 @@ public class ReGoapState : ICloneable
         cachedStates.Push(this);
     }
 
-    public static ReGoapState Instantiate(ReGoapState old = null)
+    public static ReGoapState<T, W> Instantiate(ReGoapState<T, W> old = null)
     {
         if (cachedStates == null)
         {
-            cachedStates = new Stack<ReGoapState>();
+            cachedStates = new Stack<ReGoapState<T, W>>();
         }
-        ReGoapState state = cachedStates.Count > 0 ? cachedStates.Pop() : new ReGoapState();
+        ReGoapState<T, W> state = cachedStates.Count > 0 ? cachedStates.Pop() : new ReGoapState<T, W>();
         state.Init(old);
         return state;
     }
@@ -177,17 +155,17 @@ public class ReGoapState : ICloneable
         }
     }
 
-    public T Get<T>(string key)
+    public W Get(T key)
     {
         lock (values)
         {
             if (!values.ContainsKey(key))
-                return default(T);
-            return (T)values[key];
+                return default(W);
+            return values[key];
         }
     }
 
-    public void Set<T>(string key, T value)
+    public void Set(T key, W value)
     {
         lock (values)
         {
@@ -195,7 +173,7 @@ public class ReGoapState : ICloneable
         }
     }
 
-    public void Remove(string key)
+    public void Remove(T key)
     {
         lock (values)
         {
@@ -203,13 +181,13 @@ public class ReGoapState : ICloneable
         }
     }
 
-    public Dictionary<string, object> GetValues()
+    public Dictionary<T, W> GetValues()
     {
         lock (values)
             return values;
     }
 
-    public bool HasKey(string key)
+    public bool HasKey(T key)
     {
         lock (values)
             return values.ContainsKey(key);
