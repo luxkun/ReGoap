@@ -175,6 +175,8 @@ public class MyGoapGoal : ReGoapGoal<string, object>
 }
 ```
 
+*Note*: make sure to use ReGoapGoalAdvanced if you want to automatically warn the agent that a goal is/is not available.
+
 #### How to implement your own GoapSensor
 Check out GoapSensor basic class here: https://github.com/luxkun/ReGoap/blob/master/ReGoap/Unity/GoapSensor.cs
 
@@ -192,6 +194,8 @@ public class MySensor : ReGoapSensor<string, object>
     }
 }
 ```
+
+*Note*: make sure to use ReGoapMemoryAdvanced when working with sensors, since the basic class does not check and update sensors. 
 
 ---
 
