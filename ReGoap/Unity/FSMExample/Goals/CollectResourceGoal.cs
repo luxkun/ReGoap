@@ -1,19 +1,19 @@
-﻿using UnityEngine;
-using System.Collections;
-
-public class CollectResourceGoal : ReGoapGoal<string, object>
+﻿namespace ReGoap.Unity.FSMExample.Goals
 {
-    public string ResourceName;
-
-    protected override void Awake()
+    public class CollectResourceGoal : ReGoapGoal<string, object>
     {
-        base.Awake();
-        goal.Set("collectedResource" + ResourceName, true);
-    }
+        public string ResourceName;
 
-    public override string ToString()
-    {
-        return string.Format("GoapGoal('{0}', '{1}')", Name, ResourceName);
+        protected override void Awake()
+        {
+            base.Awake();
+            goal.Set("collectedResource" + ResourceName, true);
+        }
+
+        public override string ToString()
+        {
+            return string.Format("GoapGoal('{0}', '{1}')", Name, ResourceName);
+        }
     }
 }
 

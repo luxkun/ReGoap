@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-public class BuilderMemory : ReGoapMemory<string, object>
+﻿namespace ReGoap.Unity.FSMExample.Memories
 {
+    public class BuilderMemory : ReGoapMemory<string, object>
+    {
+    }
 }
+ 
+

@@ -1,20 +1,22 @@
 ﻿using UnityEngine;
-using System.Collections;
 
-public class PrimitiveResource : Resource
+namespace ReGoap.Unity.FSMExample.OtherScripts
 {
-    public float MinScalePercentage = 0.1f;
-    private Vector3 startingScale;
-
-    protected override void Awake ()
+    public class PrimitiveResource : Resource
     {
-        base.Awake();
-	    startingScale = transform.localScale;
-	}
+        public float MinScalePercentage = 0.1f;
+        private Vector3 startingScale;
 
-    public override void RemoveResource(float value)
-    {
-        base.RemoveResource(value);
-        transform.localScale = startingScale * (MinScalePercentage + (1f - MinScalePercentage) * (Capacity / startingCapacity)); // scale down based on capacity
+        protected override void Awake ()
+        {
+            base.Awake();
+            startingScale = transform.localScale;
+        }
+
+        public override void RemoveResource(float value)
+        {
+            base.RemoveResource(value);
+            transform.localScale = startingScale * (MinScalePercentage + (1f - MinScalePercentage) * (Capacity / startingCapacity)); // scale down based on capacity
+        }
     }
 }

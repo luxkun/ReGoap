@@ -1,7 +1,8 @@
-﻿using System;
-using UnityEngine;
-using System.Collections;
+﻿using ReGoap.Unity.FSM;
 
-public class SmsIdle : SmState
+namespace ReGoap.Unity.FSMExample.FSM
 {
+    public class SmsIdle : SmState
+    {
+    }
 }

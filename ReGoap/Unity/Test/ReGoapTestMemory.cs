@@ -1,13 +1,16 @@
 ﻿
-public class ReGoapTestMemory : ReGoapMemory<string, object>
+namespace ReGoap.Unity.Test
 {
-    public void Init()
+    public class ReGoapTestMemory : ReGoapMemory<string, object>
     {
-        Awake();
-    }
+        public void Init()
+        {
+            Awake();
+        }
 
-    public void SetValue(string key, object value)
-    {
-        state.Set(key, value);
+        public void SetValue(string key, object value)
+        {
+            state.Set(key, value);
+        }
     }
 }

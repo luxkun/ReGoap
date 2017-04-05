@@ -4,6 +4,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ReGoap.Core;
 using UnityEngine.VR;
 
 public class ReGoapNodeBaseEditor : EditorWindow
@@ -149,13 +150,13 @@ public class ReGoapNodeBaseEditor : EditorWindow
 
     private void UpdateGoapNodes<T, W>(IReGoapAgent<T, W> agent)
     {
-        if (agentHelper == null || agent == null || !agent.IsActive() || agent.GetMemory() == null)
-            return;
-
         if (nodes == null)
         {
             nodes = new List<ReGoapNodeEditor>();
         }
+        if (agentHelper == null || agent == null || !agent.IsActive() || agent.GetMemory() == null)
+            return;
+
         nodes.Clear();
         var width = 300f;
         var height = 70f;

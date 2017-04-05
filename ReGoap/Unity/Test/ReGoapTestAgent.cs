@@ -1,7 +1,10 @@
-﻿public class ReGoapTestAgent : ReGoapAgent<string, object>
+﻿namespace ReGoap.Unity.Test
 {
-    public void Init()
+    public class ReGoapTestAgent : ReGoapAgent<string, object>
     {
-        Awake();
+        public void Init()
+        {
+            Awake();
+        }
     }
 }

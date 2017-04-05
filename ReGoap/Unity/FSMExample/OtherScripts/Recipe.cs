@@ -1,34 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "Recipe", menuName = "New Recipe", order = 1)]
-public class Recipe : ScriptableObject, IRecipe
+namespace ReGoap.Unity.FSMExample.OtherScripts
 {
-    public List<string> NeededResourcesName;
-    public string CraftName;
-
-    public Dictionary<string, float> GetNeededResources()
+    [CreateAssetMenu(fileName = "Recipe", menuName = "New Recipe", order = 1)]
+    public class Recipe : ScriptableObject, IRecipe
     {
-        var dict = new Dictionary<string, float>();
-        foreach (var resourceName in NeededResourcesName)
+        public List<string> NeededResourcesName;
+        public string CraftName;
+
+        public Dictionary<string, float> GetNeededResources()
         {
-            // could implement a more flexible system that has dynamic resources's count (need to create ad-hoc actions or a generic one that handle number of resources)
-            dict[resourceName] = 1f;
+            var dict = new Dictionary<string, float>();
+            foreach (var resourceName in NeededResourcesName)
+            {
+                // could implement a more flexible system that has dynamic resources's count (need to create ad-hoc actions or a generic one that handle number of resources)
+                dict[resourceName] = 1f;
+            }
+            return dict;
         }
-        return dict;
+
+        public string GetCraftedResource()
+        {
+            return CraftName;
+        }
     }
 
-    public string GetCraftedResource()
+    public interface IRecipe
     {
-        return CraftName;
+        Dictionary<string, float> GetNeededResources();
+        string GetCraftedResource();
     }
-}
-
-public interface IRecipe
-{
-    Dictionary<string, float> GetNeededResources();
-    string GetCraftedResource();
 }

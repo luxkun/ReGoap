@@ -1,21 +1,23 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using ReGoap.Unity.FSMExample.OtherScripts;
 
-public class ResourcesBagSensor : ReGoapSensor<string, object>
+namespace ReGoap.Unity.FSMExample.Sensors
 {
-    private ResourcesBag resourcesBag;
-
-    void Awake()
+    public class ResourcesBagSensor : ReGoapSensor<string, object>
     {
-        resourcesBag = GetComponent<ResourcesBag>();
-    }
+        private ResourcesBag resourcesBag;
 
-    public override void UpdateSensor()
-    {
-        var state = memory.GetWorldState();
-        foreach (var pair in resourcesBag.GetResources())
+        void Awake()
         {
-            state.Set("hasResource" + pair.Key, pair.Value > 0);
+            resourcesBag = GetComponent<ResourcesBag>();
+        }
+
+        public override void UpdateSensor()
+        {
+            var state = memory.GetWorldState();
+            foreach (var pair in resourcesBag.GetResources())
+            {
+                state.Set("hasResource" + pair.Key, pair.Value > 0);
+            }
         }
     }
 }

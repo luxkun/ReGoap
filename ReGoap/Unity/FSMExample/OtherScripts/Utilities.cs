@@ -1,27 +1,27 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
 
-public static class Utilities
+namespace ReGoap.Unity.FSMExample.OtherScripts
 {
-    public static T GetNearest<T>(Vector3 thisPosition, Dictionary<T, Vector3> otherPositions, float stopOnDistance = 1f) where T : class
+    public static class Utilities
     {
-        T best = null;
-        var bestDistance = float.MaxValue;
-        foreach (var pair in otherPositions)
+        public static T GetNearest<T>(Vector3 thisPosition, Dictionary<T, Vector3> otherPositions, float stopOnDistance = 1f) where T : class
         {
-            var otherPosition = pair.Value;
-            var delta = (thisPosition - otherPosition).sqrMagnitude;
-            if (delta < bestDistance)
+            T best = null;
+            var bestDistance = float.MaxValue;
+            foreach (var pair in otherPositions)
             {
-                bestDistance = delta;
-                best = pair.Key;
+                var otherPosition = pair.Value;
+                var delta = (thisPosition - otherPosition).sqrMagnitude;
+                if (delta < bestDistance)
+                {
+                    bestDistance = delta;
+                    best = pair.Key;
+                }
+                if (delta <= stopOnDistance)
+                    break;
             }
-            if (delta <= stopOnDistance)
-                break;
+            return best;
         }
-        return best;
     }
 }

@@ -1,24 +1,26 @@
 ﻿using UnityEngine;
-using System.Collections;
 using UnityEngine.UI;
 
-public class BankDebugToText : MonoBehaviour
+namespace ReGoap.Unity.FSMExample.OtherScripts
 {
-    public Text Text;
-    private Bank bank;
-
-    void Awake()
+    public class BankDebugToText : MonoBehaviour
     {
-        bank = GetComponent<Bank>();
-    }
+        public Text Text;
+        private Bank bank;
 
-	void FixedUpdate ()
-	{
-	    var result = "";
-	    foreach (var pair in bank.GetResources())
-	    {
-	        result += string.Format("{0}: {1}\n", pair.Key, pair.Value);
-	    }
-	    Text.text = result;
-	}
+        void Awake()
+        {
+            bank = GetComponent<Bank>();
+        }
+
+        void FixedUpdate ()
+        {
+            var result = "";
+            foreach (var pair in bank.GetResources())
+            {
+                result += string.Format("{0}: {1}\n", pair.Key, pair.Value);
+            }
+            Text.text = result;
+        }
+    }
 }

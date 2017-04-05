@@ -1,176 +1,184 @@
 ﻿using System;
+using ReGoap.Unity.FSM;
+using ReGoap.Utilities;
 using UnityEngine;
-using System.Collections;
 
 // generic goto state, can be used in most games, override Tick and Enter if you are using 
 //  a navmesh / pathfinding library 
 //  (ex. tell the library to search a path in Enter, when done move to the next waypoint in Tick)
-[RequireComponent(typeof(StateMachine))]
-[RequireComponent(typeof(SmsIdle))]
-public class SmsGoTo : SmState
+namespace ReGoap.Unity.FSMExample.FSM
 {
-    private Vector3? objective;
-    private Transform objectiveTransform;
-    private Action onDoneMovementCallback;
-    private Action onFailureMovementCallback;
-
-    private enum GoToState
+    [RequireComponent(typeof(StateMachine))]
+    [RequireComponent(typeof(SmsIdle))]
+    public class SmsGoTo : SmState
     {
-        Disabled, Pulsed, Active, Success, Failure
-    }
-    private GoToState currentState;
-    private Rigidbody body;
+        private Vector3? objective;
+        private Transform objectiveTransform;
+        private Action onDoneMovementCallback;
+        private Action onFailureMovementCallback;
 
-    public bool WorkInFixedUpdate;
-    public bool UseRigidbodyVelocity;
-    public float Speed;
-    // when the magnitude of the difference between the objective and self is <= of this then we're done
-    public float MinDistanceToObjective = 0.5f;
-
-    // additional feature, check for stuck, userful when using rigidbody or raycasts for movements
-    private Vector3 lastStuckCheckUpdatePosition;
-    private float stuckCheckCooldown;
-    public bool CheckForStuck;
-    public float StuckCheckDelay = 1f;
-    public float MaxStuckDistance = 0.1f;
-
-    protected override void Awake()
-    {
-        base.Awake();
-        body = GetComponent<Rigidbody>();
-    }
-
-    // if your games handle the speed from something else (ex. stats class) you can override this function
-    protected virtual float GetSpeed()
-    {
-        return Speed;
-    }
-
-    #region Work
-    protected override void FixedUpdate()
-    {
-        base.FixedUpdate();
-        if (!WorkInFixedUpdate) return;
-        Tick();
-    }
-
-    protected override void Update()
-    {
-        base.Update();
-        if (WorkInFixedUpdate) return;
-        Tick();
-    }
-
-    // if you're using an animation just override this, call base function (base.Tick()) and then 
-    //  set the animator variables (if you want to use root motion then also override MoveTo)
-    protected virtual void Tick()
-    {
-        var objectivePosition = objectiveTransform != null ? objectiveTransform.position : objective.GetValueOrDefault();
-        MoveTo(objectivePosition);
-    }
-
-    protected virtual void MoveTo(Vector3 position)
-    {
-        var delta = position - transform.position;
-        var movement = delta.normalized * GetSpeed();
-        if (body != null)
+        private enum GoToState
         {
-            if (UseRigidbodyVelocity)
+            Disabled, Pulsed, Active, Success, Failure
+        }
+        private GoToState currentState;
+        private Rigidbody body;
+
+        public bool WorkInFixedUpdate;
+        public bool UseRigidBody;
+        public bool UseRigidbodyVelocity;
+        public float Speed;
+        // when the magnitude of the difference between the objective and self is <= of this then we're done
+        public float MinPowDistanceToObjective = 0.5f;
+
+        // additional feature, check for stuck, userful when using rigidbody or raycasts for movements
+        private Vector3 lastStuckCheckUpdatePosition;
+        private float stuckCheckCooldown;
+        public bool CheckForStuck;
+        public float StuckCheckDelay = 1f;
+        public float MaxStuckDistance = 0.1f;
+
+        protected override void Awake()
+        {
+            base.Awake();
+            if (UseRigidBody)
             {
-                body.velocity = movement;
+                body = GetComponent<Rigidbody>();
+            }
+        }
+
+        // if your games handle the speed from something else (ex. stats class) you can override this function
+        protected virtual float GetSpeed()
+        {
+            return Speed;
+        }
+
+        #region Work
+        protected override void FixedUpdate()
+        {
+            base.FixedUpdate();
+            if (!WorkInFixedUpdate) return;
+            Tick();
+        }
+
+        protected override void Update()
+        {
+            base.Update();
+            if (WorkInFixedUpdate) return;
+            Tick();
+        }
+
+        // if you're using an animation just override this, call base function (base.Tick()) and then 
+        //  set the animator variables (if you want to use root motion then also override MoveTo)
+        protected virtual void Tick()
+        {
+            var objectivePosition = objectiveTransform != null ? objectiveTransform.position : objective.GetValueOrDefault();
+            MoveTo(objectivePosition);
+        }
+
+        protected virtual void MoveTo(Vector3 position)
+        {
+            var delta = position - transform.position;
+            var movement = delta.normalized * GetSpeed();
+            if (UseRigidBody)
+            {
+                if (UseRigidbodyVelocity)
+                {
+                    body.velocity = movement;
+                }
+                else
+                {
+                    body.MovePosition(transform.position + movement * Time.deltaTime);
+                }
             }
             else
             {
-                body.MovePosition(transform.position + movement * Time.deltaTime);
+                transform.position += movement * Time.deltaTime;
             }
-        }
-        else
-        {
-            transform.position += movement * Time.deltaTime;
-        }
-        if (delta.magnitude <= MinDistanceToObjective)
-        {
-            currentState = GoToState.Success;
-        }
-        if (CheckForStuck && CheckIfStuck())
-        {
-            currentState = GoToState.Failure;
-        }
-    }
-
-    private bool CheckIfStuck()
-    {
-        if (Time.time > stuckCheckCooldown)
-        {
-            stuckCheckCooldown = Time.time + StuckCheckDelay;
-            if ((lastStuckCheckUpdatePosition - transform.position).magnitude < MaxStuckDistance)
+            if (delta.sqrMagnitude <= MinPowDistanceToObjective)
             {
-                ReGoapLogger.Log("[SmsGoTo] '" + name + "' is stuck.");
-                return true;
+                currentState = GoToState.Success;
             }
-            lastStuckCheckUpdatePosition = transform.position;
+            if (CheckForStuck && CheckIfStuck())
+            {
+                currentState = GoToState.Failure;
+            }
         }
-        return false;
-    }
 
-    #endregion
+        private bool CheckIfStuck()
+        {
+            if (Time.time > stuckCheckCooldown)
+            {
+                stuckCheckCooldown = Time.time + StuckCheckDelay;
+                if ((lastStuckCheckUpdatePosition - transform.position).magnitude < MaxStuckDistance)
+                {
+                    ReGoapLogger.Log("[SmsGoTo] '" + name + "' is stuck.");
+                    return true;
+                }
+                lastStuckCheckUpdatePosition = transform.position;
+            }
+            return false;
+        }
 
-    #region StateHandler
-    public override void Init(StateMachine stateMachine)
-    {
-        base.Init(stateMachine);
-        var transistion = new SmTransistion(GetPriority(), Transistion);
-        var doneTransistion = new SmTransistion(GetPriority(), DoneTransistion);
-        stateMachine.GetComponent<SmsIdle>().Transistions.Add(transistion);
-        Transistions.Add(doneTransistion);
-    }
+        #endregion
 
-    private Type DoneTransistion(ISmState state)
-    {
-        if (currentState != GoToState.Active)
-            return typeof(SmsIdle);
-        return null;
-    }
+        #region StateHandler
+        public override void Init(StateMachine stateMachine)
+        {
+            base.Init(stateMachine);
+            var transistion = new SmTransistion(GetPriority(), Transistion);
+            var doneTransistion = new SmTransistion(GetPriority(), DoneTransistion);
+            stateMachine.GetComponent<SmsIdle>().Transistions.Add(transistion);
+            Transistions.Add(doneTransistion);
+        }
 
-    private Type Transistion(ISmState state)
-    {
-        if (currentState == GoToState.Pulsed)
-            return typeof(SmsGoTo);
-        return null;
-    }
+        private Type DoneTransistion(ISmState state)
+        {
+            if (currentState != GoToState.Active)
+                return typeof(SmsIdle);
+            return null;
+        }
 
-    public void GoTo(Vector3? position, Action onDoneMovement, Action onFailureMovement)
-    {
-        objective = position;
-        GoTo(onDoneMovement, onFailureMovement);
-    }
+        private Type Transistion(ISmState state)
+        {
+            if (currentState == GoToState.Pulsed)
+                return typeof(SmsGoTo);
+            return null;
+        }
 
-    public void GoTo(Transform transform, Action onDoneMovement, Action onFailureMovement)
-    {
-        objectiveTransform = transform;
-        GoTo(onDoneMovement, onFailureMovement);
-    }
+        public void GoTo(Vector3? position, Action onDoneMovement, Action onFailureMovement)
+        {
+            objective = position;
+            GoTo(onDoneMovement, onFailureMovement);
+        }
 
-    void GoTo(Action onDoneMovement, Action onFailureMovement)
-    {
-        currentState = GoToState.Pulsed;
-        onDoneMovementCallback = onDoneMovement;
-        onFailureMovementCallback = onFailureMovement;
-    }
+        public void GoTo(Transform transform, Action onDoneMovement, Action onFailureMovement)
+        {
+            objectiveTransform = transform;
+            GoTo(onDoneMovement, onFailureMovement);
+        }
 
-    public override void Enter()
-    {
-        base.Enter();
-        currentState = GoToState.Active;
-    }
+        void GoTo(Action onDoneMovement, Action onFailureMovement)
+        {
+            currentState = GoToState.Pulsed;
+            onDoneMovementCallback = onDoneMovement;
+            onFailureMovementCallback = onFailureMovement;
+        }
 
-    public override void Exit()
-    {
-        base.Exit();
-        if (currentState == GoToState.Success)
-            onDoneMovementCallback();
-        else
-            onFailureMovementCallback();
+        public override void Enter()
+        {
+            base.Enter();
+            currentState = GoToState.Active;
+        }
+
+        public override void Exit()
+        {
+            base.Exit();
+            if (currentState == GoToState.Success)
+                onDoneMovementCallback();
+            else
+                onFailureMovementCallback();
+        }
+        #endregion
     }
-#endregion
 }

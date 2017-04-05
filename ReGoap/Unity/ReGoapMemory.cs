@@ -1,49 +1,53 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using ReGoap.Core;
 using UnityEngine;
 
-public class ReGoapMemory<T, W> : MonoBehaviour, IReGoapMemory<T, W>
+namespace ReGoap.Unity
 {
-    protected ReGoapState<T, W> state;
-    private IReGoapSensor<T, W>[] sensors;
-
-    #region UnityFunctions
-    protected virtual void Awake()
+    public class ReGoapMemory<T, W> : MonoBehaviour, IReGoapMemory<T, W>
     {
-        state = ReGoapState<T, W>.Instantiate();
-        sensors = GetComponents<IReGoapSensor<T, W>>();
-        foreach (var sensor in sensors)
+        protected ReGoapState<T, W> state;
+        private IReGoapSensor<T, W>[] sensors;
+
+        public float SensorsUpdateDelay = 0.3f;
+        private float sensorsUpdateCooldown;
+
+        #region UnityFunctions
+        protected virtual void Awake()
         {
-            sensor.Init(this);
+            state = ReGoapState<T, W>.Instantiate();
+            sensors = GetComponents<IReGoapSensor<T, W>>();
+            foreach (var sensor in sensors)
+            {
+                sensor.Init(this);
+            }
         }
-    }
 
-    void OnDestroy()
-    {
-        state.Recycle();
-    }
-
-    protected virtual void Start()
-    {
-    }
-
-    protected virtual void FixedUpdate()
-    {
-    }
-
-    protected virtual void Update()
-    {
-        foreach (var sensor in sensors)
+        void OnDestroy()
         {
-            sensor.UpdateSensor();
+            state.Recycle();
         }
-    }
-    #endregion
 
-    public virtual ReGoapState<T, W> GetWorldState()
-    {
-        return state;
+        protected virtual void Start()
+        {
+        }
+
+        protected virtual void Update()
+        {
+            if (Time.time > sensorsUpdateCooldown)
+            {
+                sensorsUpdateCooldown = Time.time + SensorsUpdateDelay;
+
+                foreach (var sensor in sensors)
+                {
+                    sensor.UpdateSensor();
+                }
+            }
+        }
+        #endregion
+
+        public virtual ReGoapState<T, W> GetWorldState()
+        {
+            return state;
+        }
     }
 }

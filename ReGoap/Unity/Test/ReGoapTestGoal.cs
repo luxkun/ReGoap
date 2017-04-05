@@ -1,18 +1,22 @@
-﻿
-public class ReGoapTestGoal : ReGoapGoal<string, object>
+﻿using ReGoap.Core;
+
+namespace ReGoap.Unity.Test
 {
-    public void Init()
+    public class ReGoapTestGoal : ReGoapGoal<string, object>
     {
-        Awake();
-    }
+        public void Init()
+        {
+            Awake();
+        }
 
-    public void SetGoalState(ReGoapState<string, object> goalState)
-    {
-        goal = goalState;
-    }
+        public void SetGoalState(ReGoapState<string, object> goalState)
+        {
+            goal = goalState;
+        }
 
-    public void SetPriority(int priority)
-    {
-        this.Priority = priority;
+        public void SetPriority(int priority)
+        {
+            this.Priority = priority;
+        }
     }
 }

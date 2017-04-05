@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-public class FSMExamplePlannerManager : ReGoapPlannerManager<string, object>
+﻿namespace ReGoap.Unity.FSMExample.Planners
 {
+    public class FSMExamplePlannerManager : ReGoapPlannerManager<string, object>
+    {
+    }
 }

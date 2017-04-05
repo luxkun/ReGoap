@@ -1,17 +1,22 @@
-﻿public class ReGoapTestAction : ReGoapAction<string, object>
+﻿using ReGoap.Core;
+
+namespace ReGoap.Unity.Test
 {
-    public void Init()
+    public class ReGoapTestAction : ReGoapAction<string, object>
     {
-        Awake();
-    }
+        public void Init()
+        {
+            Awake();
+        }
 
-    public void SetEffects(ReGoapState<string, object> effects)
-    {
-        this.effects = effects;
-    }
+        public void SetEffects(ReGoapState<string, object> effects)
+        {
+            this.effects = effects;
+        }
 
-    public void SetPreconditions(ReGoapState<string, object> preconditions)
-    {
-        this.preconditions = preconditions;
+        public void SetPreconditions(ReGoapState<string, object> preconditions)
+        {
+            this.preconditions = preconditions;
+        }
     }
 }

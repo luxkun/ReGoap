@@ -1,28 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
+using ReGoap.Unity.FSMExample.OtherScripts;
 using UnityEngine;
 
 // the agent in this example is a villager which knows the location of trees, so seeTree is always true if there is an available  tree
-public class ResourceSensor : ReGoapSensor<string, object>
+namespace ReGoap.Unity.FSMExample.Sensors
 {
-    protected Dictionary<IResource, Vector3> resourcesPosition;
-
-    protected virtual void Awake()
+    public class ResourceSensor : ReGoapSensor<string, object>
     {
-        resourcesPosition = new Dictionary<IResource, Vector3>();
-    }
+        protected Dictionary<IResource, Vector3> resourcesPosition;
 
-    protected virtual void UpdateResources(IResourceManager manager)
-    {
-        resourcesPosition.Clear();
-        var resources = manager.GetResources();
-        for (int index = 0; index < resources.Count; index++)
+        protected virtual void Awake()
         {
-            var resource = resources[index];
-            if (resource.GetCapacity() > 0)
-                resourcesPosition[resource] = resource.GetTransform().position;
+            resourcesPosition = new Dictionary<IResource, Vector3>();
+        }
+
+        protected virtual void UpdateResources(IResourceManager manager)
+        {
+            resourcesPosition.Clear();
+            var resources = manager.GetResources();
+            for (int index = 0; index < resources.Count; index++)
+            {
+                var resource = resources[index];
+                if (resource.GetCapacity() > 0)
+                    resourcesPosition[resource] = resource.GetTransform().position;
+            }
         }
     }
 }

@@ -1,4 +1,7 @@
-﻿public interface IReGoapMemory<T, W>
+﻿namespace ReGoap.Core
 {
-    ReGoapState<T, W> GetWorldState();
+    public interface IReGoapMemory<T, W>
+    {
+        ReGoapState<T, W> GetWorldState();
+    }
 }

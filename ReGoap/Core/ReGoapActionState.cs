@@ -1,11 +1,14 @@
-﻿public class ReGoapActionState<T, W>
+﻿namespace ReGoap.Core
 {
-    public IReGoapAction<T, W> Action;
-    public IReGoapActionSettings<T, W> Settings;
-
-    public ReGoapActionState(IReGoapAction<T, W> action, IReGoapActionSettings<T, W> settings)
+    public class ReGoapActionState<T, W>
     {
-        Action = action;
-        Settings = settings;
+        public IReGoapAction<T, W> Action;
+        public IReGoapActionSettings<T, W> Settings;
+
+        public ReGoapActionState(IReGoapAction<T, W> action, IReGoapActionSettings<T, W> settings)
+        {
+            Action = action;
+            Settings = settings;
+        }
     }
 }

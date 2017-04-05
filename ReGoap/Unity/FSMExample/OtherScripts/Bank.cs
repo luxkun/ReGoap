@@ -1,37 +1,39 @@
-﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
-public class Bank : MonoBehaviour
+namespace ReGoap.Unity.FSMExample.OtherScripts
 {
-    private ResourcesBag bankBag;
-
-    void Awake()
+    public class Bank : MonoBehaviour
     {
-        bankBag = gameObject.AddComponent<ResourcesBag>();
-    }
+        private ResourcesBag bankBag;
 
-    public float GetResource(string resourceName)
-    {
-        return bankBag.GetResource(resourceName);
-    }
-
-    public Dictionary<string, float> GetResources()
-    {
-        return bankBag.GetResources();
-    }
-
-    public bool AddResource(ResourcesBag resourcesBag, string resourceName, float value = 1f)
-    {
-        if (resourcesBag.GetResource(resourceName) >= value)
+        void Awake()
         {
-            resourcesBag.RemoveResource(resourceName, value);
-            bankBag.AddResource(resourceName, value);
-            return true;
+            bankBag = gameObject.AddComponent<ResourcesBag>();
         }
-        else
+
+        public float GetResource(string resourceName)
         {
-            return false;
+            return bankBag.GetResource(resourceName);
+        }
+
+        public Dictionary<string, float> GetResources()
+        {
+            return bankBag.GetResources();
+        }
+
+        public bool AddResource(ResourcesBag resourcesBag, string resourceName, float value = 1f)
+        {
+            if (resourcesBag.GetResource(resourceName) >= value)
+            {
+                resourcesBag.RemoveResource(resourceName, value);
+                bankBag.AddResource(resourceName, value);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }
