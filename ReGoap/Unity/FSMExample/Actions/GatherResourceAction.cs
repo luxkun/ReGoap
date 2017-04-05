@@ -41,12 +41,11 @@ namespace ReGoap.Unity.FSMExample.Actions
             preconditions.Clear();
             if (newNeededResourceName != null)
             {
-                resource = agent.GetMemory().GetWorldState().Get("nearest" + newNeededResourceName) as IResource;
-                if (resource != null)
+                var wantedResource = agent.GetMemory().GetWorldState().Get("nearest" + newNeededResourceName) as IResource;
+                if (wantedResource != null)
                 {
-                    resourcePosition = agent.GetMemory().GetWorldState()
-                        .Get(string.Format("nearest{0}Position", newNeededResourceName)) as Vector3?;
-                    preconditions.Set("isAtPosition", resourcePosition);
+                    preconditions.Set("isAtPosition", agent.GetMemory().GetWorldState()
+                        .Get(string.Format("nearest{0}Position", newNeededResourceName)) as Vector3?);
                 }
             }
             return preconditions;
@@ -58,10 +57,9 @@ namespace ReGoap.Unity.FSMExample.Actions
             effects.Clear();
             if (newNeededResourceName != null)
             {
-                resource = agent.GetMemory().GetWorldState().Get("nearest" + newNeededResourceName) as IResource;
-                if (resource != null)
+                var wantedResource = agent.GetMemory().GetWorldState().Get("nearest" + newNeededResourceName) as IResource;
+                if (wantedResource != null)
                 {
-                    resourcePosition = agent.GetMemory().GetWorldState().Get(string.Format("nearest{0}Position", newNeededResourceName)) as Vector3?;
                     effects.Set("hasResource" + newNeededResourceName, true);
                 }
             }
@@ -71,23 +69,21 @@ namespace ReGoap.Unity.FSMExample.Actions
         public override IReGoapActionSettings<string, object> GetSettings(IReGoapAgent<string, object> goapAgent, ReGoapState<string, object> goalState)
         {
             var newNeededResourceName = GetNeededResourceFromGoal(goalState);
-            settings = null;
+            GatherResourceSettings wantedSettings = null;
             if (newNeededResourceName != null)
             {
-                resource = agent.GetMemory().GetWorldState().Get("nearest" + newNeededResourceName) as IResource;
-                if (resource != null)
+                var wantedResource = agent.GetMemory().GetWorldState().Get("nearest" + newNeededResourceName) as IResource;
+                if (wantedResource != null)
                 {
-                    resourcePosition = (Vector3) agent.GetMemory().GetWorldState()
-                        .Get(string.Format("nearest{0}Position", newNeededResourceName));
-
-                    settings = new GatherResourceSettings
+                    wantedSettings = new GatherResourceSettings
                     {
-                        ResourcePosition = resourcePosition,
-                        Resource = resource
+                        ResourcePosition = (Vector3)agent.GetMemory().GetWorldState()
+                        .Get(string.Format("nearest{0}Position", newNeededResourceName)),
+                        Resource = wantedResource
                     };
                 }
             }
-            return settings;
+            return wantedSettings;
         }
 
         public override bool CheckProceduralCondition(IReGoapAgent<string, object> goapAgent, ReGoapState<string, object> goalState, IReGoapAction<string, object> next = null)
@@ -98,7 +94,11 @@ namespace ReGoap.Unity.FSMExample.Actions
         public override void Run(IReGoapAction<string, object> previous, IReGoapAction<string, object> next, IReGoapActionSettings<string, object> settings, ReGoapState<string, object> goalState, Action<IReGoapAction<string, object>> done, Action<IReGoapAction<string, object>> fail)
         {
             base.Run(previous, next, settings, goalState, done, fail);
-            SetNeededResources(settings);
+
+            var thisSettings = (GatherResourceSettings)settings;
+            resourcePosition = thisSettings.ResourcePosition;
+            resource = thisSettings.Resource;
+
             if (resource == null || resource.GetCapacity() < ResourcePerAction)
                 failCallback(this);
             else
@@ -107,18 +107,14 @@ namespace ReGoap.Unity.FSMExample.Actions
             }
         }
 
-        private void SetNeededResources(IReGoapActionSettings<string, object> settings)
-        {
-            var thisSettings = (GatherResourceSettings)settings;
-            resourcePosition = thisSettings.ResourcePosition;
-            resource = thisSettings.Resource;
-        }
-
         protected void Update()
         {
             if (resource == null || resource.GetCapacity() < ResourcePerAction)
+            {
                 failCallback(this);
-            else if (Time.time > gatherCooldown)
+                return;
+            }
+            if (Time.time > gatherCooldown)
             {
                 gatherCooldown = float.MaxValue;
                 ReGoapLogger.Log("[GatherResourceAction] acquired " + ResourcePerAction + " " + resource.GetName());

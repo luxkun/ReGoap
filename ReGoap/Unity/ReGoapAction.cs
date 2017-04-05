@@ -98,6 +98,7 @@ namespace ReGoap.Unity
             enabled = true;
             doneCallback = done;
             failCallback = fail;
+            this.settings = settings;
 
             previousAction = previous;
             nextAction = next;

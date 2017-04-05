@@ -13,6 +13,8 @@ namespace ReGoap.Unity
         public float CalculationDelay = 0.5f;
         public bool BlackListGoalOnFailure;
 
+        public bool CalculateNewGoalOnStart = true;
+
         protected float lastCalculationTime;
 
         protected List<IReGoapGoal<T, W>> goals;
@@ -36,8 +38,6 @@ namespace ReGoap.Unity
             get { return startedPlanning && currentReGoapPlanWorker.NewGoal == null; }
         }
 
-        public bool ValidateActiveAction;
-
         #region UnityFunctions
         protected virtual void Awake()
         {
@@ -51,6 +51,10 @@ namespace ReGoap.Unity
 
         protected virtual void Start()
         {
+            if (CalculateNewGoalOnStart)
+            {
+                CalculateNewGoal(true);
+            }
         }
 
         protected virtual void OnEnable()
@@ -65,25 +69,6 @@ namespace ReGoap.Unity
                 currentActionState.Action.Exit(null);
                 currentActionState = null;
                 currentGoal = null;
-            }
-        }
-
-        protected virtual void Update()
-        {
-            possibleGoalsDirty = true;
-
-            if (currentActionState == null)
-            {
-                if (!IsPlanning)
-                    CalculateNewGoal();
-                return;
-            }
-            // check if current action preconditions are still valid, else invalid action and restart planning
-            if (ValidateActiveAction)
-            {
-                var state = memory.GetWorldState();
-                if (currentActionState.Action.GetPreconditions(state).MissingDifference(state, 1) > 0)
-                    TryWarnActionFailure(currentActionState.Action);
             }
         }
         #endregion

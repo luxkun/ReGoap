@@ -18,39 +18,19 @@ namespace ReGoap.Unity
         protected Queue<ReGoapActionState<T, W>> plan;
         protected IGoapPlanner<T, W> planner;
 
-        public float WarnDelay = 2f;
-        private float warnCooldown;
-
         #region UnityFunctions
         protected virtual void Awake()
         {
             goal = ReGoapState<T, W>.Instantiate();
         }
 
-        void OnDestroy()
+        protected virtual void OnDestroy()
         {
             goal.Recycle();
         }
 
         protected virtual void Start()
         {
-        }
-
-        protected virtual void Update()
-        {
-            if (planner != null && !planner.IsPlanning() && Time.time > warnCooldown)
-            {
-                warnCooldown = Time.time + WarnDelay;
-                var currentGoal = planner.GetCurrentGoal();
-                var plannerPlan = currentGoal == null ? null : currentGoal.GetPlan();
-                var equalsPlan = ReferenceEquals(plannerPlan, plan);
-                var isGoalPossible = IsGoalPossible();
-                // check if this goal is not active but CAN be activated
-                //  or
-                // if this goal is active but isn't anymore possible
-                if ((!equalsPlan && isGoalPossible) || (equalsPlan && !isGoalPossible))
-                    planner.GetCurrentAgent().WarnPossibleGoal(this);
-            }
         }
         #endregion
 

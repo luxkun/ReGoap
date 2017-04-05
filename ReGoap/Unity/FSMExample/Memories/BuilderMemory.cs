@@ -1,6 +1,6 @@
 ﻿namespace ReGoap.Unity.FSMExample.Memories
 {
-    public class BuilderMemory : ReGoapMemory<string, object>
+    public class BuilderMemory : ReGoapMemoryAdvanced<string, object>
     {
     }
 }
