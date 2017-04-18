@@ -126,20 +126,20 @@ namespace ReGoap.Unity.FSMExample.FSM
         public override void Init(StateMachine stateMachine)
         {
             base.Init(stateMachine);
-            var transistion = new SmTransistion(GetPriority(), Transistion);
-            var doneTransistion = new SmTransistion(GetPriority(), DoneTransistion);
-            stateMachine.GetComponent<SmsIdle>().Transistions.Add(transistion);
-            Transistions.Add(doneTransistion);
+            var transition = new SmTransition(GetPriority(), Transition);
+            var doneTransition = new SmTransition(GetPriority(), DoneTransition);
+            stateMachine.GetComponent<SmsIdle>().Transitions.Add(transition);
+            Transitions.Add(doneTransition);
         }
 
-        private Type DoneTransistion(ISmState state)
+        private Type DoneTransition(ISmState state)
         {
             if (currentState != GoToState.Active)
                 return typeof(SmsIdle);
             return null;
         }
 
-        private Type Transistion(ISmState state)
+        private Type Transition(ISmState state)
         {
             if (currentState == GoToState.Pulsed)
                 return typeof(SmsGoTo);

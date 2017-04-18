@@ -5,7 +5,7 @@ namespace ReGoap.Unity.FSM
 {
     public interface ISmState
     {
-        List<ISmTransistion> Transistions { get; set; }
+        List<ISmTransition> Transitions { get; set; }
 
         void Enter();
         void Exit();
@@ -15,25 +15,25 @@ namespace ReGoap.Unity.FSM
         int GetPriority();
     }
 
-    public interface ISmTransistion
+    public interface ISmTransition
     {
-        Type TransistionCheck(ISmState state);
+        Type TransitionCheck(ISmState state);
         int GetPriority();
     }
 
-// you can inherit your FSM's transistion from this, but feel free to implement your own (note: must implement ISmTransistion and IComparable<ISmTransistion>)
-    public class SmTransistion : ISmTransistion, IComparable<ISmTransistion>
+// you can inherit your FSM's transition from this, but feel free to implement your own (note: must implement ISmTransition and IComparable<ISmTransition>)
+    public class SmTransition : ISmTransition, IComparable<ISmTransition>
     {
         private readonly int priority;
         private readonly Func<ISmState, Type> checkFunc;
 
-        public SmTransistion(int priority, Func<ISmState, Type> checkFunc)
+        public SmTransition(int priority, Func<ISmState, Type> checkFunc)
         {
             this.priority = priority;
             this.checkFunc = checkFunc;
         }
 
-        public Type TransistionCheck(ISmState state)
+        public Type TransitionCheck(ISmState state)
         {
             return checkFunc(state);
         }
@@ -43,7 +43,7 @@ namespace ReGoap.Unity.FSM
             return priority;
         }
 
-        public int CompareTo(ISmTransistion other)
+        public int CompareTo(ISmTransition other)
         {
             return -GetPriority().CompareTo(other.GetPriority());
         }
