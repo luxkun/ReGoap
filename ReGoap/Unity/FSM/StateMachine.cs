@@ -10,7 +10,7 @@ namespace ReGoap.Unity.FSM
         private Dictionary<Type, ISmState> states;
         private Dictionary<string, object> values;
         private static Dictionary<string, object> globalValues;
-        private List<ISmTransistion> genericTransistions;
+        private List<ISmTransition> genericTransitions;
 
         public bool enableStackedStates;
         public Stack<ISmState> currentStates;
@@ -29,9 +29,9 @@ namespace ReGoap.Unity.FSM
 
         public MonoBehaviour initialState;
 
-        public bool permitLoopTransistion = true;
+        public bool permitLoopTransition = true;
 
-        public bool orderTransistions;
+        public bool orderTransitions;
 
         void OnDisable()
         {
@@ -45,7 +45,7 @@ namespace ReGoap.Unity.FSM
             states = new Dictionary<Type, ISmState>();
             values = new Dictionary<string, object>();
             currentStates = new Stack<ISmState>();
-            genericTransistions = new List<ISmTransistion>();
+            genericTransitions = new List<ISmTransition>();
             globalValues = new Dictionary<string, object>();
         }
 
@@ -66,11 +66,11 @@ namespace ReGoap.Unity.FSM
             states[state.GetType()] = state;
         }
 
-        public void AddGenericTransistion(ISmTransistion func)
+        public void AddGenericTransition(ISmTransition func)
         {
-            genericTransistions.Add(func);
-            if (orderTransistions)
-                genericTransistions.Sort();
+            genericTransitions.Add(func);
+            if (orderTransitions)
+                genericTransitions.Sort();
         }
 
         public T GetValue<T>(string key)
@@ -117,10 +117,10 @@ namespace ReGoap.Unity.FSM
 
         void Check()
         {
-            for (var index = genericTransistions.Count - 1; index >= 0; index--)
+            for (var index = genericTransitions.Count - 1; index >= 0; index--)
             {
-                var trans = genericTransistions[index];
-                var result = trans.TransistionCheck(CurrentState);
+                var trans = genericTransitions[index];
+                var result = trans.TransitionCheck(CurrentState);
                 if (result != null)
                 {
                     Switch(result);
@@ -128,10 +128,10 @@ namespace ReGoap.Unity.FSM
                 }
             }
             if (CurrentState == null) return;
-            for (var index = CurrentState.Transistions.Count - 1; index >= 0; index--)
+            for (var index = CurrentState.Transitions.Count - 1; index >= 0; index--)
             {
-                var trans = CurrentState.Transistions[index];
-                var result = trans.TransistionCheck(CurrentState);
+                var trans = CurrentState.Transitions[index];
+                var result = trans.TransitionCheck(CurrentState);
                 if (result != null)
                 {
                     Switch(result);
@@ -149,7 +149,7 @@ namespace ReGoap.Unity.FSM
         {
             if (CurrentState != null)
             {
-                if (!permitLoopTransistion && (CurrentState.GetType() == T)) return;
+                if (!permitLoopTransition && (CurrentState.GetType() == T)) return;
                 ((MonoBehaviour) CurrentState).enabled = false;
                 CurrentState.Exit();
             }
@@ -160,8 +160,8 @@ namespace ReGoap.Unity.FSM
             ((MonoBehaviour) CurrentState).enabled = true;
             CurrentState.Enter();
 
-            if (orderTransistions)
-                CurrentState.Transistions.Sort();
+            if (orderTransitions)
+                CurrentState.Transitions.Sort();
         }
 
         public void PopState()

@@ -5,13 +5,13 @@ namespace ReGoap.Unity.FSM
 {
     public class SmState : MonoBehaviour, ISmState
     {
-        public List<ISmTransistion> Transistions { get; set; }
+        public List<ISmTransition> Transitions { get; set; }
         public int priority;
 
         #region UnityFunctions
         protected virtual void Awake()
         {
-            Transistions = new List<ISmTransistion>();
+            Transitions = new List<ISmTransition>();
         }
         protected virtual void Start()
         {

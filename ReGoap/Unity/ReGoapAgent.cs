@@ -29,7 +29,7 @@ namespace ReGoap.Unity
         protected bool possibleGoalsDirty;
         protected Queue<ReGoapActionState<T, W>> startingPlan;
         protected Dictionary<T, W> planValues;
-        protected bool interruptOnNextTransistion;
+        protected bool interruptOnNextTransition;
 
         protected bool startedPlanning;
         protected ReGoapPlanWork<T, W> currentReGoapPlanWorker;
@@ -112,7 +112,7 @@ namespace ReGoap.Unity
                 return false;
             lastCalculationTime = Time.time;
 
-            interruptOnNextTransistion = false;
+            interruptOnNextTransition = false;
             UpdatePossibleGoals();
             //var watch = System.Diagnostics.Stopwatch.StartNew();
             startedPlanning = true;
@@ -170,7 +170,7 @@ namespace ReGoap.Unity
 
         protected virtual void PushAction()
         {
-            if (interruptOnNextTransistion)
+            if (interruptOnNextTransition)
             {
                 CalculateNewGoal();
                 return;
@@ -226,7 +226,7 @@ namespace ReGoap.Unity
                 return;
             if (currentActionState != null && !currentActionState.Action.IsInterruptable())
             {
-                interruptOnNextTransistion = true;
+                interruptOnNextTransition = true;
                 currentActionState.Action.AskForInterruption();
             }
             else
