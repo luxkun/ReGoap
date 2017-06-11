@@ -83,6 +83,11 @@ namespace ReGoap.Planner
                     currentGoal = null;
                     break;
                 }
+                if (result.Count == 0)
+                {
+                    currentGoal = null;
+                    continue;
+                }
                 currentGoal.SetPlan(result);
                 break;
             }
