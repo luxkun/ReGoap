@@ -48,21 +48,15 @@ namespace ReGoap.Planner
             var nextAction = parent == null ? null : parent.action;
             if (action != null)
             {
-                // since in backward search we relax the problem all preconditions are valid but are added to the current goal
-                var preconditions = action.GetPreconditions(newGoal, nextAction);
-                goal = newGoal + preconditions;
+                goal = ReGoapState<T, W>.Instantiate(newGoal);
 
+                var preconditions = action.GetPreconditions(newGoal, nextAction);
                 var effects = action.GetEffects(newGoal, nextAction);
                 state.AddFromState(effects);
                 g += action.GetCost(newGoal, nextAction);
 
-                // removing current action effects from goal, no need to do with to the whole state
-                //  since the state is the sum of all the previous actions's effects.
-                goal.ReplaceWithMissingDifference(effects);
-
-                // this is needed every step to make sure that any precondition is not already satisfied
-                //  by the world state
-                goal.ReplaceWithMissingDifference(planner.GetCurrentAgent().GetMemory().GetWorldState());
+                goal.ReplaceWithMissingDifference(state);
+                goal.AddFromState(preconditions);
             }
             else
             {
@@ -144,9 +138,10 @@ namespace ReGoap.Planner
                 var effects = possibleAction.GetEffects(goal, action);
                 if (possibleAction == action)
                     continue;
+
                 if (effects.HasAny(goal) && // any effect is the current goal
                     !goal.HasAnyConflict(effects) && // no effect is conflicting with the goal
-                    !goal.HasAnyConflict(precond) && // no precondition is conflicting with the goal
+                    !goal.HasAnyConflict(effects, precond) && // no precondition is conflicting with the goal
                     possibleAction.CheckProceduralCondition(agent, goal, parent != null ? parent.action : null))
                 {
                     var newGoal = goal;

@@ -96,7 +96,17 @@ namespace ReGoap.Planner
             if (callback != null)
                 callback(currentGoal);
             if (currentGoal != null)
+            {
                 ReGoapLogger.Log(string.Format("[ReGoapPlanner] Calculated plan for goal '{0}', plan length: {1}", currentGoal, currentGoal.GetPlan().Count));
+                if (ReGoapLogger.Level == ReGoapLogger.DebugLevel.Full)
+                {
+                    int i = 0;
+                    foreach (var action in currentGoal.GetPlan())
+                    {
+                        ReGoapLogger.Log(string.Format("[ReGoapPlanner] {0}) {1}", i++, action.Action));
+                    }
+                }
+            }
             else
                 ReGoapLogger.LogWarning("[ReGoapPlanner] Error while calculating plan.");
             return currentGoal;

@@ -79,19 +79,40 @@ namespace ReGoap.Core
         public bool HasAnyConflict(ReGoapState<T, W> other) // used only in backward for now
         {
             lock (values) lock (other.values)
-            {
-                foreach (var pair in other.values)
                 {
-                    W thisValue;
-                    values.TryGetValue(pair.Key, out thisValue);
-                    var otherValue = pair.Value;
-                    if (otherValue == null || Equals(otherValue, false))
-                        continue;
-                    if (thisValue != null && !Equals(otherValue, thisValue))
-                        return true;
+                    foreach (var pair in other.values)
+                    {
+                        W thisValue;
+                        values.TryGetValue(pair.Key, out thisValue);
+                        var otherValue = pair.Value;
+                        if (otherValue == null || Equals(otherValue, false))
+                            continue;
+                        if (thisValue != null && !Equals(otherValue, thisValue))
+                            return true;
+                    }
+                    return false;
                 }
-                return false;
-            }
+        }
+
+        // this method is more relaxed than the other, also accepts conflits that are fixed by "changes"
+        public bool HasAnyConflict(ReGoapState<T, W> changes, ReGoapState<T, W> other) // used only in backward for now
+        {
+            lock (values) lock (other.values)
+                {
+                    foreach (var pair in other.values)
+                    {
+                        W thisValue;
+                        values.TryGetValue(pair.Key, out thisValue);
+                        W effectValue;
+                        changes.values.TryGetValue(pair.Key, out effectValue);
+                        var otherValue = pair.Value;
+                        if (otherValue == null || Equals(otherValue, false))
+                            continue;
+                        if (thisValue != null && !Equals(otherValue, thisValue) && !Equals(effectValue, thisValue))
+                            return true;
+                    }
+                    return false;
+                }
         }
 
         public int MissingDifference(ReGoapState<T, W> other, int stopAt = int.MaxValue)
