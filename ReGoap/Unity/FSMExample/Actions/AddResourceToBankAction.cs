@@ -37,7 +37,6 @@ namespace ReGoap.Unity.FSMExample.Actions
         public override ReGoapState<string, object> GetEffects(ReGoapState<string, object> goalState, IReGoapAction<string, object> next = null)
         {
             effects.Clear();
-            effects.Set("isAtPosition", (Vector3?) Vector3.zero);
 
             foreach (var pair in goalState.GetValues())
             {

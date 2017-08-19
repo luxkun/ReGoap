@@ -79,6 +79,34 @@ namespace ReGoap.Unity.Editor.Test
             Assert.That(state.Get("var4"), Is.EqualTo(10.1f));
         }
 
+        [Test]
+        public void TestConflictingActionPlan()
+        {
+            var gameObject = new GameObject();
+
+            ReGoapTestsHelper.GetCustomAction(gameObject, "JumpIntoWater",
+                new Dictionary<string, object> { { "isAtPosition", 0 } },
+                new Dictionary<string, object> { { "isAtPosition", 1 }, { "isSwimming", true } }, 1);
+            ReGoapTestsHelper.GetCustomAction(gameObject, "GoSwimming",
+                new Dictionary<string, object> { },
+                new Dictionary<string, object> { { "isAtPosition", 0 } }, 2);
+
+            var hasAxeGoal = ReGoapTestsHelper.GetCustomGoal(gameObject, "Swim",
+                new Dictionary<string, object> { { "isSwimming", true } });
+
+            var memory = gameObject.AddComponent<ReGoapTestMemory>();
+            memory.Init();
+
+            var agent = gameObject.AddComponent<ReGoapTestAgent>();
+            agent.Init();
+
+            var plan = GetPlanner().Plan(agent, null, null, null);
+
+            Assert.That(plan, Is.EqualTo(hasAxeGoal));
+            // validate plan actions
+            ReGoapTestsHelper.ApplyAndValidatePlan(plan, memory);
+        }
+
         public void TestSimpleChainedPlan(IGoapPlanner<string, object> planner)
         {
             var gameObject = new GameObject();
