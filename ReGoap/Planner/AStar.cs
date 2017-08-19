@@ -43,7 +43,6 @@ namespace ReGoap.Planner
             var iterations = 0;
             while ((frontier.Count > 0) && (iterations < maxIterations) && (frontier.Count + 1 < frontier.MaxSize))
             {
-                iterations++;
                 var node = frontier.Dequeue();
                 if (node.IsGoal(goal))
                 {
@@ -53,6 +52,7 @@ namespace ReGoap.Planner
                 explored[node.GetState()] = node;
                 foreach (var child in node.Expand())
                 {
+                    iterations++;
                     if (clearNodes)
                     {
                         createdNodes.Add(child);

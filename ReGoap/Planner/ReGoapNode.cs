@@ -48,15 +48,20 @@ namespace ReGoap.Planner
             var nextAction = parent == null ? null : parent.action;
             if (action != null)
             {
+                // create a new instance of the goal based on the paren't goal
                 goal = ReGoapState<T, W>.Instantiate(newGoal);
 
-                var preconditions = action.GetPreconditions(newGoal, nextAction);
-                var effects = action.GetEffects(newGoal, nextAction);
+                var preconditions = action.GetPreconditions(goal, nextAction);
+                var effects = action.GetEffects(goal, nextAction);
+                // adding the action's effects to the current node's state
                 state.AddFromState(effects);
-                g += action.GetCost(newGoal, nextAction);
+                // addding the action's cost to the node's total cost
+                g += action.GetCost(goal, nextAction);
 
-                goal.ReplaceWithMissingDifference(state);
+                // add all preconditions of the current action to the goal
                 goal.AddFromState(preconditions);
+                // removes from goal all the conditions that are now fullfiled in the node's state
+                goal.ReplaceWithMissingDifference(state);
             }
             else
             {
@@ -136,11 +141,8 @@ namespace ReGoap.Planner
                 possibleAction.Precalculations(agent, goal);
                 var precond = possibleAction.GetPreconditions(goal, action);
                 var effects = possibleAction.GetEffects(goal, action);
-                if (possibleAction == action)
-                    continue;
 
                 if (effects.HasAny(goal) && // any effect is the current goal
-                    !goal.HasAnyConflict(effects) && // no effect is conflicting with the goal
                     !goal.HasAnyConflict(effects, precond) && // no precondition is conflicting with the goal
                     possibleAction.CheckProceduralCondition(agent, goal, parent != null ? parent.action : null))
                 {
