@@ -14,6 +14,7 @@ namespace ReGoap.Planner
         private ReGoapState<T, W> goal;
         private float g;
         private float h;
+        private ReGoapState<T, W> goalMergedWithWorld;
 
         private float heuristicMultiplier = 1;
 
@@ -58,20 +59,23 @@ namespace ReGoap.Planner
                 // addding the action's cost to the node's total cost
                 g += action.GetCost(goal, nextAction);
 
+                // removes from goal all the conditions that are now fullfiled in the action's effects
+                goal.ReplaceWithMissingDifference(effects);
                 // add all preconditions of the current action to the goal
                 goal.AddFromState(preconditions);
-                // removes from goal all the conditions that are now fullfiled in the node's state
-                goal.ReplaceWithMissingDifference(state);
             }
             else
             {
-                var diff = ReGoapState<T, W>.Instantiate();
-                newGoal.MissingDifference(state, ref diff);
-                goal = diff;
+                goal = newGoal;
             }
             h = goal.Count;
             // f(node) = g(node) + h(node)
             cost = g + h * heuristicMultiplier;
+
+            // additionally calculate the goal without any world effect to understand if we are done
+            var diff = ReGoapState<T, W>.Instantiate();
+            goal.MissingDifference(planner.GetCurrentAgent().GetMemory().GetWorldState(), ref diff);
+            goalMergedWithWorld = diff;
         }
 
         #region NodeFactory
@@ -143,7 +147,8 @@ namespace ReGoap.Planner
                 var effects = possibleAction.GetEffects(goal, action);
 
                 if (effects.HasAny(goal) && // any effect is the current goal
-                    !goal.HasAnyConflict(effects, precond) && // no precondition is conflicting with the goal
+                    !goal.HasAnyConflict(effects, precond) && // no precondition is conflicting with the goal or has conflict but the effects fulfils the goal
+                    !goal.HasAnyConflict(effects) && // no effect is conflicting with the goal
                     possibleAction.CheckProceduralCondition(agent, goal, parent != null ? parent.action : null))
                 {
                     var newGoal = goal;
@@ -192,7 +197,7 @@ namespace ReGoap.Planner
 
         public bool IsGoal(ReGoapState<T, W> goal)
         {
-            return h <= 0;
+            return goalMergedWithWorld.Count <= 0;
         }
 
         public float Priority { get; set; }

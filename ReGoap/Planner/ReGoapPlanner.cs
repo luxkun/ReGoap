@@ -60,6 +60,10 @@ namespace ReGoap.Planner
                         wantedGoalCheck = ReGoapState<T, W>.Instantiate();
                         previous.MissingDifference(action.GetEffects(wantedGoalCheck), ref wantedGoalCheck);
                     }
+                    // finally push the current world state
+                    var current = wantedGoalCheck;
+                    wantedGoalCheck = ReGoapState<T, W>.Instantiate();
+                    current.MissingDifference(GetCurrentAgent().GetMemory().GetWorldState(), ref wantedGoalCheck);
                     // can't validate goal 
                     if (wantedGoalCheck.Count > 0)
                     {
