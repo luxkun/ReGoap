@@ -122,7 +122,8 @@ namespace ReGoap.Unity
         {
             foreach (var planner in planners)
             {
-                planner.Stop();
+                if (planner != null)
+                    planner.Stop();
             }
             // should wait here?
             foreach (var thread in threads)

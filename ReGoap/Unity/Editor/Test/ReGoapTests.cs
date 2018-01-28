@@ -129,6 +129,9 @@ namespace ReGoap.Unity.Editor.Test
 
             var hasAxeGoal = ReGoapTestsHelper.GetCustomGoal(gameObject, "HasAxeGoal",
                 new Dictionary<string, object> { { "hasAxe", true } });
+            var greedyHasAxeAndOreGoal = ReGoapTestsHelper.GetCustomGoal(gameObject, "GreedyHasAxeAndOreGoal",
+                new Dictionary<string, object> { { "hasAxe", true }, { "hasOre", true }, { "isGreedy", true } },
+                2);
 
             var memory = gameObject.AddComponent<ReGoapTestMemory>();
             memory.Init();
@@ -140,6 +143,14 @@ namespace ReGoap.Unity.Editor.Test
 
             Assert.That(plan, Is.EqualTo(hasAxeGoal));
             // validate plan actions
+            ReGoapTestsHelper.ApplyAndValidatePlan(plan, memory);
+
+            // now we set the agent to be greedy, so the second goal can be activated
+            memory.SetValue("isGreedy", true);
+            // now the planning should choose KillEnemyGoal
+            plan = planner.Plan(agent, null, null, null);
+
+            Assert.That(plan, Is.EqualTo(greedyHasAxeAndOreGoal));
             ReGoapTestsHelper.ApplyAndValidatePlan(plan, memory);
         }
 
@@ -200,6 +211,66 @@ namespace ReGoap.Unity.Editor.Test
             plan = planner.Plan(agent, null, null, null);
 
             Assert.That(plan, Is.EqualTo(killEnemyGoal));
+            ReGoapTestsHelper.ApplyAndValidatePlan(plan, memory);
+        }
+
+        // Additional tests by TPMxyz
+        [Test]
+        public void TestGatherGotoGather()
+        {
+            var gameObject = new GameObject();
+
+            ReGoapTestsHelper.GetCustomAction(gameObject, "GatherApple",
+                new Dictionary<string, object> { { "At", "Farm" } },
+                new Dictionary<string, object> { { "hasApple", true } }, 1);
+            ReGoapTestsHelper.GetCustomAction(gameObject, "GatherPeach",
+                new Dictionary<string, object> { { "At", "Farm" } },
+                new Dictionary<string, object> { { "hasPeach", true } }, 2);
+            ReGoapTestsHelper.GetCustomAction(gameObject, "Goto",
+                new Dictionary<string, object> { },
+                new Dictionary<string, object> { { "At", "Farm" } }, 10);
+
+            var theGoal = ReGoapTestsHelper.GetCustomGoal(gameObject, "GatherAll",
+                new Dictionary<string, object> { { "hasApple", true }, { "hasPeach", true } });
+
+            var memory = gameObject.AddComponent<ReGoapTestMemory>();
+            memory.Init();
+
+            var agent = gameObject.AddComponent<ReGoapTestAgent>();
+            agent.Init();
+
+            var plan = GetPlanner().Plan(agent, null, null, null);
+
+            Assert.That(plan, Is.EqualTo(theGoal));
+            // validate plan actions
+            ReGoapTestsHelper.ApplyAndValidatePlan(plan, memory);
+        }
+
+        [Test]
+        public void TestActionOverrideGoal()
+        {
+            var gameObject = new GameObject();
+
+            ReGoapTestsHelper.GetCustomAction(gameObject, "Mine Ore",
+                new Dictionary<string, object> { },
+                new Dictionary<string, object> { { "hasMoney", true } }, 10);
+            ReGoapTestsHelper.GetCustomAction(gameObject, "Buy Food",
+                new Dictionary<string, object> { { "hasMoney", true } },
+                new Dictionary<string, object> { { "hasFood", true }, { "hasMoney", false } }, 2);
+
+            var theGoal = ReGoapTestsHelper.GetCustomGoal(gameObject, "PrepareFoodAndMoney",
+                new Dictionary<string, object> { { "hasMoney", true }, { "hasFood", true } });
+
+            var memory = gameObject.AddComponent<ReGoapTestMemory>();
+            memory.Init();
+
+            var agent = gameObject.AddComponent<ReGoapTestAgent>();
+            agent.Init();
+
+            var plan = GetPlanner().Plan(agent, null, null, null);
+
+            Assert.That(plan, Is.EqualTo(theGoal));
+            // validate plan actions
             ReGoapTestsHelper.ApplyAndValidatePlan(plan, memory);
         }
     }
