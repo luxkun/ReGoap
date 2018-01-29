@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using ReGoap.Core;
 
 namespace ReGoap.Planner
@@ -18,6 +19,8 @@ namespace ReGoap.Planner
         private float heuristicMultiplier = 1;
 
         private readonly List<INode<ReGoapState<T, W>>> expandList;
+
+
 
         private ReGoapNode()
         {
@@ -198,5 +201,10 @@ namespace ReGoap.Planner
         public float Priority { get; set; }
         public long InsertionIndex { get; set; }
         public int QueueIndex { get; set; }
+
+        public string Name { get { return action != null ? action.GetName() : "NoAction"; } }
+        public string GoalString { get { return goal.ToString(); } }
+        public string EffectString { get { return action != null ? action.GetEffects(goal).ToString() : ""; } }
+        public string PrecondString { get { return action != null ? action.GetPreconditions(goal).ToString() : ""; } }
     }
 }
