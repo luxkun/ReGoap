@@ -14,6 +14,8 @@ namespace ReGoap.Unity
         public float Priority = 1;
         public float ErrorDelay = 0.5f;
 
+        public bool WarnPossibleGoal = true;
+
         protected ReGoapState<T, W> goal;
         protected Queue<ReGoapActionState<T, W>> plan;
         protected IGoapPlanner<T, W> planner;
@@ -47,7 +49,7 @@ namespace ReGoap.Unity
 
         public virtual bool IsGoalPossible()
         {
-            return true;
+            return WarnPossibleGoal;
         }
 
         public virtual Queue<ReGoapActionState<T, W>> GetPlan()
