@@ -10,9 +10,7 @@ namespace ReGoap.Unity.FSMExample.Sensors
     public class WorkstationSensor : ReGoapSensor<string, object>
     {
         private Dictionary<Workstation, Vector3> workstations;
-
-        public float MinPowDistanceToBeNear = 1f;
-
+        
         void Start()
         {
             workstations = new Dictionary<Workstation, Vector3>(WorkstationsManager.Instance.Workstations.Length);
@@ -20,16 +18,9 @@ namespace ReGoap.Unity.FSMExample.Sensors
             {
                 workstations[workstation] = workstation.transform.position; // workstations are static
             }
-        }
 
-        public override void UpdateSensor()
-        {
             var worldState = memory.GetWorldState();
-            worldState.Set("seeWorkstation", WorkstationsManager.Instance != null && WorkstationsManager.Instance.Workstations.Length > 0);
-
-            var nearestStation = OtherScripts.Utilities.GetNearest(transform.position, workstations);
-            worldState.Set("nearestWorkstation", nearestStation);
-            worldState.Set("nearestWorkstationPosition", (Vector3?) (nearestStation != null ? nearestStation.transform.position : Vector3.zero));
+            worldState.Set("workstations", workstations);
         }
     }
 }

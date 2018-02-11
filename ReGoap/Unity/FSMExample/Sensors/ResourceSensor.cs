@@ -21,8 +21,7 @@ namespace ReGoap.Unity.FSMExample.Sensors
             for (int index = 0; index < resources.Count; index++)
             {
                 var resource = resources[index];
-                if (resource.GetCapacity() > 0)
-                    resourcesPosition[resource] = resource.GetTransform().position;
+                resourcesPosition[resource] = resource.GetTransform().position;
             }
         }
     }

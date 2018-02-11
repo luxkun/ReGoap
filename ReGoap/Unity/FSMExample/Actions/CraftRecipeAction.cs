@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+
 using ReGoap.Core;
 using ReGoap.Unity.FSMExample.OtherScripts;
 using ReGoap.Utilities;
+
 using UnityEngine;
 
 namespace ReGoap.Unity.FSMExample.Actions
@@ -12,6 +15,7 @@ namespace ReGoap.Unity.FSMExample.Actions
         public ScriptableObject RawRecipe;
         private IRecipe recipe;
         private ResourcesBag resourcesBag;
+        private List<ReGoapState<string, object>> settingsList;
 
         protected override void Awake()
         {
@@ -26,21 +30,46 @@ namespace ReGoap.Unity.FSMExample.Actions
             {
                 preconditions.Set("hasResource" + pair.Key, true);
             }
-            // false preconditions are not supported
-            //preconditions.Set("hasResource" + recipe.GetCraftedResource(), false); // do not permit duplicates in the bag
             effects.Set("hasResource" + recipe.GetCraftedResource(), true);
+
+            settingsList = new List<ReGoapState<string, object>>();
+        }
+
+        public override List<ReGoapState<string, object>> GetSettings(GoapActionStackData<string, object> stackData)
+        {
+            if (settingsList.Count == 0)
+                CalculateSettingsList(stackData);
+            return settingsList;
+        }
+
+        private void CalculateSettingsList(GoapActionStackData<string, object> stackData)
+        {
+            settingsList.Clear();
+            // push all available workstations
+            foreach (var workstationsPair in (Dictionary<Workstation, Vector3>)stackData.currentState.Get("workstations"))
+            {
+                settings.Set("workstation", workstationsPair.Key);
+                settings.Set("workstationPosition", workstationsPair.Value);
+                settingsList.Add(settings.Clone());
+            }
+        }
+
+        public override bool CheckProceduralCondition(GoapActionStackData<string, object> stackData)
+        {
+            return base.CheckProceduralCondition(stackData) && stackData.settings.HasKey("workstation");
         }
 
         public override ReGoapState<string, object> GetPreconditions(GoapActionStackData<string, object> stackData)
         {
-            preconditions.Set("isAtPosition", agent.GetMemory().GetWorldState().Get("nearestWorkstationPosition") as Vector3?);
+            if (stackData.settings.HasKey("workstationPosition"))
+                preconditions.Set("isAtPosition", stackData.settings.Get("workstationPosition"));
             return preconditions;
         }
 
         public override void Run(IReGoapAction<string, object> previous, IReGoapAction<string, object> next, ReGoapState<string, object> settings, ReGoapState<string, object> goalState, Action<IReGoapAction<string, object>> done, Action<IReGoapAction<string, object>> fail)
         {
             base.Run(previous, next, settings, goalState, done, fail);
-            var workstation = agent.GetMemory().GetWorldState().Get("nearestWorkstation") as Workstation;
+            var workstation = settings.Get("workstation") as Workstation;
             if (workstation != null && workstation.CraftResource(resourcesBag, recipe))
             {
                 ReGoapLogger.Log("[CraftRecipeAction] crafted recipe " + recipe.GetCraftedResource());
@@ -50,11 +79,6 @@ namespace ReGoap.Unity.FSMExample.Actions
             {
                 fail(this);
             }
-        }
-
-        public override string ToString()
-        {
-            return string.Format("GoapAction('{0}', '{1}')", Name, recipe.GetCraftedResource());
         }
     }
 }

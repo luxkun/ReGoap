@@ -1,4 +1,6 @@
-﻿namespace ReGoap.Unity.FSMExample.Goals
+﻿using ReGoap.Core;
+
+namespace ReGoap.Unity.FSMExample.Goals
 {
     public class CollectResourceGoal : ReGoapGoal<string, object>
     {
@@ -8,6 +10,7 @@
         {
             base.Awake();
             goal.Set("collectedResource" + ResourceName, true);
+            goal.Set("reconcilePosition", true);
         }
 
         public override string ToString()
