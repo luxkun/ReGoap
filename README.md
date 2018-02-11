@@ -128,7 +128,7 @@ public class MyGoapAction : ReGoapAction<string, object>
         preconditions.Set("myPrecondition", myValue);
         effects.Set("myEffects", myValue);
     }
-    public override void Run(IReGoapAction<string, object> previous, IReGoapAction<string, object> next, IReGoapActionSettings<string, object> settings, ReGoapState<string, object> goalState, Action<IReGoapAction<string, object>> done, Action<IReGoapAction<string, object>> fail)
+    public override void Run(IReGoapAction<string, object> previous, IReGoapAction<string, object> next, ReGoapState<string, object> settings, ReGoapState<string, object> goalState, Action<IReGoapAction<string, object>> done, Action<IReGoapAction<string, object>> fail)
     {
         base.Run(previous, next, goalState, done, fail);
         // do your own game logic here
