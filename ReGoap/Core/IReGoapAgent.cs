@@ -9,7 +9,7 @@ namespace ReGoap.Core
         // called from a goal when the goal is available
         void WarnPossibleGoal(IReGoapGoal<T, W> goal);
         bool IsActive();
-        Queue<ReGoapActionState<T, W>> GetStartingPlan();
+        List<ReGoapActionState<T, W>> GetStartingPlan();
         W GetPlanValue(T key);
         void SetPlanValue(T key, W value);
         bool HasPlanValue(T target);

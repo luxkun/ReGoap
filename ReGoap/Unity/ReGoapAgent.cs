@@ -27,7 +27,7 @@ namespace ReGoap.Unity
         protected Dictionary<IReGoapGoal<T, W>, float> goalBlacklist;
         protected List<IReGoapGoal<T, W>> possibleGoals;
         protected bool possibleGoalsDirty;
-        protected Queue<ReGoapActionState<T, W>> startingPlan;
+        protected List<ReGoapActionState<T, W>> startingPlan;
         protected Dictionary<T, W> planValues;
         protected bool interruptOnNextTransition;
 
@@ -138,11 +138,18 @@ namespace ReGoap.Unity
                 currentActionState.Action.Exit(null);
             currentActionState = null;
             currentGoal = newGoal;
-            startingPlan = currentGoal.GetPlan();
-            ClearPlanValues();
-            foreach (var actionState in startingPlan)
+            if (startingPlan != null)
             {
-                actionState.Action.PostPlanCalculations(this);
+                for (int i = 0; i < startingPlan.Count; i++)
+                {
+                    startingPlan[i].Action.PlanExit(i > 0 ? startingPlan[i - 1].Action : null, i + 1 < startingPlan.Count ? startingPlan[i + 1].Action : null, startingPlan[i].Settings, currentGoal.GetGoalState());
+                }
+            }
+            startingPlan = currentGoal.GetPlan().ToList();
+            ClearPlanValues();
+            for (int i = 0; i < startingPlan.Count; i++)
+            {
+                startingPlan[i].Action.PlanEnter(i > 0 ? startingPlan[i - 1].Action : null, i + 1 < startingPlan.Count ? startingPlan[i + 1].Action : null, startingPlan[i].Settings, currentGoal.GetGoalState());
             }
             currentGoal.Run(WarnGoalEnd);
             PushAction();
@@ -238,7 +245,7 @@ namespace ReGoap.Unity
             return enabled;
         }
 
-        public virtual Queue<ReGoapActionState<T, W>> GetStartingPlan()
+        public virtual List<ReGoapActionState<T, W>> GetStartingPlan()
         {
             return startingPlan;
         }

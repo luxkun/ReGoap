@@ -199,7 +199,7 @@ public class ReGoapNodeBaseEditor : EditorWindow
         stackData.currentState = agent.GetMemory().GetWorldState();
         stackData.goalState = emptyGoal;
         stackData.next = null;
-        stackData.settings = null;
+        stackData.settings = ReGoapState<T, W>.Instantiate();
 
         foreach (var action in agent.GetActionsSet())
         {

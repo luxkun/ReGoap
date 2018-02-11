@@ -103,6 +103,14 @@ namespace ReGoap.Unity
             nextAction = next;
         }
 
+        public virtual void PlanEnter(IReGoapAction<T, W> previousAction, IReGoapAction<T, W> nextAction, ReGoapState<T, W> settings, ReGoapState<T, W> goalState)
+        {
+        }
+
+        public virtual void PlanExit(IReGoapAction<T, W> previousAction, IReGoapAction<T, W> nextAction, ReGoapState<T, W> settings, ReGoapState<T, W> goalState)
+        {
+        }
+
         public virtual void Exit(IReGoapAction<T, W> next)
         {
             if (gameObject != null)
