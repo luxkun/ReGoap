@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+
 using ReGoap.Core;
 using ReGoap.Unity.FSMExample.OtherScripts;
+
 using UnityEngine;
 
 namespace ReGoap.Unity.FSMExample.Actions
@@ -16,29 +19,26 @@ namespace ReGoap.Unity.FSMExample.Actions
             resourcesBag = GetComponent<ResourcesBag>();
         }
 
-        public override IReGoapActionSettings<string, object> GetSettings(IReGoapAgent<string, object> goapAgent, ReGoapState<string, object> goalState)
+        public override List<ReGoapState<string, object>> GetSettings(GoapActionStackData<string, object> stackData)
         {
-            settings = null;
-            foreach (var pair in goalState.GetValues())
+            settings.Clear();
+            foreach (var pair in stackData.goalState.GetValues())
             {
                 if (pair.Key.StartsWith("collectedResource"))
                 {
                     var resourceName = pair.Key.Substring(17);
-                    settings = new AddResourceToBankSettings
-                    {
-                        ResourceName = resourceName
-                    };
+                    settings.Set("ResourceName", resourceName);
                     break;
                 }
             }
-            return settings;
+            return base.GetSettings(stackData);
         }
 
-        public override ReGoapState<string, object> GetEffects(ReGoapState<string, object> goalState, IReGoapAction<string, object> next = null)
+        public override ReGoapState<string, object> GetEffects(GoapActionStackData<string, object> stackData)
         {
             effects.Clear();
 
-            foreach (var pair in goalState.GetValues())
+            foreach (var pair in stackData.goalState.GetValues())
             {
                 if (pair.Key.StartsWith("collectedResource"))
                 {
@@ -51,14 +51,14 @@ namespace ReGoap.Unity.FSMExample.Actions
             return effects;
         }
 
-        public override ReGoapState<string, object> GetPreconditions(ReGoapState<string, object> goalState, IReGoapAction<string, object> next = null)
+        public override ReGoapState<string, object> GetPreconditions(GoapActionStackData<string, object> stackData)
         {
             var bankPosition = agent.GetMemory().GetWorldState().Get("nearestBankPosition") as Vector3?;
 
             preconditions.Clear();
             preconditions.Set("isAtPosition", bankPosition);
 
-            foreach (var pair in goalState.GetValues())
+            foreach (var pair in stackData.goalState.GetValues())
             {
                 if (pair.Key.StartsWith("collectedResource"))
                 {
@@ -72,12 +72,12 @@ namespace ReGoap.Unity.FSMExample.Actions
         }
 
 
-        public override void Run(IReGoapAction<string, object> previous, IReGoapAction<string, object> next, IReGoapActionSettings<string, object> settings, ReGoapState<string, object> goalState, Action<IReGoapAction<string, object>> done, Action<IReGoapAction<string, object>> fail)
+        public override void Run(IReGoapAction<string, object> previous, IReGoapAction<string, object> next, ReGoapState<string, object> settings, ReGoapState<string, object> goalState, Action<IReGoapAction<string, object>> done, Action<IReGoapAction<string, object>> fail)
         {
             base.Run(previous, next, settings, goalState, done, fail);
-            this.settings = (AddResourceToBankSettings) settings;
+            this.settings = settings;
             var bank = agent.GetMemory().GetWorldState().Get("nearestBank") as Bank;
-            if (bank != null && bank.AddResource(resourcesBag, ((AddResourceToBankSettings) settings).ResourceName))
+            if (bank != null && bank.AddResource(resourcesBag, (string)settings.Get("ResourceName")))
             {
                 done(this);
             }
@@ -91,10 +91,5 @@ namespace ReGoap.Unity.FSMExample.Actions
         {
             return string.Format("GoapAction('{0}')", Name);
         }
-    }
-
-    public class AddResourceToBankSettings : IReGoapActionSettings<string, object>
-    {
-        public string ResourceName;
     }
 }

@@ -9,7 +9,7 @@ namespace ReGoap.Planner
         private IGoapPlanner<T, W> planner;
         private ReGoapNode<T, W> parent;
         private IReGoapAction<T, W> action;
-        private IReGoapActionSettings<T, W> actionSettings;
+        private ReGoapState<T, W> actionSettings;
         private ReGoapState<T, W> state;
         private ReGoapState<T, W> goal;
         private float g;
@@ -25,15 +25,15 @@ namespace ReGoap.Planner
             expandList = new List<INode<ReGoapState<T, W>>>();
         }
 
-        private void Init(IGoapPlanner<T, W> planner, ReGoapState<T, W> newGoal, ReGoapNode<T, W> parent, IReGoapAction<T, W> action)
+        private void Init(IGoapPlanner<T, W> planner, ReGoapState<T, W> newGoal, ReGoapNode<T, W> parent, IReGoapAction<T, W> action, ReGoapState<T, W> settings)
         {
             expandList.Clear();
 
             this.planner = planner;
             this.parent = parent;
             this.action = action;
-            if (action != null)
-                actionSettings = action.GetSettings(planner.GetCurrentAgent(), newGoal);
+            if (settings != null)
+                this.actionSettings = settings.Clone();
 
             if (parent != null)
             {
@@ -52,12 +52,20 @@ namespace ReGoap.Planner
                 // create a new instance of the goal based on the paren't goal
                 goal = ReGoapState<T, W>.Instantiate(newGoal);
 
-                var preconditions = action.GetPreconditions(goal, nextAction);
-                var effects = action.GetEffects(goal, nextAction);
+                GoapActionStackData<T, W> stackData;
+                stackData.currentState = state;
+                stackData.goalState = goal;
+                stackData.next = action;
+                stackData.agent = planner.GetCurrentAgent();
+                stackData.settings = actionSettings;
+
+                var preconditions = action.GetPreconditions(stackData);
+                var effects = action.GetEffects(stackData);
+                // addding the action's cost to the node's total cost
+                g += action.GetCost(stackData);
+
                 // adding the action's effects to the current node's state
                 state.AddFromState(effects);
-                // addding the action's cost to the node's total cost
-                g += action.GetCost(goal, nextAction);
 
                 // removes from goal all the conditions that are now fullfiled in the action's effects
                 goal.ReplaceWithMissingDifference(effects);
@@ -102,7 +110,7 @@ namespace ReGoap.Planner
             }
         }
 
-        public static ReGoapNode<T, W> Instantiate(IGoapPlanner<T, W> planner, ReGoapState<T, W> newGoal, ReGoapNode<T, W> parent, IReGoapAction<T, W> action)
+        public static ReGoapNode<T, W> Instantiate(IGoapPlanner<T, W> planner, ReGoapState<T, W> newGoal, ReGoapNode<T, W> parent, IReGoapAction<T, W> action, ReGoapState<T, W> actionSettings)
         {
             ReGoapNode<T, W> node;
             if (cachedNodes == null)
@@ -113,7 +121,7 @@ namespace ReGoap.Planner
             {
                 node = cachedNodes.Count > 0 ? cachedNodes.Pop() : new ReGoapNode<T, W>();
             }
-            node.Init(planner, newGoal, parent, action);
+            node.Init(planner, newGoal, parent, action, actionSettings);
             return node;
         }
         #endregion
@@ -139,20 +147,33 @@ namespace ReGoap.Planner
 
             var agent = planner.GetCurrentAgent();
             var actions = agent.GetActionsSet();
+
+            GoapActionStackData<T, W> stackData;
+            stackData.currentState = state;
+            stackData.goalState = goal;
+            stackData.next = action;
+            stackData.agent = agent;
+            stackData.settings = null;
             for (var index = actions.Count - 1; index >= 0; index--)
             {
                 var possibleAction = actions[index];
-                possibleAction.Precalculations(agent, goal);
-                var precond = possibleAction.GetPreconditions(goal, action);
-                var effects = possibleAction.GetEffects(goal, action);
 
-                if (effects.HasAny(goal) && // any effect is the current goal
-                    !goal.HasAnyConflict(effects, precond) && // no precondition is conflicting with the goal or has conflict but the effects fulfils the goal
-                    !goal.HasAnyConflict(effects) && // no effect is conflicting with the goal
-                    possibleAction.CheckProceduralCondition(agent, goal, parent != null ? parent.action : null))
+                possibleAction.Precalculations(stackData);
+                var settingsList = possibleAction.GetSettings(stackData);
+                foreach (var settings in settingsList)
                 {
-                    var newGoal = goal;
-                    expandList.Add(Instantiate(planner, newGoal, this, possibleAction));
+                    stackData.settings = settings;
+                    var precond = possibleAction.GetPreconditions(stackData);
+                    var effects = possibleAction.GetEffects(stackData);
+
+                    if (effects.HasAny(goal) && // any effect is the current goal
+                        !goal.HasAnyConflict(effects, precond) && // no precondition is conflicting with the goal or has conflict but the effects fulfils the goal
+                        !goal.HasAnyConflict(effects) && // no effect is conflicting with the goal
+                        possibleAction.CheckProceduralCondition(stackData))
+                    {
+                        var newGoal = goal;
+                        expandList.Add(Instantiate(planner, newGoal, this, possibleAction, settings));
+                    }
                 }
             }
             return expandList;

@@ -31,13 +31,13 @@ namespace ReGoap.Unity.FSMExample.Actions
             effects.Set("hasResource" + recipe.GetCraftedResource(), true);
         }
 
-        public override ReGoapState<string, object> GetPreconditions(ReGoapState<string, object> goalState, IReGoapAction<string, object> next = null)
+        public override ReGoapState<string, object> GetPreconditions(GoapActionStackData<string, object> stackData)
         {
             preconditions.Set("isAtPosition", agent.GetMemory().GetWorldState().Get("nearestWorkstationPosition") as Vector3?);
             return preconditions;
         }
 
-        public override void Run(IReGoapAction<string, object> previous, IReGoapAction<string, object> next, IReGoapActionSettings<string, object> settings, ReGoapState<string, object> goalState, Action<IReGoapAction<string, object>> done, Action<IReGoapAction<string, object>> fail)
+        public override void Run(IReGoapAction<string, object> previous, IReGoapAction<string, object> next, ReGoapState<string, object> settings, ReGoapState<string, object> goalState, Action<IReGoapAction<string, object>> done, Action<IReGoapAction<string, object>> fail)
         {
             base.Run(previous, next, settings, goalState, done, fail);
             var workstation = agent.GetMemory().GetWorldState().Get("nearestWorkstation") as Workstation;

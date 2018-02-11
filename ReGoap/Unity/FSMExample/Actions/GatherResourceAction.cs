@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+
 using ReGoap.Core;
 using ReGoap.Unity.FSMExample.OtherScripts;
 using ReGoap.Utilities;
+
 using UnityEngine;
 
 namespace ReGoap.Unity.FSMExample.Actions
@@ -35,9 +38,9 @@ namespace ReGoap.Unity.FSMExample.Actions
             return null;
         }
 
-        public override ReGoapState<string, object> GetPreconditions(ReGoapState<string, object> goalState, IReGoapAction<string, object> next = null)
+        public override ReGoapState<string, object> GetPreconditions(GoapActionStackData<string, object> stackData)
         {
-            var newNeededResourceName = GetNeededResourceFromGoal(goalState);
+            var newNeededResourceName = GetNeededResourceFromGoal(stackData.goalState);
             preconditions.Clear();
             if (newNeededResourceName != null)
             {
@@ -51,9 +54,9 @@ namespace ReGoap.Unity.FSMExample.Actions
             return preconditions;
         }
 
-        public override ReGoapState<string, object> GetEffects(ReGoapState<string, object> goalState, IReGoapAction<string, object> next = null)
+        public override ReGoapState<string, object> GetEffects(GoapActionStackData<string, object> stackData)
         {
-            var newNeededResourceName = GetNeededResourceFromGoal(goalState);
+            var newNeededResourceName = GetNeededResourceFromGoal(stackData.goalState);
             effects.Clear();
             if (newNeededResourceName != null)
             {
@@ -66,38 +69,36 @@ namespace ReGoap.Unity.FSMExample.Actions
             return effects;
         }
 
-        public override IReGoapActionSettings<string, object> GetSettings(IReGoapAgent<string, object> goapAgent, ReGoapState<string, object> goalState)
+        public override List<ReGoapState<string, object>> GetSettings(GoapActionStackData<string, object> stackData)
         {
-            var newNeededResourceName = GetNeededResourceFromGoal(goalState);
-            GatherResourceSettings wantedSettings = null;
+            var newNeededResourceName = GetNeededResourceFromGoal(stackData.goalState);
+            settings.Clear();
             if (newNeededResourceName != null)
             {
                 var wantedResource = agent.GetMemory().GetWorldState().Get("nearest" + newNeededResourceName) as IResource;
                 if (wantedResource != null)
                 {
-                    wantedSettings = new GatherResourceSettings
-                    {
-                        ResourcePosition = (Vector3)agent.GetMemory().GetWorldState()
-                        .Get(string.Format("nearest{0}Position", newNeededResourceName)),
-                        Resource = wantedResource
-                    };
+                    settings.Set("ResourcePosition", (Vector3)agent.GetMemory().GetWorldState()
+                        .Get(string.Format("nearest{0}Position", newNeededResourceName)));
+                    settings.Set("Resource", wantedResource);
+                    return base.GetSettings(stackData);
                 }
             }
-            return wantedSettings;
+            return new List<ReGoapState<string, object>>();
         }
 
-        public override bool CheckProceduralCondition(IReGoapAgent<string, object> goapAgent, ReGoapState<string, object> goalState, IReGoapAction<string, object> next = null)
+        public override bool CheckProceduralCondition(GoapActionStackData<string, object> stackData)
         {
-            return base.CheckProceduralCondition(goapAgent, goalState) && bag != null;
+            return base.CheckProceduralCondition(stackData) && bag != null;
         }
 
-        public override void Run(IReGoapAction<string, object> previous, IReGoapAction<string, object> next, IReGoapActionSettings<string, object> settings, ReGoapState<string, object> goalState, Action<IReGoapAction<string, object>> done, Action<IReGoapAction<string, object>> fail)
+        public override void Run(IReGoapAction<string, object> previous, IReGoapAction<string, object> next, ReGoapState<string, object> settings, ReGoapState<string, object> goalState, Action<IReGoapAction<string, object>> done, Action<IReGoapAction<string, object>> fail)
         {
             base.Run(previous, next, settings, goalState, done, fail);
 
-            var thisSettings = (GatherResourceSettings)settings;
-            resourcePosition = thisSettings.ResourcePosition;
-            resource = thisSettings.Resource;
+            var thisSettings = settings;
+            resourcePosition = (Vector3)thisSettings.Get("ResourcePosition");
+            resource = (IResource)thisSettings.Get("Resource");
 
             if (resource == null || resource.GetCapacity() < ResourcePerAction)
                 failCallback(this);
@@ -123,11 +124,5 @@ namespace ReGoap.Unity.FSMExample.Actions
                 doneCallback(this);
             }
         }
-    }
-
-    internal class GatherResourceSettings : IReGoapActionSettings<string, object>
-    {
-        public Vector3? ResourcePosition;
-        public IResource Resource;
     }
 }
