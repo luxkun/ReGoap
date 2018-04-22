@@ -10,6 +10,9 @@ namespace ReGoap.Planner
         private readonly Dictionary<T, INode<T>> stateToNode;
         private readonly Dictionary<T, INode<T>> explored;
         private readonly List<INode<T>> createdNodes;
+        // Debug
+        private bool debugPlan = false;
+        private PlanDebugger debugger;
 
         public AStar(int maxNodesToExpand = 1000)
         {
@@ -28,8 +31,60 @@ namespace ReGoap.Planner
             createdNodes.Clear();
         }
 
-        public INode<T> Run(INode<T> start, T goal, int maxIterations = 100, bool earlyExit = true, bool clearNodes = true)
+        private void DebugPlan(INode<T> node, INode<T> parent)
         {
+            if (!debugPlan) return;
+            if (debugger == null)
+                debugger = new PlanDebugger();
+
+            string nodeStr = string.Format(@"{0} [label=<
+<table border='0' color='black' fontcolor='#F5F5F5'>
+    <tr> <td colspan='2'><b>{4}</b></td> </tr>
+    <hr/>
+    <tr align='left'> <td border='1' sides='rt'><b>Costs</b></td>           <td border='1' sides='t'><b>g</b>: {1} ; <b>h</b>: {2} ; <b>c</b>: {3}</td> </tr>
+    <tr align='left'> <td border='1' sides='rt'><b>Preconditions</b></td>   <td border='1' sides='t'>{5}</td> </tr>
+    <tr align='left'> <td border='1' sides='rt'><b>Effects</b></td>         <td border='1' sides='t'>{6}</td> </tr>
+    <tr align='left'> <td border='1' sides='rt'><b>Goal</b></td>            <td border='1' sides='t'>{7}</td> </tr>
+</table>
+>]",
+                node.GetHashCode(),
+                node.GetPathCost(), node.GetHeuristicCost(), node.GetCost(),
+                node.Name, node.Preconditions != null ? node.Preconditions.ToString() : "",
+                node.Effects != null ? node.Effects.ToString() : "",
+                node.Goal != null ? node.Goal.ToString() : "");
+            debugger.AddNode(nodeStr);
+
+            if (parent != null)
+            {
+                string connStr = string.Format("{0} -> {1}", parent.GetHashCode(), node.GetHashCode());
+                debugger.AddConn(connStr);
+            }
+        }
+
+        private void EndDebugPlan(INode<T> node)
+        {
+            if (debugger != null)
+            {
+                while (node != null)
+                {
+                    //mark success path
+                    string nodeStr = string.Format("{0} [style=\"bold\" color=\"darkgreen\"]", node.GetHashCode());
+                    debugger.AddNode(nodeStr);
+                    node = node.GetParent();
+                }
+
+                var txt = debugger.TransformText();
+                System.IO.Directory.CreateDirectory("PlanDebugger");
+                System.IO.Directory.CreateDirectory("PlanDebugger/Raws");
+                System.IO.File.WriteAllText(string.Format("PlanDebugger/Raws/DebugPlan_{0}.dot", System.DateTime.Now.ToString("HHmmss_ffff")), txt);
+                debugger.Clear();
+            }
+        }
+
+        public INode<T> Run(INode<T> start, T goal, int maxIterations = 100, bool earlyExit = true, bool clearNodes = true, bool debugPlan = false)
+        {
+            this.debugPlan = debugPlan;
+
             frontier.Clear();
             stateToNode.Clear();
             explored.Clear();
@@ -40,6 +95,9 @@ namespace ReGoap.Planner
             }
 
             frontier.Enqueue(start, start.GetCost());
+
+            DebugPlan(start, null);
+
             var iterations = 0;
             while ((frontier.Count > 0) && (iterations < maxIterations) && (frontier.Count + 1 < frontier.MaxSize))
             {
@@ -47,9 +105,12 @@ namespace ReGoap.Planner
                 if (node.IsGoal(goal))
                 {
                     ReGoapLogger.Log("[Astar] Success iterations: " + iterations);
+                    EndDebugPlan(node);
                     return node;
                 }
                 explored[node.GetState()] = node;
+
+
                 foreach (var child in node.Expand())
                 {
                     iterations++;
@@ -60,6 +121,7 @@ namespace ReGoap.Planner
                     if (earlyExit && child.IsGoal(goal))
                     {
                         ReGoapLogger.Log("[Astar] (early exit) Success iterations: " + iterations);
+                        EndDebugPlan(child);
                         return child;
                     }
                     var childCost = child.GetCost();
@@ -75,11 +137,16 @@ namespace ReGoap.Planner
                         else
                             break;
                     }
+
+                    DebugPlan(child, node);
+
+                    //Utilities.ReGoapLogger.Log(string.Format("    Enqueue frontier: {0}, cost: {1}", child.Name, childCost));
                     frontier.Enqueue(child, childCost);
                     stateToNode[state] = child;
                 }
             }
             ReGoapLogger.LogWarning("[Astar] failed.");
+            EndDebugPlan(null);
             return null;
         }
     }
@@ -94,6 +161,11 @@ namespace ReGoap.Planner
         float GetPathCost();
         INode<T> GetParent();
         bool IsGoal(T goal);
+
+        string Name { get; }
+        T Goal { get; }
+        T Effects { get; }
+        T Preconditions { get; }
 
         int QueueIndex { get; set; }
         float Priority { get; set; }

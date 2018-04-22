@@ -12,5 +12,7 @@ namespace ReGoap.Planner
         // set this to true if using dynamic actions, such as GenericGoTo or GatherResourceAction
         // a dynamic action is an action that has dynamic preconditions or effects (changed in runtime/precalcultions)
         public bool UsingDynamicActions = false;
+
+        public bool DebugPlan = false;
     }
 }

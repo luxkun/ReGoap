@@ -17,5 +17,6 @@ namespace ReGoap.Core
         List<IReGoapGoal<T, W>> GetGoalsSet();
         List<IReGoapAction<T, W>> GetActionsSet();
         ReGoapState<T, W> InstantiateNewState();
+
     }
 }

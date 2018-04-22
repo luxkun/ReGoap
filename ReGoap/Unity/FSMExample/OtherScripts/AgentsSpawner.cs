@@ -24,6 +24,7 @@ namespace ReGoap.Unity.FSMExample.OtherScripts
                 for (int i = 0; i < AgentsPerSpawn && spawnedBuilders < BuildersCount; i++)
                 {
                     var gameObj = Instantiate(BuilderPrefab);
+                    gameObj.SetActive(true);
                     gameObj.transform.SetParent(transform);
 
                     spawnedBuilders++;

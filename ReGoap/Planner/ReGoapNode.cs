@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using ReGoap.Core;
 
 namespace ReGoap.Planner
@@ -11,7 +12,6 @@ namespace ReGoap.Planner
         private IReGoapAction<T, W> action;
         private ReGoapState<T, W> actionSettings;
         private ReGoapState<T, W> state;
-        private ReGoapState<T, W> goal;
         private float g;
         private float h;
         private ReGoapState<T, W> goalMergedWithWorld;
@@ -50,39 +50,39 @@ namespace ReGoap.Planner
             if (action != null)
             {
                 // create a new instance of the goal based on the paren't goal
-                goal = ReGoapState<T, W>.Instantiate(newGoal);
+                Goal = ReGoapState<T, W>.Instantiate(newGoal);
 
                 GoapActionStackData<T, W> stackData;
                 stackData.currentState = state;
-                stackData.goalState = goal;
+                stackData.goalState = Goal;
                 stackData.next = action;
                 stackData.agent = planner.GetCurrentAgent();
                 stackData.settings = actionSettings;
 
-                var preconditions = action.GetPreconditions(stackData);
-                var effects = action.GetEffects(stackData);
+                Preconditions = action.GetPreconditions(stackData);
+                Effects = action.GetEffects(stackData);
                 // addding the action's cost to the node's total cost
                 g += action.GetCost(stackData);
 
                 // adding the action's effects to the current node's state
-                state.AddFromState(effects);
+                state.AddFromState(Effects);
 
                 // removes from goal all the conditions that are now fullfiled in the action's effects
-                goal.ReplaceWithMissingDifference(effects);
+                Goal.ReplaceWithMissingDifference(Effects);
                 // add all preconditions of the current action to the goal
-                goal.AddFromState(preconditions);
+                Goal.AddFromState(Preconditions);
             }
             else
             {
-                goal = newGoal;
+                Goal = newGoal;
             }
-            h = goal.Count;
+            h = Goal.Count;
             // f(node) = g(node) + h(node)
             cost = g + h * heuristicMultiplier;
 
             // additionally calculate the goal without any world effect to understand if we are done
             var diff = ReGoapState<T, W>.Instantiate();
-            goal.MissingDifference(planner.GetCurrentAgent().GetMemory().GetWorldState(), ref diff);
+            Goal.MissingDifference(planner.GetCurrentAgent().GetMemory().GetWorldState(), ref diff);
             goalMergedWithWorld = diff;
         }
 
@@ -102,8 +102,8 @@ namespace ReGoap.Planner
         {
             state.Recycle();
             state = null;
-            goal.Recycle();
-            goal = null;
+            Goal.Recycle();
+            Goal = null;
             lock (cachedNodes)
             {
                 cachedNodes.Push(this);
@@ -150,7 +150,7 @@ namespace ReGoap.Planner
 
             GoapActionStackData<T, W> stackData;
             stackData.currentState = state;
-            stackData.goalState = goal;
+            stackData.goalState = Goal;
             stackData.next = action;
             stackData.agent = agent;
             stackData.settings = null;
@@ -166,12 +166,12 @@ namespace ReGoap.Planner
                     var precond = possibleAction.GetPreconditions(stackData);
                     var effects = possibleAction.GetEffects(stackData);
 
-                    if (effects.HasAny(goal) && // any effect is the current goal
-                        !goal.HasAnyConflict(effects, precond) && // no precondition is conflicting with the goal or has conflict but the effects fulfils the goal
-                        !goal.HasAnyConflict(effects) && // no effect is conflicting with the goal
+                    if (effects.HasAny(Goal) && // any effect is the current Goal
+                        !Goal.HasAnyConflict(effects, precond) && // no precondition is conflicting with the Goal or has conflict but the effects fulfils the Goal
+                        !Goal.HasAnyConflict(effects) && // no effect is conflicting with the Goal
                         possibleAction.CheckProceduralCondition(stackData))
                     {
-                        var newGoal = goal;
+                        var newGoal = Goal;
                         expandList.Add(Instantiate(planner, newGoal, this, possibleAction, settings));
                     }
                 }
@@ -224,5 +224,10 @@ namespace ReGoap.Planner
         public float Priority { get; set; }
         public long InsertionIndex { get; set; }
         public int QueueIndex { get; set; }
+
+        public string Name { get { return action != null ? action.GetName() : "NoAction"; } }
+        public ReGoapState<T, W> Goal { get; private set; }
+        public ReGoapState<T, W> Effects { get; private set; }
+        public ReGoapState<T, W> Preconditions { get; private set; }
     }
 }

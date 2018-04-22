@@ -23,8 +23,15 @@ namespace ReGoap.Unity.Editor.Test
         {
             // not using early exit to have precise results, probably wouldn't care in a game for performance reasons
             return new ReGoapPlanner<string, object>(
-                new ReGoapPlannerSettings { PlanningEarlyExit = false, UsingDynamicActions = dynamicActions }
+                new ReGoapPlannerSettings { PlanningEarlyExit = false, UsingDynamicActions = dynamicActions, DebugPlan = true }
             );
+        }
+
+        ReGoapTestAgent PrepareAgent(GameObject owner)
+        {
+            var agent = owner.AddComponent<ReGoapTestAgent>();
+            agent.Init();
+            return agent;
         }
 
         [Test]
@@ -97,8 +104,7 @@ namespace ReGoap.Unity.Editor.Test
             var memory = gameObject.AddComponent<ReGoapTestMemory>();
             memory.Init();
 
-            var agent = gameObject.AddComponent<ReGoapTestAgent>();
-            agent.Init();
+            var agent = PrepareAgent(gameObject);
 
             var plan = GetPlanner().Plan(agent, null, null, null);
 
@@ -136,8 +142,7 @@ namespace ReGoap.Unity.Editor.Test
             var memory = gameObject.AddComponent<ReGoapTestMemory>();
             memory.Init();
 
-            var agent = gameObject.AddComponent<ReGoapTestAgent>();
-            agent.Init();
+            var agent = PrepareAgent(gameObject);
 
             var plan = planner.Plan(agent, null, null, null);
 
@@ -192,8 +197,8 @@ namespace ReGoap.Unity.Editor.Test
             var memory = gameObject.AddComponent<ReGoapTestMemory>();
             memory.Init();
 
-            var agent = gameObject.AddComponent<ReGoapTestAgent>();
-            agent.Init();
+            var agent = PrepareAgent(gameObject);
+
 
             // first plan should create axe and equip it, through 'ReadyToFightGoal', since 'hasTarget' is false (memory should handle this)
             var plan = planner.Plan(agent, null, null, null);

@@ -231,7 +231,7 @@ namespace ReGoap.Core
         {
             lock (values)
             {
-                var result = "GoapState: ";
+                var result = "";
                 foreach (var pair in values)
                     result += string.Format("'{0}': {1}, ", pair.Key, pair.Value);
                 return result;

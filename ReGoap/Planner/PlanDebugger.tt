@@ -1,0 +1,45 @@
+﻿<#@ template language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+
+digraph {
+
+node [shape=box]
+
+<#foreach(var n in nodeDeclarations) { #>
+<#=n#>
+<#}#>
+
+<#foreach(var c in nodeConnections) {#>
+<#=c#>
+<#}#>
+
+}
+
+<#+
+
+public List<string> nodeDeclarations = new List<string>();
+public List<string> nodeConnections = new List<string>();
+
+public void AddNode(string s)
+{
+	nodeDeclarations.Add(s);
+}
+
+public void AddConn(string s)
+{
+	nodeConnections.Add(s);
+}
+
+public void Clear()
+{
+	nodeDeclarations.Clear();
+	nodeConnections.Clear();
+    GenerationEnvironment.Clear();
+}
+
+#>
+
+
