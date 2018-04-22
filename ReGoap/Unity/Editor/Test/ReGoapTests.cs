@@ -27,6 +27,14 @@ namespace ReGoap.Unity.Editor.Test
             );
         }
 
+        ReGoapTestAgent PrepareAgent(GameObject owner)
+        {
+            var agent = owner.AddComponent<ReGoapTestAgent>();
+            agent.Init();
+            agent.debugPlan = true;
+            return agent;
+        }
+
         [Test]
         public void TestSimpleChainedPlan()
         {
@@ -97,8 +105,7 @@ namespace ReGoap.Unity.Editor.Test
             var memory = gameObject.AddComponent<ReGoapTestMemory>();
             memory.Init();
 
-            var agent = gameObject.AddComponent<ReGoapTestAgent>();
-            agent.Init();
+            var agent = PrepareAgent(gameObject);
 
             var plan = GetPlanner().Plan(agent, null, null, null);
 
@@ -136,8 +143,7 @@ namespace ReGoap.Unity.Editor.Test
             var memory = gameObject.AddComponent<ReGoapTestMemory>();
             memory.Init();
 
-            var agent = gameObject.AddComponent<ReGoapTestAgent>();
-            agent.Init();
+            var agent = PrepareAgent(gameObject);
 
             var plan = planner.Plan(agent, null, null, null);
 
@@ -192,8 +198,8 @@ namespace ReGoap.Unity.Editor.Test
             var memory = gameObject.AddComponent<ReGoapTestMemory>();
             memory.Init();
 
-            var agent = gameObject.AddComponent<ReGoapTestAgent>();
-            agent.Init();
+            var agent = PrepareAgent(gameObject);
+
 
             // first plan should create axe and equip it, through 'ReadyToFightGoal', since 'hasTarget' is false (memory should handle this)
             var plan = planner.Plan(agent, null, null, null);
