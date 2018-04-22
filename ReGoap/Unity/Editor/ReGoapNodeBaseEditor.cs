@@ -192,19 +192,25 @@ public class ReGoapNodeBaseEditor : EditorWindow
         nodePosition = new Vector2(0f, nodePosition.y + height + 10);
         height = 66;
         var maxHeight = height;
-        var worldState = agent.GetMemory().GetWorldState();
 
         var emptyGoal = agent.InstantiateNewState();
+        GoapActionStackData<T, W> stackData;
+        stackData.agent = agent;
+        stackData.currentState = agent.GetMemory().GetWorldState();
+        stackData.goalState = emptyGoal;
+        stackData.next = null;
+        stackData.settings = ReGoapState<T, W>.Instantiate();
+
         foreach (var action in agent.GetActionsSet())
         {
             var curHeight = height;
             var text = string.Format("<b>POSS.ACTION</b> <i>{0}</i>\n", action.GetName());
             text += "-<b>preconditions</b>-\n";
             var preconditionsDifferences = agent.InstantiateNewState();
-            var preconditions = action.GetPreconditions(emptyGoal);
+            var preconditions = action.GetPreconditions(stackData);
             if (preconditions == null)
                 continue;
-            preconditions.MissingDifference(worldState, ref preconditionsDifferences);
+            preconditions.MissingDifference(stackData.currentState, ref preconditionsDifferences);
             foreach (var preconditionPair in preconditions.GetValues())
             {
                 curHeight += 13;
@@ -218,13 +224,13 @@ public class ReGoapNodeBaseEditor : EditorWindow
             preconditionsDifferences.Recycle();
 
             text += "-<b>effects</b>-\n";
-            foreach (var effectPair in action.GetEffects(emptyGoal).GetValues())
+            foreach (var effectPair in action.GetEffects(stackData).GetValues())
             {
                 curHeight += 13;
                 text += string.Format("'<b>{0}</b>' = '<i>{1}</i>'\n", effectPair.Key, effectPair.Value);
             }
             curHeight += 13;
-            var proceduralCheck = action.CheckProceduralCondition(agent, null);
+            var proceduralCheck = action.CheckProceduralCondition(stackData);
             text += string.Format("<color={0}>-<b>proceduralCondition</b>: {1}</color>\n", proceduralCheck ? "#004d00" : "#800000", proceduralCheck);
 
             maxHeight = Mathf.Max(maxHeight, curHeight);

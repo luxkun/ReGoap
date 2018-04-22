@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using ReGoap.Core;
 using ReGoap.Planner;
@@ -122,7 +120,8 @@ namespace ReGoap.Unity
         {
             foreach (var planner in planners)
             {
-                planner.Stop();
+                if (planner != null)
+                    planner.Stop();
             }
             // should wait here?
             foreach (var thread in threads)

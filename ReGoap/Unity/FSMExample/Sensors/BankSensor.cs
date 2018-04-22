@@ -17,17 +17,10 @@ namespace ReGoap.Unity.FSMExample.Sensors
             {
                 banks[bank] = bank.transform.position;
             }
-        }
 
-        public override void UpdateSensor()
-        {
             var worldState = memory.GetWorldState();
             worldState.Set("seeBank", BankManager.Instance != null && BankManager.Instance.Banks.Length > 0);
-
-            var nearestBank = OtherScripts.Utilities.GetNearest(transform.position, banks);
-            worldState.Set("nearestBank", nearestBank);
-            worldState.Set("nearestBankPosition",
-                (Vector3?) (nearestBank != null ? nearestBank.transform.position : Vector3.zero));
+            worldState.Set("banks", banks);
         }
     }
 }

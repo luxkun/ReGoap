@@ -1,13 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
+
 using ReGoap.Core;
 using ReGoap.Unity.FSMExample.OtherScripts;
 using ReGoap.Utilities;
+
 using UnityEngine;
 
 namespace ReGoap.Unity.FSMExample.Actions
 {
     public class GatherResourceAction : ReGoapAction<string, object>
     {
+        public float MaxResourcesCount = 5.0f;
+        public float ResourcesCostMultiplier = 10.0f;
+        public float ReservedCostMultiplier = 50.0f;
+
+        public bool ExpandOnAllResources = false;
+
         public float TimeToGather = 0.5f;
         public float ResourcePerAction = 1f;
         protected ResourcesBag bag;
@@ -35,75 +44,113 @@ namespace ReGoap.Unity.FSMExample.Actions
             return null;
         }
 
-        public override ReGoapState<string, object> GetPreconditions(ReGoapState<string, object> goalState, IReGoapAction<string, object> next = null)
+        public override ReGoapState<string, object> GetPreconditions(GoapActionStackData<string, object> stackData)
         {
-            var newNeededResourceName = GetNeededResourceFromGoal(goalState);
             preconditions.Clear();
-            if (newNeededResourceName != null)
+            if (stackData.settings.HasKey("resource"))
             {
-                var wantedResource = agent.GetMemory().GetWorldState().Get("nearest" + newNeededResourceName) as IResource;
-                if (wantedResource != null)
-                {
-                    preconditions.Set("isAtPosition", agent.GetMemory().GetWorldState()
-                        .Get(string.Format("nearest{0}Position", newNeededResourceName)) as Vector3?);
-                }
+                preconditions.Set("isAtPosition", stackData.settings.Get("resourcePosition"));
             }
             return preconditions;
         }
 
-        public override ReGoapState<string, object> GetEffects(ReGoapState<string, object> goalState, IReGoapAction<string, object> next = null)
+        public override ReGoapState<string, object> GetEffects(GoapActionStackData<string, object> stackData)
         {
-            var newNeededResourceName = GetNeededResourceFromGoal(goalState);
             effects.Clear();
-            if (newNeededResourceName != null)
+            if (stackData.settings.HasKey("resource"))
             {
-                var wantedResource = agent.GetMemory().GetWorldState().Get("nearest" + newNeededResourceName) as IResource;
-                if (wantedResource != null)
-                {
-                    effects.Set("hasResource" + newNeededResourceName, true);
-                }
+                effects.Set("hasResource" + ((IResource)stackData.settings.Get("resource")).GetName(), true);
             }
             return effects;
         }
 
-        public override IReGoapActionSettings<string, object> GetSettings(IReGoapAgent<string, object> goapAgent, ReGoapState<string, object> goalState)
+        public override List<ReGoapState<string, object>> GetSettings(GoapActionStackData<string, object> stackData)
         {
-            var newNeededResourceName = GetNeededResourceFromGoal(goalState);
-            GatherResourceSettings wantedSettings = null;
-            if (newNeededResourceName != null)
+            var newNeededResourceName = GetNeededResourceFromGoal(stackData.goalState);
+            settings.Clear();
+            if (newNeededResourceName != null && stackData.currentState.HasKey("resource" + newNeededResourceName))
             {
-                var wantedResource = agent.GetMemory().GetWorldState().Get("nearest" + newNeededResourceName) as IResource;
-                if (wantedResource != null)
+                var results = new List<ReGoapState<string, object>>();
+                Sensors.ResourcePair best = new Sensors.ResourcePair();
+                var bestScore = float.MaxValue;
+                foreach (var wantedResource in (List<Sensors.ResourcePair>)stackData.currentState.Get("resource" + newNeededResourceName))
                 {
-                    wantedSettings = new GatherResourceSettings
+                    if (wantedResource.resource.GetCapacity() < ResourcePerAction) continue;
+                    // expanding on all resources is VERY expansive, expanding on the closest one is usually the best decision
+                    if (ExpandOnAllResources)
                     {
-                        ResourcePosition = (Vector3)agent.GetMemory().GetWorldState()
-                        .Get(string.Format("nearest{0}Position", newNeededResourceName)),
-                        Resource = wantedResource
-                    };
+                        settings.Set("resourcePosition", wantedResource.position);
+                        settings.Set("resource", wantedResource.resource);
+                        results.Add(settings.Clone());
+                    }
+                    else
+                    {
+                        var score = stackData.currentState.HasKey("isAtPosition") ? (wantedResource.position - (Vector3)stackData.currentState.Get("isAtPosition")).magnitude : 0.0f;
+                        score += ReservedCostMultiplier * wantedResource.resource.GetReserveCount();
+                        score += ResourcesCostMultiplier * (MaxResourcesCount - wantedResource.resource.GetCapacity());
+                        if (score < bestScore)
+                        {
+                            bestScore = score;
+                            best = wantedResource;
+                        }
+                    }
                 }
+                if (!ExpandOnAllResources)
+                {
+                    settings.Set("resourcePosition", best.position);
+                    settings.Set("resource", best.resource);
+                    results.Add(settings.Clone());
+                }
+                return results;
             }
-            return wantedSettings;
+            return new List<ReGoapState<string, object>>();
         }
 
-        public override bool CheckProceduralCondition(IReGoapAgent<string, object> goapAgent, ReGoapState<string, object> goalState, IReGoapAction<string, object> next = null)
+        public override float GetCost(GoapActionStackData<string, object> stackData)
         {
-            return base.CheckProceduralCondition(goapAgent, goalState) && bag != null;
+            var extraCost = 0.0f;
+            if (stackData.settings.HasKey("resource"))
+            {
+                var resource = (Resource)stackData.settings.Get("resource");
+                extraCost += ReservedCostMultiplier * resource.GetReserveCount();
+                extraCost += ResourcesCostMultiplier * (MaxResourcesCount - resource.GetCapacity());
+            }
+            return base.GetCost(stackData) + extraCost;
         }
 
-        public override void Run(IReGoapAction<string, object> previous, IReGoapAction<string, object> next, IReGoapActionSettings<string, object> settings, ReGoapState<string, object> goalState, Action<IReGoapAction<string, object>> done, Action<IReGoapAction<string, object>> fail)
+        public override bool CheckProceduralCondition(GoapActionStackData<string, object> stackData)
+        {
+            return base.CheckProceduralCondition(stackData) && bag != null && stackData.settings.HasKey("resource");
+        }
+
+        public override void Run(IReGoapAction<string, object> previous, IReGoapAction<string, object> next, ReGoapState<string, object> settings, ReGoapState<string, object> goalState, Action<IReGoapAction<string, object>> done, Action<IReGoapAction<string, object>> fail)
         {
             base.Run(previous, next, settings, goalState, done, fail);
 
-            var thisSettings = (GatherResourceSettings)settings;
-            resourcePosition = thisSettings.ResourcePosition;
-            resource = thisSettings.Resource;
+            var thisSettings = settings;
+            resourcePosition = (Vector3)thisSettings.Get("resourcePosition");
+            resource = (IResource)thisSettings.Get("resource");
 
             if (resource == null || resource.GetCapacity() < ResourcePerAction)
                 failCallback(this);
             else
             {
                 gatherCooldown = Time.time + TimeToGather;
+            }
+        }
+
+        public override void PlanEnter(IReGoapAction<string, object> previousAction, IReGoapAction<string, object> nextAction, ReGoapState<string, object> settings, ReGoapState<string, object> goalState)
+        {
+            if (settings.HasKey("resource"))
+            {
+                ((IResource)settings.Get("resource")).Reserve(GetHashCode());
+            }
+        }
+        public override void PlanExit(IReGoapAction<string, object> previousAction, IReGoapAction<string, object> nextAction, ReGoapState<string, object> settings, ReGoapState<string, object> goalState)
+        {
+            if (settings.HasKey("resource"))
+            {
+                ((IResource)settings.Get("resource")).Unreserve(GetHashCode());
             }
         }
 
@@ -121,13 +168,11 @@ namespace ReGoap.Unity.FSMExample.Actions
                 resource.RemoveResource(ResourcePerAction);
                 bag.AddResource(resource.GetName(), ResourcePerAction);
                 doneCallback(this);
+                if (settings.HasKey("resource"))
+                {
+                    ((IResource)settings.Get("resource")).Unreserve(GetHashCode());
+                }
             }
         }
-    }
-
-    internal class GatherResourceSettings : IReGoapActionSettings<string, object>
-    {
-        public Vector3? ResourcePosition;
-        public IResource Resource;
     }
 }

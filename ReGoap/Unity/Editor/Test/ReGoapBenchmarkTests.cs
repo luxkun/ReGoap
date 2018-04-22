@@ -60,5 +60,11 @@ namespace ReGoap.Unity.Editor.Test
         {
             Profile("TwoPhaseChainedPlanBenchmark", tests.TestTwoPhaseChainedPlan);
         }
+
+        [Test]
+        public void TestDynamicAction()
+        {
+            Profile("TestDynamicActionBenchmark", tests.TestDynamicAction);
+        }
     }
 }

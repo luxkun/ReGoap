@@ -37,6 +37,8 @@ namespace ReGoap.Planner
             }
             possibleGoals.Sort((x, y) => x.GetPriority().CompareTo(y.GetPriority()));
 
+            var currentState = agent.GetMemory().GetWorldState();
+
             while (possibleGoals.Count > 0)
             {
                 currentGoal = possibleGoals[possibleGoals.Count - 1];
@@ -47,19 +49,29 @@ namespace ReGoap.Planner
                 if (!settings.UsingDynamicActions)
                 {
                     var wantedGoalCheck = currentGoal.GetGoalState();
+                    GoapActionStackData<T, W> stackData;
+                    stackData.agent = goapAgent;
+                    stackData.currentState = currentState;
+                    stackData.goalState = goalState;
+                    stackData.next = null;
+                    stackData.settings = null;
                     // we check if the goal can be archived through actions first, so we don't brute force it with A* if we can't
                     foreach (var action in goapAgent.GetActionsSet())
                     {
-                        action.Precalculations(goapAgent, goalState);
-                        if (!action.CheckProceduralCondition(goapAgent, wantedGoalCheck))
+                        action.Precalculations(stackData);
+                        if (!action.CheckProceduralCondition(stackData))
                         {
                             continue;
                         }
                         // check if the effects of all actions can archieve currentGoal
                         var previous = wantedGoalCheck;
                         wantedGoalCheck = ReGoapState<T, W>.Instantiate();
-                        previous.MissingDifference(action.GetEffects(wantedGoalCheck), ref wantedGoalCheck);
+                        previous.MissingDifference(action.GetEffects(stackData), ref wantedGoalCheck);
                     }
+                    // finally push the current world state
+                    var current = wantedGoalCheck;
+                    wantedGoalCheck = ReGoapState<T, W>.Instantiate();
+                    current.MissingDifference(GetCurrentAgent().GetMemory().GetWorldState(), ref wantedGoalCheck);
                     // can't validate goal 
                     if (wantedGoalCheck.Count > 0)
                     {
@@ -70,7 +82,7 @@ namespace ReGoap.Planner
 
                 goalState = goalState.Clone();
                 var leaf = (ReGoapNode<T, W>)astar.Run(
-                    ReGoapNode<T, W>.Instantiate(this, goalState, null, null), goalState, settings.MaxIterations, settings.PlanningEarlyExit, debugPlan : agent.debugPlan);
+                    ReGoapNode<T, W>.Instantiate(this, goalState, null, null, null), goalState, settings.MaxIterations, settings.PlanningEarlyExit, debugPlan : agent.debugPlan);
                 if (leaf == null)
                 {
                     currentGoal = null;
@@ -101,9 +113,15 @@ namespace ReGoap.Planner
                 if (ReGoapLogger.Level == ReGoapLogger.DebugLevel.Full)
                 {
                     int i = 0;
+                    GoapActionStackData<T, W> stackData;
+                    stackData.agent = agent;
+                    stackData.currentState = currentState;
+                    stackData.goalState = currentGoal.GetGoalState();
+                    stackData.next = null;
                     foreach (var action in currentGoal.GetPlan())
                     {
-                        ReGoapLogger.Log(string.Format("[ReGoapPlanner] {0}) {1}", i++, action.Action));
+                        stackData.settings = action.Settings;
+                        ReGoapLogger.Log(string.Format("[ReGoapPlanner] {0}) {1}", i++, action.Action.ToString(stackData)));
                     }
                 }
             }

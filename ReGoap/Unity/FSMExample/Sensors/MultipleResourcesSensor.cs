@@ -1,15 +1,21 @@
-﻿using ReGoap.Unity.FSMExample.OtherScripts;
+﻿using System.Collections.Generic;
+
 using UnityEngine;
+
+using ReGoap.Unity.FSMExample.OtherScripts;
 
 // the agent in this example is a villager which knows the location of trees, so seeTree is always true if there is an available  tree
 namespace ReGoap.Unity.FSMExample.Sensors
 {
-    public class MultipleResourcesSensor : ResourceSensor
+    public struct ResourcePair
     {
-        public float MinResourceValue = 1f;
-        public float MinPowDistanceToBeNear = 1f;
+        public IResource resource;
+        public Vector3 position;
+    }
 
-        public override void UpdateSensor()
+    public class MultipleResourcesSensor : ReGoapSensor<string, object>
+    {
+        void Start()
         {
             var worldState = memory.GetWorldState();
 
@@ -17,14 +23,13 @@ namespace ReGoap.Unity.FSMExample.Sensors
             {
                 var resourceManager = pair.Value;
 
-                worldState.Set("see" + resourceManager.GetResourceName(), resourceManager.GetResourcesCount() >= MinResourceValue);
+                var resources = new List<ResourcePair>(resourceManager.GetResourcesCount());
+                foreach (var resource in resourceManager.GetResources())
+                {
+                    resources.Add(new ResourcePair { position = resource.GetTransform().position, resource = resource });
+                }
 
-                UpdateResources(resourceManager);
-
-                var nearestResource = OtherScripts.Utilities.GetNearest(transform.position, resourcesPosition);
-                worldState.Set("nearest" + resourceManager.GetResourceName(), nearestResource);
-                worldState.Set("nearest" + resourceManager.GetResourceName() + "Position",
-                    (Vector3?) (nearestResource != null ? nearestResource.GetTransform().position : Vector3.zero));
+                worldState.Set("resource" + resourceManager.GetResourceName(), resources);
             }
         }
     }

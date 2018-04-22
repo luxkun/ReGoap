@@ -19,10 +19,9 @@ namespace ReGoap.Unity
         protected IReGoapAction<T, W> nextAction;
 
         protected IReGoapAgent<T, W> agent;
-        protected Dictionary<string, object> genericValues;
         protected bool interruptWhenPossible;
 
-        protected IReGoapActionSettings<T, W> settings = null;
+        protected ReGoapState<T, W> settings = null;
 
         #region UnityFunctions
         protected virtual void Awake()
@@ -32,7 +31,7 @@ namespace ReGoap.Unity
             effects = ReGoapState<T, W>.Instantiate();
             preconditions = ReGoapState<T, W>.Instantiate();
 
-            genericValues = new Dictionary<string, object>();
+            settings = ReGoapState<T, W>.Instantiate();
         }
 
         protected virtual void Start()
@@ -61,37 +60,37 @@ namespace ReGoap.Unity
             interruptWhenPossible = true;
         }
 
-        public virtual void Precalculations(IReGoapAgent<T, W> goapAgent, ReGoapState<T, W> goalState)
+        public virtual void Precalculations(GoapActionStackData<T, W> stackData)
         {
-            agent = goapAgent;
+            agent = stackData.agent;
         }
 
-        public virtual IReGoapActionSettings<T, W> GetSettings(IReGoapAgent<T, W> goapAgent, ReGoapState<T, W> goalState)
+        public virtual List<ReGoapState<T, W>> GetSettings(GoapActionStackData<T, W> stackData)
         {
-            return settings;
+            return new List<ReGoapState<T, W>> { settings };
         }
 
-        public virtual ReGoapState<T, W> GetPreconditions(ReGoapState<T, W> goalState, IReGoapAction<T, W> next = null)
+        public virtual ReGoapState<T, W> GetPreconditions(GoapActionStackData<T, W> stackData)
         {
             return preconditions;
         }
 
-        public virtual ReGoapState<T, W> GetEffects(ReGoapState<T, W> goalState, IReGoapAction<T, W> next = null)
+        public virtual ReGoapState<T, W> GetEffects(GoapActionStackData<T, W> stackData)
         {
             return effects;
         }
 
-        public virtual float GetCost(ReGoapState<T, W> goalState, IReGoapAction<T, W> next = null)
+        public virtual float GetCost(GoapActionStackData<T, W> stackData)
         {
             return Cost;
         }
 
-        public virtual bool CheckProceduralCondition(IReGoapAgent<T, W> goapAgent, ReGoapState<T, W> goalState, IReGoapAction<T, W> next = null)
+        public virtual bool CheckProceduralCondition(GoapActionStackData<T, W> stackData)
         {
             return true;
         }
 
-        public virtual void Run(IReGoapAction<T, W> previous, IReGoapAction<T, W> next, IReGoapActionSettings<T, W> settings,
+        public virtual void Run(IReGoapAction<T, W> previous, IReGoapAction<T, W> next, ReGoapState<T, W> settings,
             ReGoapState<T, W> goalState, Action<IReGoapAction<T, W>> done, Action<IReGoapAction<T, W>> fail)
         {
             interruptWhenPossible = false;
@@ -104,15 +103,18 @@ namespace ReGoap.Unity
             nextAction = next;
         }
 
+        public virtual void PlanEnter(IReGoapAction<T, W> previousAction, IReGoapAction<T, W> nextAction, ReGoapState<T, W> settings, ReGoapState<T, W> goalState)
+        {
+        }
+
+        public virtual void PlanExit(IReGoapAction<T, W> previousAction, IReGoapAction<T, W> nextAction, ReGoapState<T, W> settings, ReGoapState<T, W> goalState)
+        {
+        }
+
         public virtual void Exit(IReGoapAction<T, W> next)
         {
             if (gameObject != null)
                 enabled = false;
-        }
-
-        public virtual Dictionary<string, object> GetGenericValues()
-        {
-            return genericValues;
         }
 
         public virtual string GetName()
@@ -123,6 +125,20 @@ namespace ReGoap.Unity
         public override string ToString()
         {
             return string.Format("GoapAction('{0}')", Name);
+        }
+
+        public virtual string ToString(GoapActionStackData<T, W> stackData)
+        {
+            string result = string.Format("GoapAction('{0}')", Name);
+            if (stackData.settings != null && stackData.settings.Count > 0)
+            {
+                result += " - ";
+                foreach (var pair in stackData.settings.GetValues())
+                {
+                    result += string.Format("{0}='{1}' ; ", pair.Key, pair.Value);
+                }
+            }
+            return result;
         }
     }
 }

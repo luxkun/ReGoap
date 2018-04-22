@@ -82,12 +82,13 @@ namespace ReGoap.Core
                 {
                     foreach (var pair in other.values)
                     {
-                        W thisValue;
-                        values.TryGetValue(pair.Key, out thisValue);
                         var otherValue = pair.Value;
-                        if (otherValue == null || Equals(otherValue, false))
+
+                        // not here, ignore this check
+                        W thisValue;
+                        if (!values.TryGetValue(pair.Key, out thisValue))
                             continue;
-                        if (thisValue != null && !Equals(otherValue, thisValue))
+                        if (!Equals(otherValue, thisValue))
                             return true;
                     }
                     return false;
@@ -95,20 +96,21 @@ namespace ReGoap.Core
         }
 
         // this method is more relaxed than the other, also accepts conflits that are fixed by "changes"
-        public bool HasAnyConflict(ReGoapState<T, W> changes, ReGoapState<T, W> other) // used only in backward for now
+        public bool HasAnyConflict(ReGoapState<T, W> changes, ReGoapState<T, W> other)
         {
             lock (values) lock (other.values)
                 {
                     foreach (var pair in other.values)
                     {
+                        var otherValue = pair.Value;
+
+                        // not here, ignore this check
                         W thisValue;
-                        values.TryGetValue(pair.Key, out thisValue);
+                        if (!values.TryGetValue(pair.Key, out thisValue))
+                            continue;
                         W effectValue;
                         changes.values.TryGetValue(pair.Key, out effectValue);
-                        var otherValue = pair.Value;
-                        if (otherValue == null || Equals(otherValue, false))
-                            continue;
-                        if (thisValue != null && !Equals(otherValue, thisValue) && !Equals(effectValue, thisValue))
+                        if (!Equals(otherValue, thisValue) && !Equals(effectValue, thisValue))
                             return true;
                     }
                     return false;

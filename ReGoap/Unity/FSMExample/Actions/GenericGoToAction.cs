@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+
 using ReGoap.Core;
 using ReGoap.Unity.FSMExample.FSM;
+
 using UnityEngine;
 
 namespace ReGoap.Unity.FSMExample.Actions
@@ -20,71 +23,64 @@ namespace ReGoap.Unity.FSMExample.Actions
         {
             base.Awake();
 
-            SetDefaultEffects();
             smsGoto = GetComponent<SmsGoTo>();
         }
 
-        protected virtual void SetDefaultEffects()
-        {
-            effects.Set("isAtPosition", default(Vector3));
-        }
-
-        // generic behaviour, get from the goal values: 'isAtPosition'
-
-        protected virtual Vector3? GetCurrentPositionFromMemory()
-        {
-            return agent.GetMemory().GetWorldState().Get("isAtPosition") as Vector3?;
-        }
-
-        public override void Run(IReGoapAction<string, object> previous, IReGoapAction<string, object> next, IReGoapActionSettings<string, object> settings, ReGoapState<string, object> goalState, Action<IReGoapAction<string, object>> done, Action<IReGoapAction<string, object>> fail)
+        public override void Run(IReGoapAction<string, object> previous, IReGoapAction<string, object> next, ReGoapState<string, object> settings, ReGoapState<string, object> goalState, Action<IReGoapAction<string, object>> done, Action<IReGoapAction<string, object>> fail)
         {
             base.Run(previous, next, settings, goalState, done, fail);
-
-            var localSettings = (GenericGoToSettings) settings;
-
-            if (localSettings.ObjectivePosition.HasValue)
-                smsGoto.GoTo(localSettings.ObjectivePosition, OnDoneMovement, OnFailureMovement);
+            
+            if (settings.HasKey("objectivePosition"))
+                smsGoto.GoTo((Vector3) settings.Get("objectivePosition"), OnDoneMovement, OnFailureMovement);
             else
                 failCallback(this);
         }
 
-        public override ReGoapState<string, object> GetEffects(ReGoapState<string, object> goalState, IReGoapAction<string, object> next = null)
+        public override bool CheckProceduralCondition(GoapActionStackData<string, object> stackData)
         {
-            var goalWantedPosition = GetWantedPositionFromState(goalState);
-            if (goalWantedPosition.HasValue)
+            return base.CheckProceduralCondition(stackData) && stackData.settings.HasKey("objectivePosition");
+        }
+
+        public override ReGoapState<string, object> GetEffects(GoapActionStackData<string, object> stackData)
+        {
+            if (stackData.settings.HasKey("objectivePosition"))
             {
-                effects.Set("isAtPosition", goalWantedPosition);
+                effects.Set("isAtPosition", stackData.settings.Get("objectivePosition"));
+                if (stackData.settings.HasKey("reconcilePosition"))
+                    effects.Set("reconcilePosition", true);
             }
             else
             {
-                SetDefaultEffects();
+                effects.Clear();
             }
-            return base.GetEffects(goalState, next);
+            return base.GetEffects(stackData);
         }
 
-        Vector3? GetWantedPositionFromState(ReGoapState<string, object> state)
+        public override List<ReGoapState<string, object>> GetSettings(GoapActionStackData<string, object> stackData)
         {
-            Vector3? result = null;
-            if (state != null)
+            if (stackData.goalState.HasKey("isAtPosition"))
             {
-                result = state.Get("isAtPosition") as Vector3?;
+                settings.Set("objectivePosition", stackData.goalState.Get("isAtPosition"));
+                return base.GetSettings(stackData);
             }
-            return result;
-        }
-
-        public override IReGoapActionSettings<string, object> GetSettings(IReGoapAgent<string, object> goapAgent, ReGoapState<string, object> goalState)
-        {
-            settings = new GenericGoToSettings
+            else if (stackData.goalState.HasKey("reconcilePosition") && stackData.goalState.Count == 1)
             {
-                ObjectivePosition = GetWantedPositionFromState(goalState)
-            };
-            return base.GetSettings(goapAgent, goalState);
+                settings.Set("objectivePosition", stackData.agent.GetMemory().GetWorldState().Get("startPosition"));
+                settings.Set("reconcilePosition", true);
+                return base.GetSettings(stackData);
+            }
+            return new List<ReGoapState<string, object>>();
         }
 
         // if you want to calculate costs use a non-dynamic/generic goto action
-        public override float GetCost(ReGoapState<string, object> goalState, IReGoapAction<string, object> next = null)
+        public override float GetCost(GoapActionStackData<string, object> stackData)
         {
-            return base.GetCost(goalState, next) + Cost;
+            var distance = 0.0f;
+            if (stackData.settings.HasKey("objectivePosition") && stackData.currentState.HasKey("isAtPosition"))
+            {
+                distance = ((Vector3)stackData.settings.Get("objectivePosition") - (Vector3)stackData.currentState.Get("isAtPosition")).magnitude;
+            }
+            return base.GetCost(stackData) + Cost + distance;
         }
 
         protected virtual void OnFailureMovement()
@@ -96,10 +92,5 @@ namespace ReGoap.Unity.FSMExample.Actions
         {
             doneCallback(this);
         }
-    }
-
-    public struct GenericGoToSettings : IReGoapActionSettings<string, object>
-    {
-        public Vector3? ObjectivePosition;
     }
 }
