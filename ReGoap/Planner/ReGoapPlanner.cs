@@ -82,7 +82,7 @@ namespace ReGoap.Planner
 
                 goalState = goalState.Clone();
                 var leaf = (ReGoapNode<T, W>)astar.Run(
-                    ReGoapNode<T, W>.Instantiate(this, goalState, null, null, null), goalState, settings.MaxIterations, settings.PlanningEarlyExit, debugPlan : agent.debugPlan);
+                    ReGoapNode<T, W>.Instantiate(this, goalState, null, null, null), goalState, settings.MaxIterations, settings.PlanningEarlyExit, debugPlan : settings.DebugPlan);
                 if (leaf == null)
                 {
                     currentGoal = null;

@@ -10,6 +10,9 @@ namespace ReGoap.Planner
         private readonly Dictionary<T, INode<T>> stateToNode;
         private readonly Dictionary<T, INode<T>> explored;
         private readonly List<INode<T>> createdNodes;
+        // Debug
+        private bool debugPlan = false;
+        private PlanDebugger debugger;
 
         public AStar(int maxNodesToExpand = 1000)
         {
@@ -28,46 +31,59 @@ namespace ReGoap.Planner
             createdNodes.Clear();
         }
 
-        private bool _debugPlan = false;
-        private Assets.ReGoap.Planner.PlanDebugger _debugger;
-
-        private void _DebugPlan(INode<T> node, INode<T> parent)
+        private void DebugPlan(INode<T> node, INode<T> parent)
         {
-            if (!_debugPlan) return;
-            if (null == _debugger)
-                _debugger = new Assets.ReGoap.Planner.PlanDebugger();
+            if (!debugPlan) return;
+            if (debugger == null)
+                debugger = new PlanDebugger();
 
-            string nodeStr = string.Format("{0} [label=\"GOAL({4}): {5}:\n{1}\nEFFECT:\n{2}\nPRECOND:\n{3}\n\"]", node.GetHashCode(), node.GoalString, node.EffectString, node.PrecondString, node.GetCost(), node.Name);
-            _debugger.AddNode(nodeStr);
+            string nodeStr = string.Format(@"{0} [label=<
+<table border='0' color='black' fontcolor='#F5F5F5'>
+    <tr> <td colspan='2'><b>{4}</b></td> </tr>
+    <hr/>
+    <tr align='left'> <td border='1' sides='rt'><b>Costs</b></td>           <td border='1' sides='t'><b>g</b>: {1} ; <b>h</b>: {2} ; <b>c</b>: {3}</td> </tr>
+    <tr align='left'> <td border='1' sides='rt'><b>Preconditions</b></td>   <td border='1' sides='t'>{5}</td> </tr>
+    <tr align='left'> <td border='1' sides='rt'><b>Effects</b></td>         <td border='1' sides='t'>{6}</td> </tr>
+    <tr align='left'> <td border='1' sides='rt'><b>Goal</b></td>            <td border='1' sides='t'>{7}</td> </tr>
+</table>
+>]",
+                node.GetHashCode(),
+                node.GetPathCost(), node.GetHeuristicCost(), node.GetCost(),
+                node.Name, node.Preconditions != null ? node.Preconditions.ToString() : "",
+                node.Effects != null ? node.Effects.ToString() : "",
+                node.Goal != null ? node.Goal.ToString() : "");
+            debugger.AddNode(nodeStr);
 
             if (parent != null)
             {
                 string connStr = string.Format("{0} -> {1}", parent.GetHashCode(), node.GetHashCode());
-                _debugger.AddConn(connStr);
+                debugger.AddConn(connStr);
             }
         }
 
-        private void _EndDebugPlan(INode<T> node)
+        private void EndDebugPlan(INode<T> node)
         {
-            if (null != _debugger)
+            if (debugger != null)
             {
                 while (node != null)
-                { //mark success path
-                    string nodeStr = string.Format("{0} [style=filled, color=\"#00FF00\"]", node.GetHashCode());
-                    _debugger.AddNode(nodeStr);
+                {
+                    //mark success path
+                    string nodeStr = string.Format("{0} [style=\"bold\" color=\"darkgreen\"]", node.GetHashCode());
+                    debugger.AddNode(nodeStr);
                     node = node.GetParent();
                 }
 
-                var txt = _debugger.TransformText();
+                var txt = debugger.TransformText();
                 System.IO.Directory.CreateDirectory("PlanDebugger");
-                System.IO.File.WriteAllText(string.Format("PlanDebugger/DebugPlan_{0}.dot", System.DateTime.Now.ToString("HHmmss_ffff")), txt);
-                _debugger.Clear();
+                System.IO.Directory.CreateDirectory("PlanDebugger/Raws");
+                System.IO.File.WriteAllText(string.Format("PlanDebugger/Raws/DebugPlan_{0}.dot", System.DateTime.Now.ToString("HHmmss_ffff")), txt);
+                debugger.Clear();
             }
         }
 
         public INode<T> Run(INode<T> start, T goal, int maxIterations = 100, bool earlyExit = true, bool clearNodes = true, bool debugPlan = false)
         {
-            _debugPlan = debugPlan;
+            this.debugPlan = debugPlan;
 
             frontier.Clear();
             stateToNode.Clear();
@@ -80,17 +96,16 @@ namespace ReGoap.Planner
 
             frontier.Enqueue(start, start.GetCost());
 
-            _DebugPlan(start, null);
+            DebugPlan(start, null);
 
             var iterations = 0;
             while ((frontier.Count > 0) && (iterations < maxIterations) && (frontier.Count + 1 < frontier.MaxSize))
             {
                 var node = frontier.Dequeue();
-                //Utilities.ReGoapLogger.Log(string.Format("\n++++Explored action: {0}({3}), state ({1})\n goal ({2})\n effect: ({4})", node.Name, node.GetState(), node.GoalString, node.GetCost(), node.EffectString));
                 if (node.IsGoal(goal))
                 {
                     ReGoapLogger.Log("[Astar] Success iterations: " + iterations);
-                    _EndDebugPlan(node);
+                    EndDebugPlan(node);
                     return node;
                 }
                 explored[node.GetState()] = node;
@@ -106,7 +121,7 @@ namespace ReGoap.Planner
                     if (earlyExit && child.IsGoal(goal))
                     {
                         ReGoapLogger.Log("[Astar] (early exit) Success iterations: " + iterations);
-                        _EndDebugPlan(child);
+                        EndDebugPlan(child);
                         return child;
                     }
                     var childCost = child.GetCost();
@@ -123,7 +138,7 @@ namespace ReGoap.Planner
                             break;
                     }
 
-                    _DebugPlan(child, node);
+                    DebugPlan(child, node);
 
                     //Utilities.ReGoapLogger.Log(string.Format("    Enqueue frontier: {0}, cost: {1}", child.Name, childCost));
                     frontier.Enqueue(child, childCost);
@@ -131,7 +146,7 @@ namespace ReGoap.Planner
                 }
             }
             ReGoapLogger.LogWarning("[Astar] failed.");
-            _EndDebugPlan(null);
+            EndDebugPlan(null);
             return null;
         }
     }
@@ -146,11 +161,11 @@ namespace ReGoap.Planner
         float GetPathCost();
         INode<T> GetParent();
         bool IsGoal(T goal);
-        //int AstarID { get; } //used for planDebug
+
         string Name { get; }
-        string GoalString { get; }
-        string EffectString { get; }
-        string PrecondString { get; }
+        T Goal { get; }
+        T Effects { get; }
+        T Preconditions { get; }
 
         int QueueIndex { get; set; }
         float Priority { get; set; }

@@ -23,7 +23,7 @@ namespace ReGoap.Unity.Editor.Test
         {
             // not using early exit to have precise results, probably wouldn't care in a game for performance reasons
             return new ReGoapPlanner<string, object>(
-                new ReGoapPlannerSettings { PlanningEarlyExit = false, UsingDynamicActions = dynamicActions }
+                new ReGoapPlannerSettings { PlanningEarlyExit = false, UsingDynamicActions = dynamicActions, DebugPlan = true }
             );
         }
 
@@ -31,7 +31,6 @@ namespace ReGoap.Unity.Editor.Test
         {
             var agent = owner.AddComponent<ReGoapTestAgent>();
             agent.Init();
-            agent.debugPlan = true;
             return agent;
         }
 

@@ -15,8 +15,6 @@ namespace ReGoap.Unity
 
         public bool CalculateNewGoalOnStart = true;
 
-        public bool shouldDebugPlan = false;
-
         protected float lastCalculationTime;
 
         protected List<IReGoapGoal<T, W>> goals;
@@ -39,7 +37,6 @@ namespace ReGoap.Unity
         {
             get { return startedPlanning && currentReGoapPlanWorker.NewGoal == null; }
         }
-        public bool debugPlan { get { return shouldDebugPlan; } set { shouldDebugPlan = value; } }
 
         #region UnityFunctions
         protected virtual void Awake()

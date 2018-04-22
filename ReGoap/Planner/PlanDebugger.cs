@@ -7,7 +7,7 @@
 //     the code is regenerated.
 // </auto-generated>
 // ------------------------------------------------------------------------------
-namespace Assets.ReGoap.Planner
+namespace ReGoap.Planner
 {
     using System.Linq;
     using System.Text;
@@ -18,7 +18,7 @@ namespace Assets.ReGoap.Planner
     /// Class to produce the template output
     /// </summary>
     
-    #line 1 "E:\works\programs\GameProjects\TestGround\TestReGOAP\Assets\ReGoap\Planner\PlanDebugger.tt"
+    #line 1 "PlanDebugger.tt"
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "14.0.0.0")]
     public partial class PlanDebugger : PlanDebuggerBase
     {
@@ -30,40 +30,40 @@ namespace Assets.ReGoap.Planner
         {
             this.Write("\r\ndigraph {\r\n\r\nnode [shape=box]\r\n\r\n");
             
-            #line 11 "E:\works\programs\GameProjects\TestGround\TestReGOAP\Assets\ReGoap\Planner\PlanDebugger.tt"
+            #line 11 "PlanDebugger.tt"
 foreach(var n in nodeDeclarations) { 
             
             #line default
             #line hidden
             
-            #line 12 "E:\works\programs\GameProjects\TestGround\TestReGOAP\Assets\ReGoap\Planner\PlanDebugger.tt"
+            #line 12 "PlanDebugger.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(n));
             
             #line default
             #line hidden
             this.Write("\r\n");
             
-            #line 13 "E:\works\programs\GameProjects\TestGround\TestReGOAP\Assets\ReGoap\Planner\PlanDebugger.tt"
+            #line 13 "PlanDebugger.tt"
 }
             
             #line default
             #line hidden
             this.Write("\r\n");
             
-            #line 15 "E:\works\programs\GameProjects\TestGround\TestReGOAP\Assets\ReGoap\Planner\PlanDebugger.tt"
+            #line 15 "PlanDebugger.tt"
 foreach(var c in nodeConnections) {
             
             #line default
             #line hidden
             
-            #line 16 "E:\works\programs\GameProjects\TestGround\TestReGOAP\Assets\ReGoap\Planner\PlanDebugger.tt"
+            #line 16 "PlanDebugger.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(c));
             
             #line default
             #line hidden
             this.Write("\r\n");
             
-            #line 17 "E:\works\programs\GameProjects\TestGround\TestReGOAP\Assets\ReGoap\Planner\PlanDebugger.tt"
+            #line 17 "PlanDebugger.tt"
 }
             
             #line default
@@ -72,7 +72,7 @@ foreach(var c in nodeConnections) {
             return this.GenerationEnvironment.ToString();
         }
         
-        #line 21 "E:\works\programs\GameProjects\TestGround\TestReGOAP\Assets\ReGoap\Planner\PlanDebugger.tt"
+        #line 21 "PlanDebugger.tt"
 
 
 public List<string> nodeDeclarations = new List<string>();

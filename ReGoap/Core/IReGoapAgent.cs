@@ -13,7 +13,6 @@ namespace ReGoap.Core
         W GetPlanValue(T key);
         void SetPlanValue(T key, W value);
         bool HasPlanValue(T target);
-        bool debugPlan { get; set; }
         // THREAD SAFE
         List<IReGoapGoal<T, W>> GetGoalsSet();
         List<IReGoapAction<T, W>> GetActionsSet();
