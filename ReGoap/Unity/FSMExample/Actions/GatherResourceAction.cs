@@ -47,9 +47,10 @@ namespace ReGoap.Unity.FSMExample.Actions
         public override ReGoapState<string, object> GetPreconditions(GoapActionStackData<string, object> stackData)
         {
             preconditions.Clear();
-            if (stackData.settings.HasKey("resource"))
+            if (stackData.settings.HasKey("resource")
+                && stackData.settings.TryGetValue("resourcePosition", out var resourcePosition))
             {
-                preconditions.Set("isAtPosition", stackData.settings.Get("resourcePosition"));
+                preconditions.Set("isAtPosition", resourcePosition);
             }
             return preconditions;
         }
@@ -57,9 +58,11 @@ namespace ReGoap.Unity.FSMExample.Actions
         public override ReGoapState<string, object> GetEffects(GoapActionStackData<string, object> stackData)
         {
             effects.Clear();
-            if (stackData.settings.HasKey("resource"))
+            if (stackData.settings.TryGetValue("resource", out var obj))
             {
-                effects.Set("hasResource" + ((IResource)stackData.settings.Get("resource")).GetName(), true);
+                var resource = (IResource) obj;
+                if (resource != null)
+                    effects.Set("hasResource" + resource.GetName(), true);
             }
             return effects;
         }
@@ -85,7 +88,10 @@ namespace ReGoap.Unity.FSMExample.Actions
                     }
                     else
                     {
-                        var score = stackData.currentState.HasKey("isAtPosition") ? (wantedResource.position - (Vector3)stackData.currentState.Get("isAtPosition")).magnitude : 0.0f;
+                        var score = stackData.currentState.TryGetValue("isAtPosition",
+                                                                       out object isAtPosition)
+                            ? (wantedResource.position - (Vector3)isAtPosition).magnitude
+                            : 0.0f;
                         score += ReservedCostMultiplier * wantedResource.resource.GetReserveCount();
                         score += ResourcesCostMultiplier * (MaxResourcesCount - wantedResource.resource.GetCapacity());
                         if (score < bestScore)

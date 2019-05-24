@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading;
 using ReGoap.Core;
 using ReGoap.Planner;
@@ -11,7 +12,7 @@ namespace ReGoap.Unity
     public class ReGoapPlannerThread<T, W>
     {
         private readonly ReGoapPlanner<T, W> planner;
-        public static Queue<ReGoapPlanWork<T, W>> WorksQueue;
+        public static ConcurrentQueue<ReGoapPlanWork<T, W>> WorksQueue;
         private bool isRunning = true;
         private readonly Action<ReGoapPlannerThread<T, W>, ReGoapPlanWork<T, W>, IReGoapGoal<T, W>> onDonePlan;
 
@@ -37,16 +38,10 @@ namespace ReGoap.Unity
 
         public void CheckWorkers()
         {
-            if (WorksQueue.Count > 0)
-            {
-                ReGoapPlanWork<T, W> checkWork;
-                lock (WorksQueue)
-                {
-                    checkWork = WorksQueue.Dequeue();
-                }
+            if (WorksQueue.TryDequeue(out ReGoapPlanWork<T, W> checkWork)) {
                 var work = checkWork;
                 planner.Plan(work.Agent, work.BlacklistGoal, work.Actions,
-                    (newGoal) => onDonePlan(this, work, newGoal));
+                            (newGoal) => onDonePlan(this, work, newGoal));
             }
         }
     }
@@ -90,7 +85,7 @@ namespace ReGoap.Unity
             Instance = this;
 
             doneWorks = new List<ReGoapPlanWork<T, W>>();
-            ReGoapPlannerThread<T, W>.WorksQueue = new Queue<ReGoapPlanWork<T, W>>();
+            ReGoapPlannerThread<T, W>.WorksQueue = new ConcurrentQueue<ReGoapPlanWork<T, W>>();
             planners = new ReGoapPlannerThread<T, W>[ThreadsCount];
             threads = new Thread[ThreadsCount];
 

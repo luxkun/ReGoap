@@ -30,8 +30,8 @@ namespace ReGoap.Unity.FSMExample.Actions
         {
             base.Run(previous, next, settings, goalState, done, fail);
             
-            if (settings.HasKey("objectivePosition"))
-                smsGoto.GoTo((Vector3) settings.Get("objectivePosition"), OnDoneMovement, OnFailureMovement);
+            if (settings.TryGetValue("objectivePosition", out var v))
+                smsGoto.GoTo((Vector3) v, OnDoneMovement, OnFailureMovement);
             else
                 failCallback(this);
         }
@@ -43,9 +43,9 @@ namespace ReGoap.Unity.FSMExample.Actions
 
         public override ReGoapState<string, object> GetEffects(GoapActionStackData<string, object> stackData)
         {
-            if (stackData.settings.HasKey("objectivePosition"))
+            if (stackData.settings.TryGetValue("objectivePosition", out var objectivePosition))
             {
-                effects.Set("isAtPosition", stackData.settings.Get("objectivePosition"));
+                effects.Set("isAtPosition", objectivePosition);
                 if (stackData.settings.HasKey("reconcilePosition"))
                     effects.Set("reconcilePosition", true);
             }
@@ -58,9 +58,9 @@ namespace ReGoap.Unity.FSMExample.Actions
 
         public override List<ReGoapState<string, object>> GetSettings(GoapActionStackData<string, object> stackData)
         {
-            if (stackData.goalState.HasKey("isAtPosition"))
+            if (stackData.goalState.TryGetValue("isAtPosition", out var isAtPosition))
             {
-                settings.Set("objectivePosition", stackData.goalState.Get("isAtPosition"));
+                settings.Set("objectivePosition", isAtPosition);
                 return base.GetSettings(stackData);
             }
             else if (stackData.goalState.HasKey("reconcilePosition") && stackData.goalState.Count == 1)
@@ -76,9 +76,11 @@ namespace ReGoap.Unity.FSMExample.Actions
         public override float GetCost(GoapActionStackData<string, object> stackData)
         {
             var distance = 0.0f;
-            if (stackData.settings.HasKey("objectivePosition") && stackData.currentState.HasKey("isAtPosition"))
+            if (stackData.settings.TryGetValue("objectivePosition", out object objectivePosition)
+                && stackData.currentState.TryGetValue("isAtPosition", out object isAtPosition))
             {
-                distance = ((Vector3)stackData.settings.Get("objectivePosition") - (Vector3)stackData.currentState.Get("isAtPosition")).magnitude;
+                if (objectivePosition is Vector3 p && isAtPosition is Vector3 r)
+                    distance = (p - r).magnitude;
             }
             return base.GetCost(stackData) + Cost + distance;
         }

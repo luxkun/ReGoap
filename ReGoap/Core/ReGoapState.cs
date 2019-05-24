@@ -1,21 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace ReGoap.Core
 {
     public class ReGoapState<T, W>
     {
         // can change to object
-        private Dictionary<T, W> values;
-        private readonly Dictionary<T, W> bufferA;
-        private readonly Dictionary<T, W> bufferB;
+        private ConcurrentDictionary<T, W> values;
+        private readonly ConcurrentDictionary<T, W> bufferA;
+        private readonly ConcurrentDictionary<T, W> bufferB;
 
         public static int DefaultSize = 20;
 
         private ReGoapState()
         {
-            bufferA = new Dictionary<T, W>(DefaultSize);
-            bufferB = new Dictionary<T, W>(DefaultSize);
+            int concurrencyLevel = 5; // No idea.
+            bufferA = new ConcurrentDictionary<T, W>(concurrencyLevel, DefaultSize);
+            bufferB = new ConcurrentDictionary<T, W>(concurrencyLevel, DefaultSize);
             values = bufferA;
         }
 
@@ -258,16 +260,17 @@ namespace ReGoap.Core
 
         public void Remove(T key)
         {
-            lock (values)
-            {
-                values.Remove(key);
-            }
+            values.TryRemove(key, out _);
         }
 
-        public Dictionary<T, W> GetValues()
+        public ConcurrentDictionary<T, W> GetValues()
         {
             lock (values)
                 return values;
+        }
+
+        public bool TryGetValue(T key, out W value) {
+            return values.TryGetValue(key, out value);
         }
 
         public bool HasKey(T key)
