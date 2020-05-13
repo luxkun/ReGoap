@@ -142,7 +142,7 @@ namespace ReGoap.Unity.FSMExample.FSM
         private Type Transition(ISmState state)
         {
             if (currentState == GoToState.Pulsed)
-                return typeof(SmsGoTo);
+                return GetType();
             return null;
         }
 
