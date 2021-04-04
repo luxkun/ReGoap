@@ -61,8 +61,8 @@ namespace ReGoap.Unity.FSMExample.Actions
 
         public override ReGoapState<string, object> GetPreconditions(GoapActionStackData<string, object> stackData)
         {
-            if (stackData.settings.HasKey("workstationPosition"))
-                preconditions.Set("isAtPosition", stackData.settings.Get("workstationPosition"));
+            if (stackData.settings.TryGetValue("workstationPosition", out var workstationPosition))
+                preconditions.Set("isAtPosition", workstationPosition);
             return preconditions;
         }
 
