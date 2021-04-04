@@ -104,6 +104,8 @@ namespace ReGoap.Planner
             state = null;
             Goal.Recycle();
             Goal = null;
+            g = 0;
+
             lock (cachedNodes)
             {
                 cachedNodes.Push(this);
