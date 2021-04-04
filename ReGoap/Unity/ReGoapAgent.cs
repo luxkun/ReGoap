@@ -170,7 +170,7 @@ namespace ReGoap.Unity
 
         public virtual void WarnActionEnd(IReGoapAction<T, W> thisAction)
         {
-            if (thisAction != currentActionState.Action)
+            if (currentActionState != null && thisAction != currentActionState.Action)
                 return;
             PushAction();
         }
