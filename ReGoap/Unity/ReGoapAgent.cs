@@ -10,7 +10,7 @@ namespace ReGoap.Unity
     public class ReGoapAgent<T, W> : MonoBehaviour, IReGoapAgent<T, W>, IReGoapAgentHelper
     {
         public string Name;
-        public float CalculationDelay = 0.5f;
+        public float CalculationDelay = 0.55f;
         public bool BlackListGoalOnFailure;
 
         public bool CalculateNewGoalOnStart = true;
