@@ -7,7 +7,7 @@ namespace ReGoap.Unity.FSM
     {
         List<ISmTransition> Transitions { get; set; }
 
-        void Enter();
+        void Enteer();
         void Exit();
         void Init(StateMachine stateMachine);
         bool IsActive();
