@@ -1,12 +1,13 @@
 # ReGoap
-Generic C# GOAP (Goal Oriented Action Planning) library with Unity3d examples and helpers classes.
+Generic C# GOAP (Goal Oriented Action Planning) library with Unity3D examples and helper classes, plus Godot helper classes.
 
-This library is very generic, if you don't include the Unity folder you can use it in any game engine.
+This library is very generic, if you don't include the Unity and Godot folders you can use it in any game engine.
 
 1. [Get Started, fast version](#get-started-fast-version)
 2. [Get Started, long version](#get-started-long-version)
     1. [Explaining GOAP](#explaining-goap)
     2. [How to use ReGoap in Unity3D](#how-to-use-regoap-in-unity3d)
+    3. [How to use ReGoap in Godot](#how-to-use-regoap-in-godot)
         1. [How to implement your own ReGoapAction](#how-to-implement-your-own-regoapaction)
         2. [How to implement your own ReGoapGoal](#how-to-implement-your-own-regoapgoal)
         3. [How to implement your own ReGoapSensor](#how-to-implement-your-own-regoapsensor)
@@ -90,6 +91,24 @@ Example:
 
 Now you should understand what is a GOAP library for and what you should use it for, if still having questions or want to know more about this field I advise you to read Jeff Orkin's papers here: http://alumni.media.mit.edu/~jorkin/
 
+### Comparator preconditions (`==`, `!=`, `>=`, `<=`)
+
+ReGoap supports comparator-based state conditions through `ReGoapCondition`:
+
+- `ReGoapCondition.Equal(value)`
+- `ReGoapCondition.NotEqual(value)`
+- `ReGoapCondition.GreaterOrEqual(value)`
+- `ReGoapCondition.LessOrEqual(value)`
+
+You can use these in goals, preconditions and effects when you need relational checks (for example, inventory/resource counts):
+
+```C#
+preconditions.Set("chestOreCount", ReGoapCondition.GreaterOrEqual(1));
+goal.Set("chestSwordCount", ReGoapCondition.GreaterOrEqual(10));
+```
+
+Backward compatibility: if you store a plain value (for example `true`, `42`, `"Idle"`) and not a `ReGoapCondition`, ReGoap keeps exact equality matching as before.
+
 ### How to use ReGoap in Unity3D
 1. Clone this repository in your Unity project.
 Command line:
@@ -104,6 +123,38 @@ git clone https://github.com/luxkun/ReGoap.git
 7. [repeat as needed] Add your own class that inherit ReGoapGoal or implements IReGoapGoal (choose wisely what goal state the goal has)
 8. Add ONE ReGoapPlannerManager (you must create your own class that inherit ReGoapPlannerManager) to any GameObject (not the agent!), this will handle all the planning.
 9. Play the game :-)
+
+### How to use ReGoap in Godot
+The `ReGoap/Godot` folder contains Godot-ready base classes that mirror the Unity API:
+
+- `ReGoapAction<T, W>`
+- `ReGoapAgent<T, W>` / `ReGoapAgentAdvanced<T, W>`
+- `ReGoapGoal<T, W>` / `ReGoapGoalAdvanced<T, W>`
+- `ReGoapMemory<T, W>` / `ReGoapMemoryAdvanced<T, W>`
+- `ReGoapSensor<T, W>`
+- `ReGoapPlannerManager<T, W>`
+- `ReGoapDebugger` (runtime in-game debugger UI)
+
+If you're using AI agents to extend Godot debugger/runtime features, read `ReGoap/Godot/AGENT.md` first.
+
+To use ReGoap in Godot, create your own classes by inheriting these base classes and keep the same generic pair across your agent, goals, actions, memory and sensors (usually `string, object`).
+
+There is also a Godot FSM test map in `ReGoap/Godot/FSMExample/Scenes/TestMap.tscn` that includes a live debugger panel (`F3` to toggle), similar in intent to the Unity debugger window.
+
+For `FSMExample`, shared Godot runtime classes are compiled from `ReGoap/Godot/*.cs` through `ReGoap/Godot/FSMExample/regoap_godot_fsm_example.csproj` (explicit `../ReGoap*.cs` includes). Keep generic runtime files in `ReGoap/Godot/` and do not duplicate/symlink `ReGoap*.cs` into the example root.
+
+#### Godot FSMExample behavior notes
+
+- The world sensor writes exact chest counts into memory (`chestWoodCount`, `chestOreCount`, `chestIngotCount`, `chestSwordCount`).
+- Workers carry resources physically between world objects, but resource removal/addition is applied at the interaction point (for example, wood/ingot are consumed at chest pickup, then the worker moves to blacksmith to craft).
+- Smelting and crafting are modeled as shared-workflow actions using chest stock as input and output buffer.
+
+#### Godot debugger UX
+
+- Toggle debugger with `F3`.
+- Use `<` and `>` buttons to switch selected agents.
+- By default, selection now stays on the chosen agent (it does not snap back to first agent while unlocked).
+- The debugger can run in a detached window (`UseSeparateWindow = true` in `ReGoapDebugger`) and defaults to a larger readable UI.
 
 What's more? nothing really, the library will handle all the planning, choose the actions to complete a goal and run the first one until it's done, then the second one and so on, all you need to do is implement your own actions and goals.
 

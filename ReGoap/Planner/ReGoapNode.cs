@@ -4,6 +4,10 @@ using ReGoap.Core;
 
 namespace ReGoap.Planner
 {
+    /// <summary>
+    /// A* node used by ReGoap planner.
+    /// Each node represents one backward-planning step and its merged state.
+    /// </summary>
     public class ReGoapNode<T, W> : INode<ReGoapState<T, W>>
     {
         private float cost;
@@ -25,6 +29,9 @@ namespace ReGoap.Planner
             expandList = new List<INode<ReGoapState<T, W>>>();
         }
 
+        /// <summary>
+        /// Initializes node internal values and derives new state/goal from action transition.
+        /// </summary>
         private void Init(IGoapPlanner<T, W> planner, ReGoapState<T, W> newGoal, ReGoapNode<T, W> parent, IReGoapAction<T, W> action, ReGoapState<T, W> settings)
         {
             expandList.Clear();
@@ -89,6 +96,9 @@ namespace ReGoap.Planner
         #region NodeFactory
         private static Stack<ReGoapNode<T, W>> cachedNodes;
 
+        /// <summary>
+        /// Preallocates node instances for lower GC pressure.
+        /// </summary>
         public static void Warmup(int count)
         {
             cachedNodes = new Stack<ReGoapNode<T, W>>(count);
@@ -98,6 +108,9 @@ namespace ReGoap.Planner
             }
         }
 
+        /// <summary>
+        /// Returns this node to the internal cache.
+        /// </summary>
         public void Recycle()
         {
             state.Recycle();
@@ -112,6 +125,9 @@ namespace ReGoap.Planner
             }
         }
 
+        /// <summary>
+        /// Gets a cached node and initializes it.
+        /// </summary>
         public static ReGoapNode<T, W> Instantiate(IGoapPlanner<T, W> planner, ReGoapState<T, W> newGoal, ReGoapNode<T, W> parent, IReGoapAction<T, W> action, ReGoapState<T, W> actionSettings)
         {
             ReGoapNode<T, W> node;
@@ -128,21 +144,33 @@ namespace ReGoap.Planner
         }
         #endregion
 
+        /// <summary>
+        /// Returns accumulated path cost (g).
+        /// </summary>
         public float GetPathCost()
         {
             return g;
         }
 
+        /// <summary>
+        /// Returns heuristic cost (h).
+        /// </summary>
         public float GetHeuristicCost()
         {
             return h;
         }
 
+        /// <summary>
+        /// Returns node merged state.
+        /// </summary>
         public ReGoapState<T, W> GetState()
         {
             return state;
         }
 
+        /// <summary>
+        /// Expands node by testing all planner actions against current goal.
+        /// </summary>
         public List<INode<ReGoapState<T, W>>> Expand()
         {
             expandList.Clear();
@@ -181,11 +209,17 @@ namespace ReGoap.Planner
             return expandList;
         }
 
+        /// <summary>
+        /// Internal accessor for node action.
+        /// </summary>
         private IReGoapAction<T, W> GetAction()
         {
             return action;
         }
 
+        /// <summary>
+        /// Builds path queue from this leaf back to root.
+        /// </summary>
         public Queue<ReGoapActionState<T, W>> CalculatePath()
         {
             var result = new Queue<ReGoapActionState<T, W>>();
@@ -193,6 +227,9 @@ namespace ReGoap.Planner
             return result;
         }
 
+        /// <summary>
+        /// Appends path queue from this leaf back to root into an existing queue.
+        /// </summary>
         public void CalculatePath(ref Queue<ReGoapActionState<T, W>> result)
         {
             var node = this;
@@ -203,21 +240,33 @@ namespace ReGoap.Planner
             }
         }
 
+        /// <summary>
+        /// Priority-queue ordering by node f-cost.
+        /// </summary>
         public int CompareTo(INode<ReGoapState<T, W>> other)
         {
             return cost.CompareTo(other.GetCost());
         }
 
+        /// <summary>
+        /// Returns total node cost (f = g + h * multiplier).
+        /// </summary>
         public float GetCost()
         {
             return cost;
         }
 
+        /// <summary>
+        /// Returns parent node in search tree.
+        /// </summary>
         public INode<ReGoapState<T, W>> GetParent()
         {
             return parent;
         }
 
+        /// <summary>
+        /// Returns true when all remaining goal conditions are already satisfied by world state.
+        /// </summary>
         public bool IsGoal(ReGoapState<T, W> goal)
         {
             return goalMergedWithWorld.Count <= 0;

@@ -1,0 +1,21 @@
+<Project Sdk="Godot.NET.Sdk/4.6.2">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>regoap_godot_runtime</AssemblyName>
+    <RootNamespace>ReGoap.Godot</RootNamespace>
+    <Nullable>enable</Nullable>
+    <EnableDynamicLoading>false</EnableDynamicLoading>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.CodeDom" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../Core/*.cs" />
+    <Compile Include="../Planner/*.cs" />
+    <Compile Include="../Utilities/*.cs" />
+    <Compile Include="*.cs" />
+  </ItemGroup>
+</Project>

@@ -3,16 +3,31 @@
 namespace ReGoap.Planner
 {
     [Serializable]
+    /// <summary>
+    /// Planner configuration limits and behavior flags.
+    /// </summary>
     public class ReGoapPlannerSettings
     {
         public bool PlanningEarlyExit = false;
-        // increase both if your agent has a lot of actions
+        /// <summary>
+        /// Maximum A* iterations per planning attempt.
+        /// </summary>
         public int MaxIterations = 1000;
+
+        /// <summary>
+        /// Maximum expanded nodes for internal A* queue.
+        /// </summary>
         public int MaxNodesToExpand = 10000;
-        // set this to true if using dynamic actions, such as GenericGoTo or GatherResourceAction
-        // a dynamic action is an action that has dynamic preconditions or effects (changed in runtime/precalcultions)
+
+        /// <summary>
+        /// Enables planner mode tailored for dynamic actions
+        /// whose preconditions/effects change at runtime.
+        /// </summary>
         public bool UsingDynamicActions = false;
 
+        /// <summary>
+        /// Enables extra plan-debug information in logs.
+        /// </summary>
         public bool DebugPlan = false;
     }
 }

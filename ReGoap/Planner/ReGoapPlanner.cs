@@ -5,6 +5,10 @@ using ReGoap.Utilities;
 
 namespace ReGoap.Planner
 {
+    /// <summary>
+    /// Main GOAP planner implementation.
+    /// Selects a goal and computes an action queue via A* over world-state diffs.
+    /// </summary>
     public class ReGoapPlanner<T, W> : IGoapPlanner<T, W>
     {
         private IReGoapAgent<T, W> goapAgent;
@@ -13,12 +17,18 @@ namespace ReGoap.Planner
         private readonly AStar<ReGoapState<T, W>> astar;
         private readonly ReGoapPlannerSettings settings;
 
+        /// <summary>
+        /// Creates a planner with optional custom settings.
+        /// </summary>
         public ReGoapPlanner(ReGoapPlannerSettings settings = null)
         {
             this.settings = settings ?? new ReGoapPlannerSettings();
             astar = new AStar<ReGoapState<T, W>>(this.settings.MaxNodesToExpand);
         }
 
+        /// <summary>
+        /// Computes a plan for <paramref name="agent"/> and returns the chosen goal.
+        /// </summary>
         public IReGoapGoal<T, W> Plan(IReGoapAgent<T, W> agent, IReGoapGoal<T, W> blacklistGoal = null, Queue<ReGoapActionState<T, W>> currentPlan = null, Action<IReGoapGoal<T, W>> callback = null)
         {
             if (ReGoapLogger.Level == ReGoapLogger.DebugLevel.Full)
@@ -45,6 +55,7 @@ namespace ReGoap.Planner
                 possibleGoals.RemoveAt(possibleGoals.Count - 1);
                 var goalState = currentGoal.GetGoalState();
 
+                // Optional fast pre-check for non-dynamic action sets.
                 // can't work with dynamic actions, of course
                 if (!settings.UsingDynamicActions)
                 {
@@ -135,16 +146,25 @@ namespace ReGoap.Planner
             return currentGoal;
         }
 
+        /// <summary>
+        /// Returns agent currently being planned.
+        /// </summary>
         public IReGoapAgent<T, W> GetCurrentAgent()
         {
             return goapAgent;
         }
 
+        /// <summary>
+        /// Returns true while a planning call is in progress.
+        /// </summary>
         public bool IsPlanning()
         {
             return !Calculated;
         }
 
+        /// <summary>
+        /// Returns active planner settings.
+        /// </summary>
         public ReGoapPlannerSettings GetSettings()
         {
             return settings;

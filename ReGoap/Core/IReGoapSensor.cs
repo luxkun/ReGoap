@@ -1,13 +1,23 @@
-﻿// this is not strictly needed for a goap AI, but can be userful if your memory has many states and 
-//  you want to re-use different sensors in different agents
-// the interface does not dictate how you should update the memory from the sensor
-// - in a unity game probably you will want to update the memory in the sensor's Update/FixedUpdate
 namespace ReGoap.Core
 {
+    /// <summary>
+    /// Optional contract for reusable memory updaters.
+    /// </summary>
     public interface IReGoapSensor<T, W>
     {
+        /// <summary>
+        /// Attaches the sensor to a memory instance.
+        /// </summary>
         void Init(IReGoapMemory<T, W> memory);
+
+        /// <summary>
+        /// Returns bound memory instance.
+        /// </summary>
         IReGoapMemory<T, W> GetMemory();
+
+        /// <summary>
+        /// Executes sensor update and writes values to memory.
+        /// </summary>
         void UpdateSensor();
     }
 }

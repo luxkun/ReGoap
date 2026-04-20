@@ -30,3 +30,12 @@ sysinfo.txt
 *.unitypackage
 ReGoap/Unity/SimExample/
 ReGoap/Unity/SimExample.meta
+opencode.json
+.godot/
+.mono/
+**/.godot/
+**/.mono/
+.DS_Store
+
+# Keep Godot C# project files versioned
+!ReGoap/Godot/**/*.csproj

@@ -72,7 +72,7 @@ namespace ReGoap.Core
                 {
                     W thisValue;
                     values.TryGetValue(pair.Key, out thisValue);
-                    if (Equals(thisValue, pair.Value))
+                    if (ReGoapCondition.IsMatch(pair.Value, thisValue))
                         return true;
                 }
                 return false;
@@ -90,7 +90,7 @@ namespace ReGoap.Core
                         W thisValue;
                         if (!values.TryGetValue(pair.Key, out thisValue))
                             continue;
-                        if (!Equals(otherValue, thisValue))
+                        if (!ReGoapCondition.AreCompatible(otherValue, thisValue))
                             return true;
                     }
                     return false;
@@ -112,7 +112,7 @@ namespace ReGoap.Core
                             continue;
                         W effectValue;
                         changes.values.TryGetValue(pair.Key, out effectValue);
-                        if (!Equals(otherValue, thisValue) && !Equals(effectValue, thisValue))
+                        if (!ReGoapCondition.AreCompatible(otherValue, thisValue) && !ReGoapCondition.AreCompatible(effectValue, thisValue))
                             return true;
                     }
                     return false;
@@ -128,7 +128,7 @@ namespace ReGoap.Core
                 {
                     W otherValue;
                     other.values.TryGetValue(pair.Key, out otherValue);
-                    if (!Equals(pair.Value, otherValue))
+                    if (!ReGoapCondition.IsMatch(pair.Value, otherValue))
                     {
                         count++;
                         if (count >= stopAt)
@@ -149,7 +149,7 @@ namespace ReGoap.Core
                 {
                     W otherValue;
                     other.values.TryGetValue(pair.Key, out otherValue);
-                    if (!Equals(pair.Value, otherValue) && (predicate == null || predicate(pair, otherValue)))
+                    if (!ReGoapCondition.IsMatch(pair.Value, otherValue) && (predicate == null || predicate(pair, otherValue)))
                     {
                         count++;
                         if (difference != null)
@@ -175,7 +175,7 @@ namespace ReGoap.Core
                 {
                     W otherValue;
                     other.values.TryGetValue(pair.Key, out otherValue);
-                    if (!Equals(pair.Value, otherValue) && (predicate == null || predicate(pair, otherValue)))
+                    if (!ReGoapCondition.IsMatch(pair.Value, otherValue) && (predicate == null || predicate(pair, otherValue)))
                     {
                         count++;
                         values[pair.Key] = pair.Value;

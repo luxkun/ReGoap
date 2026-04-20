@@ -1,0 +1,256 @@
+[gd_scene load_steps=19 format=3]
+
+[ext_resource type="Script" path="res://Planners/FSMExamplePlannerManager.cs" id="1"]
+[ext_resource type="Script" path="res://Debug/DebuggerRoot.cs" id="2"]
+[ext_resource type="Script" path="res://World/ChestNode.cs" id="3"]
+[ext_resource type="Script" path="res://World/ResourceNode.cs" id="4"]
+[ext_resource type="Script" path="res://World/BuildingNode.cs" id="5"]
+[ext_resource type="Script" path="res://World/WorldStateController.cs" id="6"]
+[ext_resource type="Script" path="res://World/WorkerAgent.cs" id="7"]
+[ext_resource type="Script" path="res://World/WorkerMemory.cs" id="8"]
+[ext_resource type="Script" path="res://World/SwordsmithGoal.cs" id="9"]
+[ext_resource type="Script" path="res://World/WorkerAgentBindings.cs" id="10"]
+[ext_resource type="Script" path="res://World/WorkerPawn.cs" id="11"]
+[ext_resource type="Script" path="res://World/ChopTreeAction.cs" id="12"]
+[ext_resource type="Script" path="res://World/DepositWoodAction.cs" id="13"]
+[ext_resource type="Script" path="res://World/MineOreAction.cs" id="14"]
+[ext_resource type="Script" path="res://World/DepositOreAction.cs" id="15"]
+[ext_resource type="Script" path="res://World/SmeltIngotAction.cs" id="16"]
+[ext_resource type="Script" path="res://World/CraftSwordAction.cs" id="17"]
+[ext_resource type="Script" path="res://World/WorldBootstrap.cs" id="18"]
+[ext_resource type="Script" path="res://World/WorldResourceSensor.cs" id="19"]
+
+[node name="root" type="Node2D"]
+
+[node name="Background" type="Polygon2D" parent="."]
+color = Color(0.12, 0.13, 0.15, 1)
+polygon = PackedVector2Array(0, 0, 1280, 0, 1280, 720, 0, 720)
+
+[node name="Ground" type="Polygon2D" parent="."]
+color = Color(0.18, 0.19, 0.22, 1)
+polygon = PackedVector2Array(0, 440, 1280, 440, 1280, 720, 0, 720)
+
+[node name="Planner" type="Node" parent="."]
+script = ExtResource("1")
+
+[node name="Chest" type="Node2D" parent="."]
+position = Vector2(640, 540)
+script = ExtResource("3")
+
+[node name="TreeA" type="Node2D" parent="."]
+position = Vector2(180, 220)
+script = ExtResource("4")
+ResourceName = "Tree A"
+MaxCharges = 4
+RegenSeconds = 3.5
+Tint = Color(0.23, 0.55, 0.26, 1)
+
+[node name="TreeB" type="Node2D" parent="."]
+position = Vector2(340, 190)
+script = ExtResource("4")
+ResourceName = "Tree B"
+MaxCharges = 4
+RegenSeconds = 3.2
+Tint = Color(0.2, 0.49, 0.24, 1)
+
+[node name="MineA" type="Node2D" parent="."]
+position = Vector2(940, 210)
+script = ExtResource("4")
+ResourceName = "Mine A"
+MaxCharges = 4
+RegenSeconds = 4.4
+Tint = Color(0.47, 0.47, 0.51, 1)
+
+[node name="MineB" type="Node2D" parent="."]
+position = Vector2(1090, 240)
+script = ExtResource("4")
+ResourceName = "Mine B"
+MaxCharges = 4
+RegenSeconds = 4.1
+Tint = Color(0.44, 0.44, 0.48, 1)
+
+[node name="Smelter" type="Node2D" parent="."]
+position = Vector2(860, 520)
+script = ExtResource("5")
+BuildingName = "Smelter"
+Tint = Color(0.68, 0.38, 0.18, 1)
+
+[node name="Blacksmith" type="Node2D" parent="."]
+position = Vector2(430, 520)
+script = ExtResource("5")
+BuildingName = "Blacksmith"
+Tint = Color(0.24, 0.35, 0.54, 1)
+
+[node name="World" type="Node" parent="."]
+script = ExtResource("6")
+
+[node name="Bootstrap" type="Node" parent="."]
+script = ExtResource("18")
+
+[node name="Workers" type="Node2D" parent="."]
+
+[node name="Worker1" type="Node" parent="Workers"]
+script = ExtResource("7")
+Name = "Worker 1"
+
+[node name="Bindings" type="Node" parent="Workers/Worker1"]
+script = ExtResource("10")
+
+[node name="Pawn" type="Node2D" parent="Workers/Worker1"]
+position = Vector2(130, 650)
+script = ExtResource("11")
+HomePosition = Vector2(130, 650)
+BodyColor = Color(0.94, 0.83, 0.35, 1)
+
+[node name="Memory" type="Node" parent="Workers/Worker1"]
+script = ExtResource("8")
+
+[node name="WorldSensor" type="Node" parent="Workers/Worker1/Memory"]
+script = ExtResource("19")
+
+[node name="Goal" type="Node" parent="Workers/Worker1"]
+script = ExtResource("9")
+
+[node name="ChopTree" type="Node" parent="Workers/Worker1"]
+script = ExtResource("12")
+
+[node name="DepositWood" type="Node" parent="Workers/Worker1"]
+script = ExtResource("13")
+
+[node name="MineOre" type="Node" parent="Workers/Worker1"]
+script = ExtResource("14")
+
+[node name="DepositOre" type="Node" parent="Workers/Worker1"]
+script = ExtResource("15")
+
+[node name="SmeltIngot" type="Node" parent="Workers/Worker1"]
+script = ExtResource("16")
+
+[node name="CraftSword" type="Node" parent="Workers/Worker1"]
+script = ExtResource("17")
+
+[node name="Worker2" type="Node" parent="Workers"]
+script = ExtResource("7")
+Name = "Worker 2"
+
+[node name="Bindings" type="Node" parent="Workers/Worker2"]
+script = ExtResource("10")
+
+[node name="Pawn" type="Node2D" parent="Workers/Worker2"]
+position = Vector2(210, 650)
+script = ExtResource("11")
+HomePosition = Vector2(210, 650)
+BodyColor = Color(0.88, 0.53, 0.25, 1)
+
+[node name="Memory" type="Node" parent="Workers/Worker2"]
+script = ExtResource("8")
+
+[node name="WorldSensor" type="Node" parent="Workers/Worker2/Memory"]
+script = ExtResource("19")
+
+[node name="Goal" type="Node" parent="Workers/Worker2"]
+script = ExtResource("9")
+
+[node name="ChopTree" type="Node" parent="Workers/Worker2"]
+script = ExtResource("12")
+
+[node name="DepositWood" type="Node" parent="Workers/Worker2"]
+script = ExtResource("13")
+
+[node name="MineOre" type="Node" parent="Workers/Worker2"]
+script = ExtResource("14")
+
+[node name="DepositOre" type="Node" parent="Workers/Worker2"]
+script = ExtResource("15")
+
+[node name="SmeltIngot" type="Node" parent="Workers/Worker2"]
+script = ExtResource("16")
+
+[node name="CraftSword" type="Node" parent="Workers/Worker2"]
+script = ExtResource("17")
+
+[node name="Worker3" type="Node" parent="Workers"]
+script = ExtResource("7")
+Name = "Worker 3"
+
+[node name="Bindings" type="Node" parent="Workers/Worker3"]
+script = ExtResource("10")
+
+[node name="Pawn" type="Node2D" parent="Workers/Worker3"]
+position = Vector2(290, 650)
+script = ExtResource("11")
+HomePosition = Vector2(290, 650)
+BodyColor = Color(0.35, 0.72, 0.88, 1)
+
+[node name="Memory" type="Node" parent="Workers/Worker3"]
+script = ExtResource("8")
+
+[node name="WorldSensor" type="Node" parent="Workers/Worker3/Memory"]
+script = ExtResource("19")
+
+[node name="Goal" type="Node" parent="Workers/Worker3"]
+script = ExtResource("9")
+
+[node name="ChopTree" type="Node" parent="Workers/Worker3"]
+script = ExtResource("12")
+
+[node name="DepositWood" type="Node" parent="Workers/Worker3"]
+script = ExtResource("13")
+
+[node name="MineOre" type="Node" parent="Workers/Worker3"]
+script = ExtResource("14")
+
+[node name="DepositOre" type="Node" parent="Workers/Worker3"]
+script = ExtResource("15")
+
+[node name="SmeltIngot" type="Node" parent="Workers/Worker3"]
+script = ExtResource("16")
+
+[node name="CraftSword" type="Node" parent="Workers/Worker3"]
+script = ExtResource("17")
+
+[node name="Worker4" type="Node" parent="Workers"]
+script = ExtResource("7")
+Name = "Worker 4"
+
+[node name="Bindings" type="Node" parent="Workers/Worker4"]
+script = ExtResource("10")
+
+[node name="Pawn" type="Node2D" parent="Workers/Worker4"]
+position = Vector2(370, 650)
+script = ExtResource("11")
+HomePosition = Vector2(370, 650)
+BodyColor = Color(0.65, 0.84, 0.36, 1)
+
+[node name="Memory" type="Node" parent="Workers/Worker4"]
+script = ExtResource("8")
+
+[node name="WorldSensor" type="Node" parent="Workers/Worker4/Memory"]
+script = ExtResource("19")
+
+[node name="Goal" type="Node" parent="Workers/Worker4"]
+script = ExtResource("9")
+
+[node name="ChopTree" type="Node" parent="Workers/Worker4"]
+script = ExtResource("12")
+
+[node name="DepositWood" type="Node" parent="Workers/Worker4"]
+script = ExtResource("13")
+
+[node name="MineOre" type="Node" parent="Workers/Worker4"]
+script = ExtResource("14")
+
+[node name="DepositOre" type="Node" parent="Workers/Worker4"]
+script = ExtResource("15")
+
+[node name="SmeltIngot" type="Node" parent="Workers/Worker4"]
+script = ExtResource("16")
+
+[node name="CraftSword" type="Node" parent="Workers/Worker4"]
+script = ExtResource("17")
+
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+
+[node name="Debugger" type="CanvasLayer" parent="."]
+script = ExtResource("2")
