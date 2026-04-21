@@ -1,3 +1,4 @@
+using ReGoap.Core;
 using ReGoap.Godot;
 
 namespace ReGoap.Godot.FSMExample.World
@@ -29,7 +30,7 @@ namespace ReGoap.Godot.FSMExample.World
                 targetMoveCount = moveCount + 1;
 
             goal.Clear();
-            goal.Set("randomMoveCount", targetMoveCount);
+            goal.Set("randomMoveCount", ReGoapCondition.GreaterOrEqual(targetMoveCount));
         }
     }
 }

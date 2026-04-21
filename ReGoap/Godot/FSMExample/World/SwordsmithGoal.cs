@@ -1,3 +1,4 @@
+using ReGoap.Core;
 using ReGoap.Godot;
 
 namespace ReGoap.Godot.FSMExample.World
@@ -26,7 +27,7 @@ namespace ReGoap.Godot.FSMExample.World
                 targetSwordCount = swordsInChest + 1;
 
             goal.Clear();
-            goal.Set("chestSwordCount", targetSwordCount);
+            goal.Set("chestSwordCount", ReGoapCondition.GreaterOrEqual(targetSwordCount));
         }
     }
 }

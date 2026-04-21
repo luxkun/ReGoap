@@ -10,41 +10,41 @@ using static GdUnit4.Assertions;
 
 [TestSuite]
 /// <summary>
-/// Covers dynamic swordsmith goal target progression behavior.
+/// Covers dynamic random-move goal threshold behavior.
 /// </summary>
-public class SwordsmithGoalTests
+public class RandomMoveGoalTests
 {
     /// <summary>
-    /// Goal target should track chest swords and require at least the next count.
+    /// Goal target should require at least the next random move count.
     /// </summary>
     [TestCase]
     [RequireGodotRuntime]
-    public void PrecalculationsTargetsCurrentSwordCountPlusOneWithGreaterOrEqualCondition()
+    public void PrecalculationsTargetsNextMoveCountWithGreaterOrEqualCondition()
     {
-        var goal = new SwordsmithGoal();
+        var goal = new RandomMoveGoal();
         goal._Ready();
 
-        var planner = new StubPlanner(5);
+        var planner = new StubPlanner(3);
         goal.Precalculations(planner);
 
-        var firstCondition = goal.GetGoalState().Get("chestSwordCount") as ReGoapCondition;
+        var firstCondition = goal.GetGoalState().Get("randomMoveCount") as ReGoapCondition;
         AssertThat(firstCondition).IsNotNull();
-        AssertBool(firstCondition.IsSatisfiedBy(6)).IsTrue();
-        AssertBool(firstCondition.IsSatisfiedBy(7)).IsTrue();
-        AssertBool(firstCondition.IsSatisfiedBy(5)).IsFalse();
+        AssertBool(firstCondition.IsSatisfiedBy(4)).IsTrue();
+        AssertBool(firstCondition.IsSatisfiedBy(5)).IsTrue();
+        AssertBool(firstCondition.IsSatisfiedBy(3)).IsFalse();
 
         AssertThat(firstCondition.Operator).IsEqual(ReGoapConditionOperator.GreaterOrEqual);
-        AssertThat(firstCondition.Value).IsEqual(6);
+        AssertThat(firstCondition.Value).IsEqual(4);
 
-        planner.SetSwordCount(6);
+        planner.SetMoveCount(4);
         goal.Precalculations(planner);
 
-        var secondCondition = goal.GetGoalState().Get("chestSwordCount") as ReGoapCondition;
+        var secondCondition = goal.GetGoalState().Get("randomMoveCount") as ReGoapCondition;
         AssertThat(secondCondition).IsNotNull();
         AssertThat(secondCondition.Operator).IsEqual(ReGoapConditionOperator.GreaterOrEqual);
-        AssertThat(secondCondition.Value).IsEqual(7);
-        AssertBool(secondCondition.IsSatisfiedBy(8)).IsTrue();
-        AssertBool(secondCondition.IsSatisfiedBy(6)).IsFalse();
+        AssertThat(secondCondition.Value).IsEqual(5);
+        AssertBool(secondCondition.IsSatisfiedBy(6)).IsTrue();
+        AssertBool(secondCondition.IsSatisfiedBy(4)).IsFalse();
     }
 
     private sealed class StubPlanner : ReGoap.Planner.IGoapPlanner<string, object>
@@ -52,14 +52,14 @@ public class SwordsmithGoalTests
         // Minimal planner stub: only agent access is needed by goal precalculations.
         private readonly StubAgent agent;
 
-        public StubPlanner(int swordCount)
+        public StubPlanner(int moveCount)
         {
-            agent = new StubAgent(swordCount);
+            agent = new StubAgent(moveCount);
         }
 
-        public void SetSwordCount(int swordCount)
+        public void SetMoveCount(int moveCount)
         {
-            agent.Memory.GetWorldState().Set("chestSwordCount", swordCount);
+            agent.Memory.GetWorldState().Set("randomMoveCount", moveCount);
         }
 
         public ReGoap.Core.IReGoapGoal<string, object> Plan(ReGoap.Core.IReGoapAgent<string, object> goapAgent, ReGoap.Core.IReGoapGoal<string, object> blacklistGoal, System.Collections.Generic.Queue<ReGoapActionState<string, object>> currentPlan, System.Action<ReGoap.Core.IReGoapGoal<string, object>> callback)
@@ -81,10 +81,10 @@ public class SwordsmithGoalTests
         // Minimal agent stub backed by an in-memory world state.
         public StubMemory Memory { get; }
 
-        public StubAgent(int swordCount)
+        public StubAgent(int moveCount)
         {
             Memory = new StubMemory();
-            Memory.GetWorldState().Set("chestSwordCount", swordCount);
+            Memory.GetWorldState().Set("randomMoveCount", moveCount);
         }
 
         public ReGoap.Core.IReGoapMemory<string, object> GetMemory() => Memory;
