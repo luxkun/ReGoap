@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3]
+[gd_scene load_steps=22 format=3]
 
 [ext_resource type="Script" path="res://Planners/FSMExamplePlannerManager.cs" id="1"]
 [ext_resource type="Script" path="res://Debug/DebuggerRoot.cs" id="2"]
@@ -19,6 +19,9 @@
 [ext_resource type="Script" path="res://World/CraftSwordAction.cs" id="17"]
 [ext_resource type="Script" path="res://World/WorldBootstrap.cs" id="18"]
 [ext_resource type="Script" path="res://World/WorldResourceSensor.cs" id="19"]
+[ext_resource type="Script" path="res://World/RandomMoveGoal.cs" id="20"]
+[ext_resource type="Script" path="res://World/RandomMoveAction.cs" id="21"]
+[ext_resource type="Script" path="res://World/RandomMoveCounterLabel.cs" id="22"]
 
 [node name="root" type="Node2D"]
 
@@ -111,6 +114,9 @@ script = ExtResource("19")
 [node name="Goal" type="Node" parent="Workers/Worker1"]
 script = ExtResource("9")
 
+[node name="RandomMoveGoal" type="Node" parent="Workers/Worker1"]
+script = ExtResource("20")
+
 [node name="ChopTree" type="Node" parent="Workers/Worker1"]
 script = ExtResource("12")
 
@@ -128,6 +134,9 @@ script = ExtResource("16")
 
 [node name="CraftSword" type="Node" parent="Workers/Worker1"]
 script = ExtResource("17")
+
+[node name="RandomMove" type="Node" parent="Workers/Worker1"]
+script = ExtResource("21")
 
 [node name="Worker2" type="Node" parent="Workers"]
 script = ExtResource("7")
@@ -151,6 +160,9 @@ script = ExtResource("19")
 [node name="Goal" type="Node" parent="Workers/Worker2"]
 script = ExtResource("9")
 
+[node name="RandomMoveGoal" type="Node" parent="Workers/Worker2"]
+script = ExtResource("20")
+
 [node name="ChopTree" type="Node" parent="Workers/Worker2"]
 script = ExtResource("12")
 
@@ -168,6 +180,9 @@ script = ExtResource("16")
 
 [node name="CraftSword" type="Node" parent="Workers/Worker2"]
 script = ExtResource("17")
+
+[node name="RandomMove" type="Node" parent="Workers/Worker2"]
+script = ExtResource("21")
 
 [node name="Worker3" type="Node" parent="Workers"]
 script = ExtResource("7")
@@ -191,6 +206,9 @@ script = ExtResource("19")
 [node name="Goal" type="Node" parent="Workers/Worker3"]
 script = ExtResource("9")
 
+[node name="RandomMoveGoal" type="Node" parent="Workers/Worker3"]
+script = ExtResource("20")
+
 [node name="ChopTree" type="Node" parent="Workers/Worker3"]
 script = ExtResource("12")
 
@@ -208,6 +226,9 @@ script = ExtResource("16")
 
 [node name="CraftSword" type="Node" parent="Workers/Worker3"]
 script = ExtResource("17")
+
+[node name="RandomMove" type="Node" parent="Workers/Worker3"]
+script = ExtResource("21")
 
 [node name="Worker4" type="Node" parent="Workers"]
 script = ExtResource("7")
@@ -231,6 +252,9 @@ script = ExtResource("19")
 [node name="Goal" type="Node" parent="Workers/Worker4"]
 script = ExtResource("9")
 
+[node name="RandomMoveGoal" type="Node" parent="Workers/Worker4"]
+script = ExtResource("20")
+
 [node name="ChopTree" type="Node" parent="Workers/Worker4"]
 script = ExtResource("12")
 
@@ -249,8 +273,14 @@ script = ExtResource("16")
 [node name="CraftSword" type="Node" parent="Workers/Worker4"]
 script = ExtResource("17")
 
+[node name="RandomMove" type="Node" parent="Workers/Worker4"]
+script = ExtResource("21")
+
 [node name="Camera" type="Camera2D" parent="."]
 position = Vector2(640, 360)
 
 [node name="Debugger" type="CanvasLayer" parent="."]
 script = ExtResource("2")
+
+[node name="RandomMoveCounter" type="Label" parent="."]
+script = ExtResource("22")

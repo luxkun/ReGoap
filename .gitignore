@@ -36,6 +36,7 @@ opencode.json
 **/.godot/
 **/.mono/
 .DS_Store
+ReGoap/Godot/FSMExample/gdunit4_testadapter_v5/
 
 # Keep Godot C# project files versioned
 !ReGoap/Godot/**/*.csproj

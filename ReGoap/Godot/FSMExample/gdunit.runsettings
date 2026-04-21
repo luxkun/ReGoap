@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <GdUnit4>
+    <CompileProcessTimeout>120000</CompileProcessTimeout>
+  </GdUnit4>
+</RunSettings>

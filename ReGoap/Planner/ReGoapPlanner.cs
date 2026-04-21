@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using ReGoap.Core;
 using ReGoap.Utilities;
 
@@ -11,6 +12,7 @@ namespace ReGoap.Planner
     /// </summary>
     public class ReGoapPlanner<T, W> : IGoapPlanner<T, W>
     {
+        private readonly Random random;
         private IReGoapAgent<T, W> goapAgent;
         private IReGoapGoal<T, W> currentGoal;
         public bool Calculated;
@@ -24,6 +26,9 @@ namespace ReGoap.Planner
         {
             this.settings = settings ?? new ReGoapPlannerSettings();
             astar = new AStar<ReGoapState<T, W>>(this.settings.MaxNodesToExpand);
+            random = this.settings.WeightedRandomUseDeterministicSeed
+                ? new Random(this.settings.WeightedRandomSeed)
+                : new Random();
         }
 
         /// <summary>
@@ -51,8 +56,8 @@ namespace ReGoap.Planner
 
             while (possibleGoals.Count > 0)
             {
-                currentGoal = possibleGoals[possibleGoals.Count - 1];
-                possibleGoals.RemoveAt(possibleGoals.Count - 1);
+                currentGoal = SelectNextGoal(possibleGoals);
+                possibleGoals.Remove(currentGoal);
                 var goalState = currentGoal.GetGoalState();
 
                 // Optional fast pre-check for non-dynamic action sets.
@@ -139,6 +144,42 @@ namespace ReGoap.Planner
             else
                 ReGoapLogger.LogWarning("[ReGoapPlanner] Error while calculating plan.");
             return currentGoal;
+        }
+
+        private IReGoapGoal<T, W> SelectNextGoal(List<IReGoapGoal<T, W>> possibleGoals)
+        {
+            if (!settings.UseWeightedRandomGoalSelection || possibleGoals.Count == 1)
+                return possibleGoals[possibleGoals.Count - 1];
+
+            var power = Math.Max(0.01f, settings.WeightedRandomGoalPriorityPower);
+            var minWeight = Math.Max(0.000001f, settings.WeightedRandomMinimumWeight);
+
+            var weights = new float[possibleGoals.Count];
+            float total = 0f;
+            for (var i = 0; i < possibleGoals.Count; i++)
+            {
+                var priority = possibleGoals[i].GetPriority();
+                var clampedPriority = Math.Max(0f, priority);
+                var weight = (float)Math.Pow(clampedPriority, power);
+                if (weight < minWeight)
+                    weight = minWeight;
+                weights[i] = weight;
+                total += weight;
+            }
+
+            if (total <= 0f)
+                return possibleGoals[possibleGoals.Count - 1];
+
+            var roll = (float)(random.NextDouble() * total);
+            float cumulative = 0f;
+            for (var i = 0; i < possibleGoals.Count; i++)
+            {
+                cumulative += weights[i];
+                if (roll <= cumulative)
+                    return possibleGoals[i];
+            }
+
+            return possibleGoals.Last();
         }
 
         public IReGoapGoal<T, W> GetCurrentGoal()

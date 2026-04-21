@@ -11,6 +11,7 @@ namespace ReGoap.Godot.FSMExample.World
             world.Set("hasWood", false);
             world.Set("hasOre", false);
             world.Set("hasIngot", false);
+            world.Set("randomMoveCount", 0);
         }
     }
 }

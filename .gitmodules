@@ -1,0 +1,3 @@
+[submodule "ReGoap/Godot/FSMExample/addons/gdUnit4"]
+	path = ReGoap/Godot/FSMExample/addons/gdUnit4
+	url = https://github.com/MikeSchulze/gdUnit4.git

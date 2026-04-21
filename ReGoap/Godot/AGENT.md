@@ -74,6 +74,13 @@ Then verify in Godot:
 3. press `F3` and validate both tabs (`Inspector`, `Graph`)
 4. pause, switch snapshots, export JSON
 
+## Test Policy
+
+- Godot tests in this repository must be C# tests.
+- Do not add new GDScript tests.
+- Place Godot C# tests under `ReGoap/Godot/FSMExample/Tests`.
+- Use GdUnit4 C# API attributes (`[TestSuite]`, `[TestCase]`) and assertions.
+
 ## Notes
 
 - This debugger is runtime UI (not an editor plugin), so it also works in exported debug builds.

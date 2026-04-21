@@ -23,6 +23,10 @@ window/size/viewport_height=720
 
 project/assembly_name="regoap_godot_fsm_example"
 
+[editor_plugins]
+
+enabled=PackedStringArray()
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
