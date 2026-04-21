@@ -7,6 +7,11 @@ This file gives AI coding agents guidance for the Godot subtree.
 - Applies to `ReGoap/Godot/**`.
 - Overrides root `AGENT.md` for this subtree where instructions differ.
 
+## Godot-Only Focus
+
+- Keep this file scoped to Godot runtime/scene/editor/test specifics.
+- Do not put repo-wide or Unity guidance here.
+
 ## Purpose
 
 `ReGoapDebugger` is a runtime debugging UI for Godot that mirrors Unity debugger intent:
