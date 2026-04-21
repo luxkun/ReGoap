@@ -1,7 +1,6 @@
-[gd_scene load_steps=22 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://Planners/FSMExamplePlannerManager.cs" id="1"]
-[ext_resource type="Script" path="res://Debug/DebuggerRoot.cs" id="2"]
 [ext_resource type="Script" path="res://World/ChestNode.cs" id="3"]
 [ext_resource type="Script" path="res://World/ResourceNode.cs" id="4"]
 [ext_resource type="Script" path="res://World/BuildingNode.cs" id="5"]
@@ -278,9 +277,6 @@ script = ExtResource("21")
 
 [node name="Camera" type="Camera2D" parent="."]
 position = Vector2(640, 360)
-
-[node name="Debugger" type="CanvasLayer" parent="."]
-script = ExtResource("2")
 
 [node name="RandomMoveCounter" type="Label" parent="."]
 script = ExtResource("22")

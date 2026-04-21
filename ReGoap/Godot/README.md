@@ -39,6 +39,18 @@ This keeps one canonical runtime implementation and avoids duplicate script/type
 
 ## Debugger
 
+The debugger is auto-attached by `ReGoapPlannerManager<T, W>` by default.
+
+- default behavior: if no `ReGoapDebugger` node exists in the current scene, manager adds one automatically
+- press `F3` to toggle
+- if you already add your own debugger subclass in-scene, auto-attach detects it and does nothing
+
+Optional manager toggles:
+
+- `AutoAttachDebugger` (default `true`)
+- `AutoDebuggerStartVisible` (default `false`)
+- `AutoDebuggerUseSeparateWindow` (default `true`)
+
 - Toggle: `F3`
 - Switch agent: `<` and `>`
 - Lock current agent: `Lock Agent`

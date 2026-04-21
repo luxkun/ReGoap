@@ -49,6 +49,10 @@ namespace ReGoap.Godot
     {
         public static ReGoapPlannerManager<T, W> Instance;
 
+        public bool AutoAttachDebugger = true;
+        public bool AutoDebuggerStartVisible = false;
+        public bool AutoDebuggerUseSeparateWindow = true;
+
         public bool MultiThread;
         public int ThreadsCount = 1;
         private ReGoapPlannerThread<T, W>[] planners;
@@ -76,6 +80,9 @@ namespace ReGoap.Godot
             }
             Instance = this;
 
+            if (AutoAttachDebugger)
+                CallDeferred(nameof(EnsureDebuggerExists));
+
             if (ThreadsCount < 1)
                 ThreadsCount = 1;
 
@@ -99,6 +106,39 @@ namespace ReGoap.Godot
                 ReGoapLogger.Log("[GoapPlannerManager] Running in single-thread mode.");
                 planners[0] = new ReGoapPlannerThread<T, W>(PlannerSettings, OnDonePlan);
             }
+        }
+
+        private void EnsureDebuggerExists()
+        {
+            var tree = GetTree();
+            if (tree == null)
+                return;
+
+            var currentScene = tree.CurrentScene;
+            if (currentScene == null)
+                currentScene = tree.Root;
+
+            var queue = new Queue<global::Godot.Node>();
+            queue.Enqueue(currentScene);
+            while (queue.Count > 0)
+            {
+                var node = queue.Dequeue();
+                if (node is ReGoapDebugger)
+                    return;
+
+                foreach (var childObj in node.GetChildren())
+                    if (childObj is global::Godot.Node child)
+                        queue.Enqueue(child);
+            }
+
+            var debugger = new ReGoapDebugger
+            {
+                Name = "ReGoapDebugger",
+                StartVisible = AutoDebuggerStartVisible,
+                UseSeparateWindow = AutoDebuggerUseSeparateWindow
+            };
+            currentScene.AddChild(debugger);
+            global::Godot.GD.Print("[ReGoapPlannerManager] Auto-attached ReGoapDebugger.");
         }
 
         public override void _ExitTree()
